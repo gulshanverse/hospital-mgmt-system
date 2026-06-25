@@ -56,7 +56,7 @@ USER nodejs
 
 # Railway sets PORT dynamically; healthcheck must respect it
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD node -e "const port = process.env.PORT || 3000; require('http').get('http://localhost:' + port + '/api/trpc/auth.me', (r) => { if (r.statusCode !== 200) throw new Error(r.statusCode) })"
+    CMD node -e "const port = process.env.PORT || 3000; require('http').get('http://127.0.0.1:' + port + '/health', (r) => { if (r.statusCode !== 200) throw new Error(r.statusCode) })"
 
 # Expose default port (Railway overrides with PORT env var)
 EXPOSE 3000
