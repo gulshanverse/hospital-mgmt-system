@@ -86,11 +86,19 @@ declare global {
   }
 }
 
-const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
+const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY || "Rs4DJ7nNJsuGNMF4LsWvYc";
 const FORGE_BASE_URL =
   import.meta.env.VITE_FRONTEND_FORGE_API_URL ||
-  "https://forge.butterfly-effect.dev";
-const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
+  "https://forge.manus.ai";
+
+// Ensure absolute URL
+let absoluteForgeBaseUrl = FORGE_BASE_URL;
+if (!absoluteForgeBaseUrl.startsWith("http://") && !absoluteForgeBaseUrl.startsWith("https://")) {
+  absoluteForgeBaseUrl = typeof window !== "undefined"
+    ? `${window.location.origin}${absoluteForgeBaseUrl.startsWith("/") ? "" : "/"}${absoluteForgeBaseUrl}`
+    : `https://forge.manus.ai${absoluteForgeBaseUrl.startsWith("/") ? "" : "/"}${absoluteForgeBaseUrl}`;
+}
+const MAPS_PROXY_URL = `${absoluteForgeBaseUrl.replace(/\/+$/, "")}/v1/maps/proxy`;
 
 function loadMapScript() {
   return new Promise(resolve => {

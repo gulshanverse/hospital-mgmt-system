@@ -37,10 +37,15 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
+const getBaseUrl = () => {
+  if (typeof window !== "undefined") return window.location.origin;
+  return "";
+};
+
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "/api/trpc",
+      url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
       headers() {
         // Preview auto-login fallback: when the browser blocks iframe cookies
@@ -71,6 +76,26 @@ const trpcClient = trpc.createClient({
     }),
   ],
 });
+
+// Load Umami analytics dynamically with fallbacks
+const initAnalytics = () => {
+  if (typeof window === "undefined") return;
+  const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT || "https://manus-analytics.com";
+  const websiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID || "5d47acc6-6dec-4cd9-8dcc-2a171fe40c13";
+
+  if (endpoint && websiteId) {
+    let absoluteEndpoint = endpoint;
+    if (!absoluteEndpoint.startsWith("http://") && !absoluteEndpoint.startsWith("https://")) {
+      absoluteEndpoint = `${window.location.origin}${absoluteEndpoint.startsWith("/") ? "" : "/"}${absoluteEndpoint}`;
+    }
+    const script = document.createElement("script");
+    script.defer = true;
+    script.src = `${absoluteEndpoint.replace(/\/+$/, "")}/umami`;
+    script.setAttribute("data-website-id", websiteId);
+    document.head.appendChild(script);
+  }
+};
+initAnalytics();
 
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
