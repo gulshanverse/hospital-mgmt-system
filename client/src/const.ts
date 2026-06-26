@@ -1,23 +1,21 @@
-export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+/**
+ * Client Constants (Phase 1)
+ * 
+ * Removed Manus OAuth constants.
+ * JWT-based authentication will be implemented in Phase 2.
+ */
 
-// Generate login URL at runtime so redirect URI reflects the current origin.
+// Placeholder: Will be implemented in Phase 2
 export const getLoginUrl = () => {
-  const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL || "https://manus.im";
-  const appId = import.meta.env.VITE_APP_ID || "TtabevBoN3F2YUrkXpbqCr";
-  const redirectUri = `${window.location.origin}/api/oauth/callback`;
-  const state = btoa(redirectUri);
+  return "/login";
+};
 
-  // Ensure absolute URL
-  let basePortalUrl = oauthPortalUrl;
-  if (!basePortalUrl.startsWith("http://") && !basePortalUrl.startsWith("https://")) {
-    basePortalUrl = `${window.location.origin}${basePortalUrl.startsWith("/") ? "" : "/"}${basePortalUrl}`;
-  }
+// Placeholder: Will be implemented in Phase 2
+export const getSignupUrl = () => {
+  return "/signup";
+};
 
-  const url = new URL(`${basePortalUrl.replace(/\/+$/, "")}/app-auth`);
-  url.searchParams.set("appId", appId);
-  url.searchParams.set("redirectUri", redirectUri);
-  url.searchParams.set("state", state);
-  url.searchParams.set("type", "signIn");
-
-  return url.toString();
+// Placeholder: Will be implemented in Phase 2
+export const getForgotPasswordUrl = () => {
+  return "/forgot-password";
 };
