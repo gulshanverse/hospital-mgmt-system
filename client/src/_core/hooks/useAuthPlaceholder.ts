@@ -22,7 +22,7 @@ export function useAuthPlaceholder(options?: UseAuthOptions) {
 
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => {
-      utils.auth.me.setData(undefined, null);
+      utils.auth.me.setData(undefined, undefined);
     },
   });
 
@@ -33,7 +33,7 @@ export function useAuthPlaceholder(options?: UseAuthOptions) {
       // Silently handle logout errors
       console.error("Logout error:", error);
     } finally {
-      utils.auth.me.setData(undefined, null);
+      utils.auth.me.setData(undefined, undefined);
       await utils.auth.me.invalidate();
     }
   }, [logoutMutation, utils]);
