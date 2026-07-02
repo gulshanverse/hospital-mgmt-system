@@ -204,11 +204,11 @@ async function main() {
   // ==========================================
   console.log("[Seed] Seeding patients...");
   const patientData = [
-    { patientCode: "PAT-001", firstName: "John", lastName: "Doe", gender: "male" as const, dateOfBirth: "1985-05-15", phone: "9876540001", email: "john.doe@example.com", address: "123 Main St", city: "New York", state: "NY", zipCode: "10001", bloodGroup: "A+" as const, emergencyContactName: "Jane Doe", emergencyContactPhone: "9876540002", insuranceProvider: "BlueCross", insuranceNumber: "BC123456", status: "admitted" as const },
-    { patientCode: "PAT-002", firstName: "Sarah", lastName: "Connor", gender: "female" as const, dateOfBirth: "1975-11-20", phone: "9876540003", email: "sarah.c@example.com", address: "456 Terminator Rd", city: "Los Angeles", state: "CA", zipCode: "90001", bloodGroup: "O-" as const, emergencyContactName: "John Connor", emergencyContactPhone: "9876540004", insuranceProvider: "Aetna", insuranceNumber: "AE789012", status: "active" as const },
-    { patientCode: "PAT-003", firstName: "James", lastName: "Howlett", gender: "male" as const, dateOfBirth: "1900-01-01", phone: "9876540005", email: "logan@xmail.com", address: "Weapon X Facility", city: "Alberta", state: "AB", zipCode: "T2P", bloodGroup: "AB+" as const, emergencyContactName: "Professor X", emergencyContactPhone: "9876540006", status: "active" as const },
-    { patientCode: "PAT-004", firstName: "Bruce", lastName: "Wayne", gender: "male" as const, dateOfBirth: "1980-02-19", phone: "9876540007", email: "bruce@waynecorp.com", address: "Wayne Manor", city: "Gotham", state: "NJ", zipCode: "07001", bloodGroup: "O+" as const, emergencyContactName: "Alfred Pennyworth", emergencyContactPhone: "9876540008", status: "active" as const },
-    { patientCode: "PAT-005", firstName: "Mary", lastName: "Jane", gender: "female" as const, dateOfBirth: "1992-08-25", phone: "9876540009", email: "mj@example.com", address: "20 Ingram St", city: "Queens", state: "NY", zipCode: "11375", bloodGroup: "B-" as const, emergencyContactName: "Peter Parker", emergencyContactPhone: "9876540010", status: "active" as const },
+    { patientCode: "PAT-001", firstName: "John", lastName: "Doe", gender: "male" as const, dateOfBirth: new Date("1985-05-15"), phone: "9876540001", email: "john.doe@example.com", address: "123 Main St", city: "New York", state: "NY", zipCode: "10001", bloodGroup: "A+" as const, emergencyContactName: "Jane Doe", emergencyContactPhone: "9876540002", insuranceProvider: "BlueCross", insuranceNumber: "BC123456", status: "admitted" as const },
+    { patientCode: "PAT-002", firstName: "Sarah", lastName: "Connor", gender: "female" as const, dateOfBirth: new Date("1975-11-20"), phone: "9876540003", email: "sarah.c@example.com", address: "456 Terminator Rd", city: "Los Angeles", state: "CA", zipCode: "90001", bloodGroup: "O-" as const, emergencyContactName: "John Connor", emergencyContactPhone: "9876540004", insuranceProvider: "Aetna", insuranceNumber: "AE789012", status: "active" as const },
+    { patientCode: "PAT-003", firstName: "James", lastName: "Howlett", gender: "male" as const, dateOfBirth: new Date("1900-01-01"), phone: "9876540005", email: "logan@xmail.com", address: "Weapon X Facility", city: "Alberta", state: "AB", zipCode: "T2P", bloodGroup: "AB+" as const, emergencyContactName: "Professor X", emergencyContactPhone: "9876540006", status: "active" as const },
+    { patientCode: "PAT-004", firstName: "Bruce", lastName: "Wayne", gender: "male" as const, dateOfBirth: new Date("1980-02-19"), phone: "9876540007", email: "bruce@waynecorp.com", address: "Wayne Manor", city: "Gotham", state: "NJ", zipCode: "07001", bloodGroup: "O+" as const, emergencyContactName: "Alfred Pennyworth", emergencyContactPhone: "9876540008", status: "active" as const },
+    { patientCode: "PAT-005", firstName: "Mary", lastName: "Jane", gender: "female" as const, dateOfBirth: new Date("1992-08-25"), phone: "9876540009", email: "mj@example.com", address: "20 Ingram St", city: "Queens", state: "NY", zipCode: "11375", bloodGroup: "B-" as const, emergencyContactName: "Peter Parker", emergencyContactPhone: "9876540010", status: "active" as const },
   ];
 
   const patientIds: number[] = [];
@@ -240,9 +240,9 @@ async function main() {
   // ==========================================
   console.log("[Seed] Seeding appointments...");
   const appointmentDates = [
-    { patientId: patient2Id, doctorId: doctor1Id, departmentId: cardiologyId, appointmentDate: "2026-06-25", appointmentTime: "10:00", reason: "Routine cardiology checkup.", status: "scheduled" as const, createdBy: receptionistUserId },
-    { patientId: patient3Id, doctorId: doctor2Id, departmentId: pediatricsId, appointmentDate: "2026-06-26", appointmentTime: "11:30", reason: "Follow-up on respiratory issue.", status: "scheduled" as const, createdBy: receptionistUserId },
-    { patientId: patient4Id, doctorId: doctor1Id, departmentId: cardiologyId, appointmentDate: "2026-06-23", appointmentTime: "15:00", reason: "Cardiovascular endurance evaluation.", status: "completed" as const, createdBy: receptionistUserId },
+    { patientId: patient2Id, doctorId: doctor1Id, departmentId: cardiologyId, appointmentDate: new Date("2026-06-25"), appointmentTime: "10:00", reason: "Routine cardiology checkup.", status: "scheduled" as const, createdBy: receptionistUserId },
+    { patientId: patient3Id, doctorId: doctor2Id, departmentId: pediatricsId, appointmentDate: new Date("2026-06-26"), appointmentTime: "11:30", reason: "Follow-up on respiratory issue.", status: "scheduled" as const, createdBy: receptionistUserId },
+    { patientId: patient4Id, doctorId: doctor1Id, departmentId: cardiologyId, appointmentDate: new Date("2026-06-23"), appointmentTime: "15:00", reason: "Cardiovascular endurance evaluation.", status: "completed" as const, createdBy: receptionistUserId },
   ];
 
   const appointmentIds: number[] = [];
@@ -328,11 +328,11 @@ async function main() {
   // ==========================================
   console.log("[Seed] Seeding pharmacy inventory...");
   const drugs = [
-    { drugCode: "DRG-001", drugName: "Paracetamol", category: "Analgesic", manufacturer: "GSK", batchNumber: "BATCH-PAR-01", quantity: 500, unitPrice: "0.15", reorderLevel: 50, expiryDate: "2028-12-31", storageLocation: "Shelf A-1", status: "available" as const },
-    { drugCode: "DRG-002", drugName: "Amoxicillin 500mg", category: "Antibiotic", manufacturer: "Pfizer", batchNumber: "BATCH-AMX-02", quantity: 200, unitPrice: "0.85", reorderLevel: 30, expiryDate: "2027-10-15", storageLocation: "Shelf B-2", status: "available" as const },
-    { drugCode: "DRG-003", drugName: "Metformin 1000mg", category: "Antidiabetic", manufacturer: "Merck", batchNumber: "BATCH-MET-03", quantity: 25, unitPrice: "0.45", reorderLevel: 40, expiryDate: "2027-04-30", storageLocation: "Shelf C-1", status: "low_stock" as const },
-    { drugCode: "DRG-004", drugName: "Atorvastatin 20mg", category: "Antihyperlipidemic", manufacturer: "Pfizer", batchNumber: "BATCH-ATR-04", quantity: 15, unitPrice: "1.20", reorderLevel: 50, expiryDate: "2026-09-30", storageLocation: "Shelf C-3", status: "low_stock" as const },
-    { drugCode: "DRG-005", drugName: "Ibuprofen 400mg", category: "Analgesic", manufacturer: "Abbott", batchNumber: "BATCH-IBU-05", quantity: 450, unitPrice: "0.20", reorderLevel: 50, expiryDate: "2028-06-30", storageLocation: "Shelf A-3", status: "available" as const },
+    { drugCode: "DRG-001", drugName: "Paracetamol", category: "Analgesic", manufacturer: "GSK", batchNumber: "BATCH-PAR-01", quantity: 500, unitPrice: "0.15", reorderLevel: 50, expiryDate: new Date("2028-12-31"), storageLocation: "Shelf A-1", status: "available" as const },
+    { drugCode: "DRG-002", drugName: "Amoxicillin 500mg", category: "Antibiotic", manufacturer: "Pfizer", batchNumber: "BATCH-AMX-02", quantity: 200, unitPrice: "0.85", reorderLevel: 30, expiryDate: new Date("2027-10-15"), storageLocation: "Shelf B-2", status: "available" as const },
+    { drugCode: "DRG-003", drugName: "Metformin 1000mg", category: "Antidiabetic", manufacturer: "Merck", batchNumber: "BATCH-MET-03", quantity: 25, unitPrice: "0.45", reorderLevel: 40, expiryDate: new Date("2027-04-30"), storageLocation: "Shelf C-1", status: "low_stock" as const },
+    { drugCode: "DRG-004", drugName: "Atorvastatin 20mg", category: "Antihyperlipidemic", manufacturer: "Pfizer", batchNumber: "BATCH-ATR-04", quantity: 15, unitPrice: "1.20", reorderLevel: 50, expiryDate: new Date("2026-09-30"), storageLocation: "Shelf C-3", status: "low_stock" as const },
+    { drugCode: "DRG-005", drugName: "Ibuprofen 400mg", category: "Analgesic", manufacturer: "Abbott", batchNumber: "BATCH-IBU-05", quantity: 450, unitPrice: "0.20", reorderLevel: 50, expiryDate: new Date("2028-06-30"), storageLocation: "Shelf A-3", status: "available" as const },
   ];
 
   for (const d of drugs) {
@@ -349,7 +349,7 @@ async function main() {
     patientId: patient4Id,
     appointmentId: appCompletedId,
     invoiceDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    dueDate: "2026-07-07",
+    dueDate: new Date("2026-07-07"),
     totalAmount: "250.00",
     paidAmount: "250.00",
     status: "paid" as const,
@@ -381,7 +381,7 @@ async function main() {
     invoiceNumber: "INV-2026-0002",
     patientId: patient2Id,
     invoiceDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    dueDate: "2026-06-30",
+    dueDate: new Date("2026-06-30"),
     totalAmount: "120.00",
     paidAmount: "0.00",
     status: "pending" as const,
