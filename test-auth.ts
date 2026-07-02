@@ -1,14 +1,13 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import type { AppRouter } from './server/routers';
 import superjson from 'superjson';
-import fetch from 'node-fetch';
 
 const client = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
       url: 'https://jeevanos.up.railway.app/api/trpc',
       transformer: superjson,
-      fetch: fetch as any,
+      fetch: globalThis.fetch as any,
     }),
   ],
 });
@@ -48,7 +47,7 @@ async function runTests() {
         httpBatchLink({
           url: 'https://jeevanos.up.railway.app/api/trpc',
           transformer: superjson,
-          fetch: fetch as any,
+          fetch: globalThis.fetch as any,
           headers: {
             Authorization: `Bearer ${tokens.accessToken}`
           }
