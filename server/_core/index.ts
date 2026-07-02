@@ -53,8 +53,27 @@ async function startServer() {
   });
 
   // Dedicated health check endpoint
-  app.get("/health", (_req, res) => {
-    res.status(200).json({ status: "ok", timestamp: Date.now() });
+  app.get("/health", async (_req, res) => {
+    let dbStatus = "unknown";
+    try {
+      const { getDb } = await import("../db");
+      const db = await getDb();
+      if (db) {
+        // Try a simple query
+        await db.execute("SELECT 1");
+        dbStatus = "connected";
+      } else {
+        dbStatus = "no_url";
+      }
+    } catch (err: any) {
+      dbStatus = "error: " + err.message;
+    }
+    
+    res.status(dbStatus === "connected" ? 200 : 500).json({ 
+      status: dbStatus === "connected" ? "ok" : "error", 
+      database: dbStatus,
+      timestamp: Date.now() 
+    });
   });
 
   // Configure body parser with larger size limit for file uploads

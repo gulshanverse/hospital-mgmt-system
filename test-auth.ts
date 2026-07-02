@@ -22,12 +22,12 @@ async function runTests() {
 
   try {
     // 1. Register
-    console.log('1. Testing Registration (Receptionist)...');
+    console.log('1. Testing Registration (Patient)...');
     const regResult = await client.auth.register.mutate({
       email,
       password,
       fullName,
-      role: 'receptionist'
+      role: 'patient'
     });
     console.log('✅ Registration successful:', regResult.user.email);
 
