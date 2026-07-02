@@ -11,6 +11,8 @@ import {
   updateUserProfile,
 } from "../_core/authDb";
 import { TRPCError } from "@trpc/server";
+import { COOKIE_NAME } from "../../shared/const";
+import { getSessionCookieOptions } from "../_core/cookies";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -124,7 +126,7 @@ export const authRouter = router({
       }
 
       // Verify password
-      const passwordHash = (user as any).passwordHash;
+      const passwordHash = user.passwordHash;
       if (!passwordHash || !verifyPassword(input.password, passwordHash)) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -312,7 +314,9 @@ export const authRouter = router({
    */
   logout: protectedProcedure.mutation(async ({ ctx }) => {
     // Token revocation would be implemented here
-    // For now, just return success
+    // For backwards compatibility and cookie cleanup, clear the session cookie
+    const cookieOptions = getSessionCookieOptions(ctx.req as any);
+    ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
     return {
       success: true,
       message: "Logged out successfully",

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { getDb } from "../server/db";
+import { hashPassword } from "../server/_core/password";
 import {
   users,
   departments,
@@ -84,16 +85,16 @@ async function main() {
   // 3. Seed Users (RBAC Roles)
   // ==========================================
   console.log("[Seed] Seeding users...");
-  const ownerOpenId = process.env.OWNER_OPEN_ID || "owner-openid";
+  const defaultPasswordHash = hashPassword("Password123!");
   
   const userData = [
-    { openId: ownerOpenId, name: "Gulshan Kumar (Admin)", email: "admin@hms.com", phone: "9876543210", role: "admin" as const, isActive: true },
-    { openId: "doctor-doctor1", name: "Dr. Alice Smith", email: "alice.smith@hms.com", phone: "9876543211", role: "doctor" as const, isActive: true },
-    { openId: "doctor-doctor2", name: "Dr. Bob Johnson", email: "bob.johnson@hms.com", phone: "9876543212", role: "doctor" as const, isActive: true },
-    { openId: "nurse-nurse1", name: "Nurse Carol White", email: "carol.white@hms.com", phone: "9876543213", role: "nurse" as const, isActive: true },
-    { openId: "pharmacist-pharmacist1", name: "Pharmacist David Green", email: "david.green@hms.com", phone: "9876543214", role: "pharmacist" as const, isActive: true },
-    { openId: "tech-tech1", name: "Technician Edward Nygma", email: "edward.n@hms.com", phone: "9876543215", role: "lab_technician" as const, isActive: true },
-    { openId: "receptionist-recep1", name: "Receptionist Fiona Gallagher", email: "fiona.g@hms.com", phone: "9876543216", role: "receptionist" as const, isActive: true },
+    { name: "Gulshan Kumar (Admin)", email: "admin@hms.com", phone: "9876543210", role: "admin" as const, isActive: true, passwordHash: defaultPasswordHash, isVerified: true },
+    { name: "Dr. Alice Smith", email: "alice.smith@hms.com", phone: "9876543211", role: "doctor" as const, isActive: true, passwordHash: defaultPasswordHash, isVerified: true },
+    { name: "Dr. Bob Johnson", email: "bob.johnson@hms.com", phone: "9876543212", role: "doctor" as const, isActive: true, passwordHash: defaultPasswordHash, isVerified: true },
+    { name: "Nurse Carol White", email: "carol.white@hms.com", phone: "9876543213", role: "nurse" as const, isActive: true, passwordHash: defaultPasswordHash, isVerified: true },
+    { name: "Pharmacist David Green", email: "david.green@hms.com", phone: "9876543214", role: "pharmacist" as const, isActive: true, passwordHash: defaultPasswordHash, isVerified: true },
+    { name: "Technician Edward Nygma", email: "edward.n@hms.com", phone: "9876543215", role: "lab_technician" as const, isActive: true, passwordHash: defaultPasswordHash, isVerified: true },
+    { name: "Receptionist Fiona Gallagher", email: "fiona.g@hms.com", phone: "9876543216", role: "receptionist" as const, isActive: true, passwordHash: defaultPasswordHash, isVerified: true },
   ];
 
   const userIds: number[] = [];

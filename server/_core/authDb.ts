@@ -86,8 +86,7 @@ export async function createUser(data: {
 
   try {
     const result = await db.insert(users).values({
-      fullName: data.fullName,
-      name: data.fullName, // Keep for compatibility if needed
+      name: data.fullName,
       email: data.email,
       passwordHash: data.passwordHash,
       phone: data.phone || null,
@@ -96,7 +95,7 @@ export async function createUser(data: {
       createdAt: new Date(),
       updatedAt: new Date(),
       lastSignedIn: new Date(),
-    } as any);
+    });
     // Retrieve the created user
     const newUser = await findUserByEmail(data.email);
     if (!newUser) {

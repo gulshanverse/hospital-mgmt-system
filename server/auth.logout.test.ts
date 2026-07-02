@@ -15,11 +15,13 @@ function createAuthContext(): { ctx: TrpcContext; clearedCookies: CookieCall[] }
 
   const user: AuthenticatedUser = {
     id: 1,
-    openId: "sample-user",
-    email: "sample@example.com",
     name: "Sample User",
-    loginMethod: "manus",
-    role: "user",
+    email: "sample@example.com",
+    passwordHash: "some-hash",
+    phone: null,
+    role: "admin",
+    isActive: true,
+    isVerified: true,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
@@ -48,7 +50,7 @@ describe("auth.logout", () => {
 
     const result = await caller.auth.logout();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, message: "Logged out successfully" });
     expect(clearedCookies).toHaveLength(1);
     expect(clearedCookies[0]?.name).toBe(COOKIE_NAME);
     expect(clearedCookies[0]?.options).toMatchObject({

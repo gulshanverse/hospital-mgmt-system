@@ -210,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        loading,
+        loading: loading || (!!accessToken && meQuery.isLoading && !user),
         error,
         isAuthenticated: !!user && !!accessToken,
         login,
