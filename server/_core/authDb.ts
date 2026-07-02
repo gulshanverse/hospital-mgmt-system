@@ -64,10 +64,12 @@ export async function createUser(data: {
     throw new Error("User with this email already exists");
   }
 
-  // Insert new user with compatible fields
+  // Insert new user with new schema fields
   const result = await db.insert(users).values({
-    name: data.fullName, // Use 'name' field for compatibility
+    fullName: data.fullName,
+    name: data.fullName, // Keep for compatibility if needed
     email: data.email,
+    passwordHash: data.passwordHash,
     phone: data.phone || null,
     role: (data.role as any) || "patient",
     isActive: true,
@@ -101,7 +103,7 @@ export async function updateLastLogin(userId: number): Promise<void> {
 }
 
 /**
- * Update user password (stores in custom field)
+ * Update user password
  */
 export async function updateUserPassword(userId: number, passwordHash: string): Promise<void> {
   const db = await getDb();
@@ -111,10 +113,11 @@ export async function updateUserPassword(userId: number, passwordHash: string): 
 
   await db
     .update(users)
-    .set({ updatedAt: new Date() })
+    .set({ 
+      passwordHash,
+      updatedAt: new Date() 
+    })
     .where(eq(users.id, userId));
-  
-  // Note: passwordHash would be stored in a separate column once schema is migrated
 }
 
 /**

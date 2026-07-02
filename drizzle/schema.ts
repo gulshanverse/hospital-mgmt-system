@@ -28,10 +28,13 @@ export const users = mysqlTable(
   "users",
   {
     id: int("id").autoincrement().primaryKey(),
-    openId: varchar("openId", { length: 64 }).notNull().unique(),
+    fullName: varchar("fullName", { length: 255 }).notNull().default("Unknown"),
+    openId: varchar("openId", { length: 64 }).unique(),
     name: text("name"),
-    email: varchar("email", { length: 320 }).unique(),
+    email: varchar("email", { length: 320 }).notNull().unique(),
+    passwordHash: text("passwordHash"),
     phone: varchar("phone", { length: 20 }),
+    avatar: text("avatar"),
     loginMethod: varchar("loginMethod", { length: 64 }),
     role: mysqlEnum("role", [
       "admin",
@@ -45,14 +48,17 @@ export const users = mysqlTable(
       .default("patient")
       .notNull(),
     isActive: boolean("isActive").default(true).notNull(),
+    isVerified: boolean("isVerified").default(false).notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
     lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+    lastLogin: timestamp("lastLogin"),
   },
   (table) => [
     index("idx_email").on(table.email),
     index("idx_role").on(table.role),
     index("idx_isActive").on(table.isActive),
+    index("idx_email_password").on(table.email),
   ]
 );
 
