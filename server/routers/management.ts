@@ -4,7 +4,7 @@ import { router, protectedProcedure, adminProcedure, receptionistProcedure, doct
 import { requirePermission } from "../\_core/rbac";
 import * as db from "../db";
 import { eq } from "drizzle-orm";
-import { doctors, departments, patients } from "../../drizzle/schema";
+import { doctors, departments, patients, users } from "../../drizzle/schema";
 
 // ============================================================================
 // PATIENT MANAGEMENT
@@ -146,7 +146,17 @@ export const doctorRouter = router({
   list: protectedProcedure.query(async () => {
     const dbInstance = await db.getDb();
     if (!dbInstance) return [];
-    return dbInstance.select().from(doctors);
+    return dbInstance
+      .select({
+        id: doctors.id,
+        userId: doctors.userId,
+        departmentId: doctors.departmentId,
+        specialty: doctors.specialty,
+        isAvailable: doctors.isAvailable,
+        name: users.name,
+      })
+      .from(doctors)
+      .innerJoin(users, eq(doctors.userId, users.id));
   }),
 
   update: adminProcedure
