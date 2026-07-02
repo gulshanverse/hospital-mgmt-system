@@ -95,7 +95,8 @@ export const authRouter = router({
       console.error("Registration error:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Registration failed",
+        message: `Registration failed: ${(error as Error).message}`,
+        cause: error,
       });
     }
   }),
