@@ -16,13 +16,23 @@ export async function findUserByEmail(email: string): Promise<User | undefined> 
     throw new Error("Database not available");
   }
 
-  const result = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
+  try {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error: any) {
+    console.error("Database error in findUserByEmail:", {
+      message: error.message,
+      code: error.code, // MySQL error code
+      sqlState: error.sqlState, // SQLSTATE
+      sql: error.sql, // The failing SQL query
+      stack: error.stack,
+    });
+    throw new Error("Failed to query user by email");
+  }
 }
 
 /**
@@ -34,13 +44,23 @@ export async function findUserById(id: number): Promise<User | undefined> {
     throw new Error("Database not available");
   }
 
-  const result = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, id))
-    .limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
+  try {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error: any) {
+    console.error("Database error in findUserById:", {
+      message: error.message,
+      code: error.code, // MySQL error code
+      sqlState: error.sqlState, // SQLSTATE
+      sql: error.sql, // The failing SQL query
+      stack: error.stack,
+    });
+    throw new Error("Failed to query user by ID");
+  }
 }
 
 /**
@@ -64,27 +84,35 @@ export async function createUser(data: {
     throw new Error("User with this email already exists");
   }
 
-  // Insert new user with new schema fields
-  const result = await db.insert(users).values({
-    fullName: data.fullName,
-    name: data.fullName, // Keep for compatibility if needed
-    email: data.email,
-    passwordHash: data.passwordHash,
-    phone: data.phone || null,
-    role: (data.role as any) || "patient",
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastSignedIn: new Date(),
-  } as any);
-
-  // Retrieve the created user
-  const newUser = await findUserByEmail(data.email);
-  if (!newUser) {
+  try {
+    const result = await db.insert(users).values({
+      fullName: data.fullName,
+      name: data.fullName, // Keep for compatibility if needed
+      email: data.email,
+      passwordHash: data.passwordHash,
+      phone: data.phone || null,
+      role: (data.role as any) || "patient",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSignedIn: new Date(),
+    } as any);
+    // Retrieve the created user
+    const newUser = await findUserByEmail(data.email);
+    if (!newUser) {
+      throw new Error("Failed to create user");
+    }
+    return newUser;
+  } catch (error: any) {
+    console.error("Database error in createUser:", {
+      message: error.message,
+      code: error.code, // MySQL error code
+      sqlState: error.sqlState, // SQLSTATE
+      sql: error.sql, // The failing SQL query
+      stack: error.stack,
+    });
     throw new Error("Failed to create user");
   }
-
-  return newUser;
 }
 
 /**
