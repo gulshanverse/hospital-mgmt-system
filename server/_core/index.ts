@@ -8,7 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic } from "./serveStatic";
-import mysql from "mysql2/promise";
+
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -77,76 +77,7 @@ async function startServer() {
     });
   });
 
-  // Temporary DB test endpoint
-  app.get("/db-test", async (_req, res) => {
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-      return res.status(500).json({ error: "DATABASE_URL is not set." });
-    }
-
-    let connection: mysql.Connection | undefined;
-    try {
-      connection = await mysql.createConnection(databaseUrl);
-      const results: any = {};
-
-      // Test 1: SELECT 1
-      try {
-        const [rows] = await connection.execute("SELECT 1;");
-        results.select1 = { status: "success", rows };
-      } catch (error: any) {
-        results.select1 = { 
-          status: "failed", 
-          error: {
-            message: error.message,
-            errno: error.errno,
-            code: error.code,
-            sqlState: error.sqlState,
-            sqlMessage: error.sqlMessage,
-            sql: error.sql,
-            stack: error.stack,
-          }
-        };
-      }
-
-      // Test 2: SELECT * FROM users LIMIT 1
-      try {
-        const [rows] = await connection.execute("SELECT * FROM users LIMIT 1;");
-        results.selectUsers = { status: "success", rows };
-      } catch (error: any) {
-        results.selectUsers = { 
-          status: "failed", 
-          error: {
-            message: error.message,
-            errno: error.errno,
-            code: error.code,
-            sqlState: error.sqlState,
-            sqlMessage: error.sqlMessage,
-            sql: error.sql,
-            stack: error.stack,
-          }
-        };
-      }
-
-      res.json(results);
-    } catch (error: any) {
-      res.status(500).json({
-        error: "Database connection or query failed",
-        details: {
-          message: error.message,
-          errno: error.errno,
-          code: error.code,
-          sqlState: error.sqlState,
-          sqlMessage: error.sqlMessage,
-          sql: error.sql,
-          stack: error.stack,
-        },
-      });
-    } finally {
-      if (connection) {
-        await connection.end();
-      }
-    }
-  });
+  
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
