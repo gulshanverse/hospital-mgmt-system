@@ -12,6 +12,19 @@ export default function EHRViewer() {
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { data: searchResults } = trpc.patient.search.useQuery(
+    { query: searchQuery },
+    { enabled: searchQuery.trim().length > 0 }
+  );
+
+  const { data: allPatients } = trpc.patient.list.useQuery(undefined, {
+    enabled: searchQuery.trim().length === 0,
+  });
+
+  const displayPatients = searchQuery.trim().length > 0 ? searchResults : allPatients;
+
+  const selectedPatient = displayPatients?.find((p: any) => p.id === selectedPatientId) || (allPatients?.find((p: any) => p.id === selectedPatientId));
+
   const { data: records } = trpc.ehr.getByPatient.useQuery(
     { patientId: selectedPatientId || 0 },
     { enabled: selectedPatientId !== null }
@@ -68,12 +81,28 @@ export default function EHRViewer() {
                   className="pl-10"
                 />
               </div>
-              <div className="text-sm text-gray-600">
-                {selectedPatientId ? (
-                  <p>Patient ID: {selectedPatientId}</p>
-                ) : (
-                  <p>Select a patient to view records</p>
-                )}
+              <div className="border-t pt-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Patients List</p>
+                <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+                  {displayPatients && displayPatients.length > 0 ? (
+                    displayPatients.map((patient: any) => (
+                      <button
+                        key={patient.id}
+                        onClick={() => setSelectedPatientId(patient.id)}
+                        className={`w-full text-left p-2.5 rounded-lg border text-sm transition-all flex flex-col gap-1 focus:outline-none ${
+                          selectedPatientId === patient.id
+                            ? "border-blue-500 bg-blue-50/50 text-blue-900 font-medium"
+                            : "hover:bg-gray-50 border-gray-100"
+                        }`}
+                      >
+                        <span className="truncate">{patient.firstName} {patient.lastName}</span>
+                        <span className="text-xs font-mono text-gray-500">{patient.patientCode}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-500 text-center py-4">No patients found</p>
+                  )}
+                </div>
               </div>
             </div>
           </Card>
@@ -84,7 +113,9 @@ export default function EHRViewer() {
               <>
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold">Medical Records Timeline</h2>
+                    <h2 className="text-2xl font-bold">
+                      Medical Records Timeline — {selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : `Patient #${selectedPatientId}`}
+                    </h2>
                     <Button className="gap-2">
                       <Plus className="w-4 h-4" />
                       Add Record

@@ -9,13 +9,94 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Microscope, Plus, Upload, Download, Eye } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 export default function LabManagement() {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
-  const { data: labOrders } = trpc.lab.getOrders.useQuery({});
-  const { data: labReports } = trpc.lab.getReports.useQuery({ patientId: 0 });
+  // Create Order State
+  const [patientId, setPatientId] = useState("");
+  const [appointmentId, setAppointmentId] = useState("");
+  const [testType, setTestType] = useState("blood_test");
+  const [notes, setNotes] = useState("");
+
+  // Upload Report State
+  const [labOrderId, setLabOrderId] = useState("");
+  const [reportPatientId, setReportPatientId] = useState("");
+  const [results, setResults] = useState("");
+  const [normalRange, setNormalRange] = useState("");
+  const [reportPdfUrl, setReportPdfUrl] = useState("");
+
+  const { data: labOrders, refetch: refetchOrders } = trpc.lab.getOrders.useQuery({});
+  const { data: labReports, refetch: refetchReports } = trpc.lab.getReports.useQuery({});
+
+  const createOrderMutation = trpc.lab.createOrder.useMutation({
+    onSuccess: () => {
+      toast.success("Lab order created successfully");
+      setIsOrderOpen(false);
+      setPatientId("");
+      setAppointmentId("");
+      setTestType("blood_test");
+      setNotes("");
+      refetchOrders();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to create lab order");
+    },
+  });
+
+  const handleCreateOrder = () => {
+    const patId = parseInt(patientId, 10);
+    const aptId = appointmentId ? parseInt(appointmentId, 10) : undefined;
+
+    if (isNaN(patId) || !testType) {
+      toast.error("Please enter a valid Patient ID and select Test Type");
+      return;
+    }
+
+    createOrderMutation.mutate({
+      patientId: patId,
+      appointmentId: isNaN(aptId!) ? undefined : aptId,
+      testType: testType as any,
+      notes: notes || undefined,
+    });
+  };
+
+  const uploadReportMutation = trpc.lab.uploadReport.useMutation({
+    onSuccess: () => {
+      toast.success("Lab report uploaded successfully");
+      setIsReportOpen(false);
+      setLabOrderId("");
+      setReportPatientId("");
+      setResults("");
+      setNormalRange("");
+      setReportPdfUrl("");
+      refetchOrders();
+      refetchReports();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to upload report");
+    },
+  });
+
+  const handleUploadReport = () => {
+    const orderId = parseInt(labOrderId, 10);
+    const patId = parseInt(reportPatientId, 10);
+
+    if (isNaN(orderId) || isNaN(patId) || !results) {
+      toast.error("Please enter valid Lab Order ID, Patient ID, and Test Results");
+      return;
+    }
+
+    uploadReportMutation.mutate({
+      labOrderId: orderId,
+      patientId: patId,
+      results,
+      normalRange: normalRange || undefined,
+      reportPdfUrl: reportPdfUrl || undefined,
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -188,10 +269,13 @@ export default function LabManagement() {
             <DialogTitle>Create Lab Order</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input placeholder="Patient ID" />
-            <Input placeholder="Appointment ID (optional)" />
-            <select className="w-full border rounded px-3 py-2">
-              <option>Select Test Type</option>
+            <Input placeholder="Patient ID (Number)" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
+            <Input placeholder="Appointment ID (optional Number)" value={appointmentId} onChange={(e) => setAppointmentId(e.target.value)} />
+            <select
+              value={testType}
+              onChange={(e: any) => setTestType(e.target.value)}
+              className="w-full border rounded px-3 py-2 text-sm bg-background"
+            >
               <option value="blood_test">Blood Test</option>
               <option value="urine_test">Urine Test</option>
               <option value="mri">MRI</option>
@@ -199,8 +283,10 @@ export default function LabManagement() {
               <option value="xray">X-Ray</option>
               <option value="ultrasound">Ultrasound</option>
             </select>
-            <Input placeholder="Notes (optional)" />
-            <Button className="w-full">Create Order</Button>
+            <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <Button onClick={handleCreateOrder} disabled={createOrderMutation.isPending} className="w-full">
+              {createOrderMutation.isPending ? "Creating..." : "Create Order"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -212,12 +298,14 @@ export default function LabManagement() {
             <DialogTitle>Upload Lab Report</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input placeholder="Lab Order ID" />
-            <Input placeholder="Patient ID" />
-            <Input placeholder="Test Results" />
-            <Input placeholder="Normal Range" />
-            <Input type="file" placeholder="Report PDF" />
-            <Button className="w-full">Upload Report</Button>
+            <Input placeholder="Lab Order ID (Number)" value={labOrderId} onChange={(e) => setLabOrderId(e.target.value)} />
+            <Input placeholder="Patient ID (Number)" value={reportPatientId} onChange={(e) => setReportPatientId(e.target.value)} />
+            <Input placeholder="Test Results" value={results} onChange={(e) => setResults(e.target.value)} />
+            <Input placeholder="Normal Range" value={normalRange} onChange={(e) => setNormalRange(e.target.value)} />
+            <Input placeholder="Report PDF URL (optional)" value={reportPdfUrl} onChange={(e) => setReportPdfUrl(e.target.value)} />
+            <Button onClick={handleUploadReport} disabled={uploadReportMutation.isPending} className="w-full">
+              {uploadReportMutation.isPending ? "Uploading..." : "Upload Report"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

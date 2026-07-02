@@ -8,11 +8,68 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Plus, Edit2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 export default function PharmacyInventory() {
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const { data: inventory } = trpc.pharmacy.getInventory.useQuery();
-  const { data: lowStock } = trpc.pharmacy.getLowStock.useQuery();
+
+  // Form State
+  const [drugName, setDrugName] = useState("");
+  const [category, setCategory] = useState("");
+  const [manufacturer, setManufacturer] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
+  const [reorderLevel, setReorderLevel] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [storageLocation, setStorageLocation] = useState("");
+
+  const { data: inventory, refetch: refetchInventory } = trpc.pharmacy.getInventory.useQuery();
+  const { data: lowStock, refetch: refetchLowStock } = trpc.pharmacy.getLowStock.useQuery();
+
+  const addMedicineMutation = trpc.pharmacy.addMedicine.useMutation({
+    onSuccess: () => {
+      toast.success("Medicine added successfully");
+      setIsAddOpen(false);
+      setDrugName("");
+      setCategory("");
+      setManufacturer("");
+      setBatchNumber("");
+      setQuantity("");
+      setUnitPrice("");
+      setReorderLevel("");
+      setExpiryDate("");
+      setStorageLocation("");
+      refetchInventory();
+      refetchLowStock();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to add medicine");
+    },
+  });
+
+  const handleAddMedicine = () => {
+    const qty = parseInt(quantity, 10);
+    const price = parseFloat(unitPrice);
+    const reorder = parseInt(reorderLevel, 10);
+
+    if (!drugName || !category || isNaN(qty) || isNaN(price) || isNaN(reorder)) {
+      toast.error("Please enter valid Drug Name, Category, Quantity, Unit Price, and Reorder Level");
+      return;
+    }
+
+    addMedicineMutation.mutate({
+      drugName,
+      category,
+      manufacturer: manufacturer || undefined,
+      batchNumber: batchNumber || undefined,
+      quantity: qty,
+      unitPrice: price,
+      reorderLevel: reorder,
+      expiryDate: expiryDate || undefined,
+      storageLocation: storageLocation || undefined,
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -119,16 +176,21 @@ export default function PharmacyInventory() {
             <DialogTitle>Add New Medicine</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input placeholder="Drug Name" />
-            <Input placeholder="Category" />
-            <Input placeholder="Manufacturer" />
-            <Input placeholder="Batch Number" />
-            <Input type="number" placeholder="Quantity" />
-            <Input type="number" placeholder="Unit Price" step="0.01" />
-            <Input type="number" placeholder="Reorder Level" />
-            <Input type="date" placeholder="Expiry Date" />
-            <Input placeholder="Storage Location" />
-            <Button className="w-full">Add Medicine</Button>
+            <Input placeholder="Drug Name" value={drugName} onChange={(e) => setDrugName(e.target.value)} />
+            <Input placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} />
+            <Input placeholder="Manufacturer" value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} />
+            <Input placeholder="Batch Number" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} />
+            <Input type="number" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+            <Input type="number" placeholder="Unit Price" step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} />
+            <Input type="number" placeholder="Reorder Level" value={reorderLevel} onChange={(e) => setReorderLevel(e.target.value)} />
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Expiry Date</label>
+              <Input type="date" placeholder="Expiry Date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+            </div>
+            <Input placeholder="Storage Location" value={storageLocation} onChange={(e) => setStorageLocation(e.target.value)} />
+            <Button onClick={handleAddMedicine} disabled={addMedicineMutation.isPending} className="w-full">
+              {addMedicineMutation.isPending ? "Adding..." : "Add Medicine"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

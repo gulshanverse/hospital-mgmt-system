@@ -8,11 +8,70 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { FileText, Plus, Download, Eye } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function Billing() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: pendingInvoices } = trpc.billing.getPending.useQuery();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  // Form State
+  const [patientId, setPatientId] = useState("");
+  const [admissionId, setAdmissionId] = useState("");
+  const [notes, setNotes] = useState("");
+  const [itemType, setItemType] = useState<"consultation" | "procedure" | "medication" | "room_charge" | "lab_charge">("consultation");
+  const [itemDescription, setItemDescription] = useState("");
+  const [itemQty, setItemQty] = useState("1");
+  const [itemPrice, setItemPrice] = useState("");
+
+  const { data: pendingInvoices, refetch } = trpc.billing.getPending.useQuery(undefined, {
+    enabled: isAdmin,
+  });
+
+  const createMutation = trpc.billing.createInvoice.useMutation({
+    onSuccess: () => {
+      toast.success("Invoice created successfully");
+      setIsCreateOpen(false);
+      setPatientId("");
+      setAdmissionId("");
+      setNotes("");
+      setItemDescription("");
+      setItemQty("1");
+      setItemPrice("");
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to create invoice");
+    },
+  });
+
+  const handleCreateInvoice = () => {
+    const patId = parseInt(patientId, 10);
+    const admId = admissionId ? parseInt(admissionId, 10) : undefined;
+    const qty = parseInt(itemQty, 10);
+    const price = parseFloat(itemPrice);
+
+    if (isNaN(patId) || !itemDescription || isNaN(qty) || isNaN(price)) {
+      toast.error("Please enter valid Patient ID, Description, Quantity, and Unit Price");
+      return;
+    }
+
+    createMutation.mutate({
+      patientId: patId,
+      admissionId: admId,
+      items: [
+        {
+          itemType,
+          description: itemDescription,
+          quantity: qty,
+          unitPrice: price,
+        }
+      ],
+      notes: notes || undefined,
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -26,6 +85,17 @@ export default function Billing() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (!isAdmin) {
+    return (
+      <DashboardLayout>
+        <Card className="p-6 bg-red-50 border-red-200">
+          <h1 className="text-xl font-bold text-red-900">Access Denied</h1>
+          <p className="text-sm text-red-700 mt-2">Billing and financial records management require administrator privileges.</p>
+        </Card>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -42,7 +112,9 @@ export default function Billing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-6">
             <p className="text-sm text-gray-600">Total Invoices</p>
-            <p className="text-3xl font-bold mt-2">0</p>
+            <p className="text-3xl font-bold mt-2">
+              {pendingInvoices ? pendingInvoices.length : 0}
+            </p>
           </Card>
           <Card className="p-6">
             <p className="text-sm text-gray-600">Pending Payment</p>
@@ -122,24 +194,33 @@ export default function Billing() {
             <DialogTitle>Create New Invoice</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input placeholder="Patient ID" />
-            <Input placeholder="Admission ID (optional)" />
-            <div className="space-y-2">
-              <p className="font-semibold">Invoice Items</p>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input placeholder="Item Type" className="flex-1" />
-                  <Input placeholder="Description" className="flex-1" />
-                  <Input type="number" placeholder="Qty" className="w-20" />
-                  <Input type="number" placeholder="Price" className="w-24" />
-                </div>
-              </div>
-              <Button variant="outline" className="w-full">
-                + Add Item
-              </Button>
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="Patient ID (Number)" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
+              <Input placeholder="Admission ID (optional Number)" value={admissionId} onChange={(e) => setAdmissionId(e.target.value)} />
             </div>
-            <Input placeholder="Notes (optional)" />
-            <Button className="w-full">Create Invoice</Button>
+            <div className="space-y-2">
+              <p className="font-semibold text-sm">Invoice Item</p>
+              <div className="grid grid-cols-4 gap-2">
+                <select
+                  value={itemType}
+                  onChange={(e: any) => setItemType(e.target.value)}
+                  className="border rounded px-3 py-2 text-sm bg-background col-span-1"
+                >
+                  <option value="consultation">Consultation</option>
+                  <option value="procedure">Procedure</option>
+                  <option value="medication">Medication</option>
+                  <option value="room_charge">Room Charge</option>
+                  <option value="lab_charge">Lab Charge</option>
+                </select>
+                <Input placeholder="Description" value={itemDescription} onChange={(e) => setItemDescription(e.target.value)} className="col-span-1" />
+                <Input type="number" placeholder="Qty" value={itemQty} onChange={(e) => setItemQty(e.target.value)} className="col-span-1" />
+                <Input type="number" placeholder="Unit Price" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} className="col-span-1" />
+              </div>
+            </div>
+            <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <Button onClick={handleCreateInvoice} disabled={createMutation.isPending} className="w-full">
+              {createMutation.isPending ? "Creating..." : "Create Invoice"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

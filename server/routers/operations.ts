@@ -14,6 +14,12 @@ export const bedRouter = router({
     return db.getAvailableBeds();
   }),
 
+  list: protectedProcedure.query(async () => {
+    const dbInstance = await db.getDb();
+    if (!dbInstance) return [];
+    return dbInstance.select().from(beds);
+  }),
+
   getByWard: protectedProcedure
     .input(z.object({ wardId: z.number() }))
     .query(async ({ input }) => {

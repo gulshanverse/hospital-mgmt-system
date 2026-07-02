@@ -9,14 +9,26 @@ import { trpc } from "@/lib/trpc";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: kpis, isLoading: kpisLoading } = trpc.analytics.getDashboardKPIs.useQuery();
-  const { data: weeklyAdmissions } = trpc.analytics.getWeeklyAdmissions.useQuery();
-  const { data: monthlyRevenue } = trpc.analytics.getMonthlyRevenue.useQuery();
-  const { data: appointmentTrends } = trpc.analytics.getAppointmentTrends.useQuery();
-  const { data: bedOccupancy } = trpc.analytics.getBedOccupancy.useQuery();
+  const isAdmin = user?.role === "admin";
+
+  const { data: kpis, isLoading: kpisLoading } = trpc.analytics.getDashboardKPIs.useQuery(undefined, {
+    enabled: isAdmin,
+  });
+  const { data: weeklyAdmissions } = trpc.analytics.getWeeklyAdmissions.useQuery(undefined, {
+    enabled: isAdmin,
+  });
+  const { data: monthlyRevenue } = trpc.analytics.getMonthlyRevenue.useQuery(undefined, {
+    enabled: isAdmin,
+  });
+  const { data: appointmentTrends } = trpc.analytics.getAppointmentTrends.useQuery(undefined, {
+    enabled: isAdmin,
+  });
+  const { data: bedOccupancy } = trpc.analytics.getBedOccupancy.useQuery(undefined, {
+    enabled: isAdmin,
+  });
   const { data: notifications } = trpc.analytics.getNotifications.useQuery();
 
-  if (kpisLoading) {
+  if (isAdmin && kpisLoading) {
     return <DashboardLayout>Loading...</DashboardLayout>;
   }
 
@@ -31,6 +43,41 @@ export default function Dashboard() {
       </div>
     </Card>
   );
+
+  if (!isAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <h1 className="text-2xl font-bold text-blue-900">Welcome to JeevanOS, {user?.fullName || user?.name || "User"}!</h1>
+            <p className="text-blue-700 mt-2">You are logged in as <span className="font-semibold capitalize">{user?.role}</span>. Access the sidebar navigation to view and manage features allowed for your role.</p>
+          </Card>
+
+          {/* Recent Notifications */}
+          {notifications && notifications.length > 0 ? (
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Your Recent Notifications</h3>
+              <div className="space-y-3">
+                {notifications.slice(0, 8).map((notif: any) => (
+                  <div key={notif.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Activity className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{notif.title}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{notif.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-6 text-center text-gray-500">
+              No recent notifications
+            </Card>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -118,10 +165,10 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie data={appointmentTrends || []} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={100} label>
-                    <Cell fill="#3b82f6" />
-                    <Cell fill="#10b981" />
-                    <Cell fill="#f59e0b" />
-                    <Cell fill="#ef4444" />
+                    {(appointmentTrends || []).map((entry: any, index: number) => {
+                      const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
+                      return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
+                    })}
                   </Pie>
                   <Tooltip />
                   <Legend />

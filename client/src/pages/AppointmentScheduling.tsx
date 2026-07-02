@@ -8,14 +8,59 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Clock } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 export default function AppointmentScheduling() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const { data: appointments } = trpc.appointment.getByDate.useQuery({
+  // Form State
+  const [patientId, setPatientId] = useState("");
+  const [doctorId, setDoctorId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [date, setDate] = useState(selectedDate);
+  const [time, setTime] = useState("");
+  const [reason, setReason] = useState("");
+
+  const { data: appointments, refetch } = trpc.appointment.getByDate.useQuery({
     date: selectedDate,
   });
+
+  const createMutation = trpc.appointment.create.useMutation({
+    onSuccess: () => {
+      toast.success("Appointment scheduled successfully");
+      setIsCreateOpen(false);
+      setPatientId("");
+      setDoctorId("");
+      setDepartmentId("");
+      setTime("");
+      setReason("");
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to schedule appointment");
+    },
+  });
+
+  const handleSchedule = () => {
+    const patId = parseInt(patientId, 10);
+    const docId = parseInt(doctorId, 10);
+    const deptId = parseInt(departmentId, 10);
+
+    if (isNaN(patId) || isNaN(docId) || isNaN(deptId) || !date || !time) {
+      toast.error("Please enter valid Patient ID, Doctor ID, Department ID, Date and Time");
+      return;
+    }
+
+    createMutation.mutate({
+      patientId: patId,
+      doctorId: docId,
+      departmentId: deptId,
+      appointmentDate: date,
+      appointmentTime: time,
+      reason: reason || undefined,
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -111,13 +156,15 @@ export default function AppointmentScheduling() {
             <DialogTitle>Schedule New Appointment</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input placeholder="Patient ID" />
-            <Input placeholder="Doctor ID" />
-            <Input placeholder="Department ID" />
-            <Input type="date" placeholder="Date" />
-            <Input type="time" placeholder="Time" />
-            <Input placeholder="Reason for visit" />
-            <Button className="w-full">Schedule Appointment</Button>
+            <Input placeholder="Patient ID (Number)" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
+            <Input placeholder="Doctor ID (Number)" value={doctorId} onChange={(e) => setDoctorId(e.target.value)} />
+            <Input placeholder="Department ID (Number)" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} />
+            <Input type="date" placeholder="Date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input type="time" placeholder="Time" value={time} onChange={(e) => setTime(e.target.value)} />
+            <Input placeholder="Reason for visit" value={reason} onChange={(e) => setReason(e.target.value)} />
+            <Button onClick={handleSchedule} disabled={createMutation.isPending} className="w-full">
+              {createMutation.isPending ? "Scheduling..." : "Schedule Appointment"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

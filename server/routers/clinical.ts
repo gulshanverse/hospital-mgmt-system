@@ -287,15 +287,19 @@ export const labRouter = router({
     }),
 
   getReports: protectedProcedure
-    .input(z.object({ patientId: z.number() }))
+    .input(z.object({ patientId: z.number().optional() }))
     .query(async ({ input }) => {
       const dbInstance = await db.getDb();
       if (!dbInstance) return [];
 
-      return dbInstance
-        .select()
-        .from(labReports)
-        .where(eq(labReports.patientId, input.patientId))
-        .orderBy(desc(labReports.reportDate));
+      if (input.patientId) {
+        return dbInstance
+          .select()
+          .from(labReports)
+          .where(eq(labReports.patientId, input.patientId))
+          .orderBy(desc(labReports.reportDate));
+      }
+
+      return dbInstance.select().from(labReports).orderBy(desc(labReports.reportDate));
     }),
 });

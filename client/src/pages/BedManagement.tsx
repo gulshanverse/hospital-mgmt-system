@@ -8,7 +8,7 @@ import { Grid3x3, Plus } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 export default function BedManagement() {
-  const { data: availableBeds } = trpc.bed.getAvailable.useQuery();
+  const { data: allBeds } = trpc.bed.list.useQuery();
   const { data: bedOccupancy } = trpc.analytics.getBedOccupancy.useQuery();
 
   const getBedStatusColor = (status: string) => {
@@ -58,14 +58,14 @@ export default function BedManagement() {
             <TabsTrigger value="all">All Beds</TabsTrigger>
             <TabsTrigger value="available">Available</TabsTrigger>
             <TabsTrigger value="occupied">Occupied</TabsTrigger>
-            <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+            <TabsTrigger value="maintenance">Maintenance & Cleaning</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
             <Card className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {availableBeds && availableBeds.length > 0 ? (
-                  availableBeds.map((bed: any) => (
+                {allBeds && allBeds.length > 0 ? (
+                  allBeds.map((bed: any) => (
                     <div
                       key={bed.id}
                       className={`p-4 border-2 rounded-lg text-center cursor-pointer hover:shadow-lg transition ${getBedStatusColor(bed.status)}`}
@@ -90,8 +90,8 @@ export default function BedManagement() {
           <TabsContent value="available" className="mt-6">
             <Card className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {availableBeds && availableBeds.filter((b: any) => b.status === "available").length > 0 ? (
-                  availableBeds
+                {allBeds && allBeds.filter((b: any) => b.status === "available").length > 0 ? (
+                  allBeds
                     .filter((b: any) => b.status === "available")
                     .map((bed: any) => (
                       <div
@@ -101,7 +101,6 @@ export default function BedManagement() {
                         <Grid3x3 className="w-6 h-6 mx-auto mb-2 text-green-600" />
                         <p className="font-semibold text-sm">{bed.bedNumber}</p>
                         <p className="text-xs mt-1">{bed.wardName || "Ward"}</p>
-                        <Button size="sm" className="mt-2 w-full">Admit</Button>
                       </div>
                     ))
                 ) : (
@@ -116,8 +115,8 @@ export default function BedManagement() {
           <TabsContent value="occupied" className="mt-6">
             <Card className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {availableBeds && availableBeds.filter((b: any) => b.status === "occupied").length > 0 ? (
-                  availableBeds
+                {allBeds && allBeds.filter((b: any) => b.status === "occupied").length > 0 ? (
+                  allBeds
                     .filter((b: any) => b.status === "occupied")
                     .map((bed: any) => (
                       <div
@@ -127,9 +126,6 @@ export default function BedManagement() {
                         <Grid3x3 className="w-6 h-6 mx-auto mb-2 text-red-600" />
                         <p className="font-semibold text-sm">{bed.bedNumber}</p>
                         <p className="text-xs mt-1">{bed.wardName || "Ward"}</p>
-                        <Button size="sm" variant="outline" className="mt-2 w-full">
-                          View
-                        </Button>
                       </div>
                     ))
                 ) : (
@@ -143,8 +139,28 @@ export default function BedManagement() {
 
           <TabsContent value="maintenance" className="mt-6">
             <Card className="p-6">
-              <div className="text-center py-8 text-gray-500">
-                No beds under maintenance
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {allBeds && allBeds.filter((b: any) => ["maintenance", "cleaning"].includes(b.status)).length > 0 ? (
+                  allBeds
+                    .filter((b: any) => ["maintenance", "cleaning"].includes(b.status))
+                    .map((bed: any) => (
+                      <div
+                        key={bed.id}
+                        className="p-4 border-2 border-gray-300 bg-gray-50 rounded-lg text-center"
+                      >
+                        <Grid3x3 className="w-6 h-6 mx-auto mb-2 text-gray-600" />
+                        <p className="font-semibold text-sm">{bed.bedNumber}</p>
+                        <p className="text-xs mt-1">{bed.wardName || "Ward"}</p>
+                        <Badge className="mt-2 text-xs" variant="outline">
+                          {getBedStatusLabel(bed.status)}
+                        </Badge>
+                      </div>
+                    ))
+                ) : (
+                  <div className="col-span-full text-center py-8 text-gray-500">
+                    No beds under maintenance
+                  </div>
+                )}
               </div>
             </Card>
           </TabsContent>

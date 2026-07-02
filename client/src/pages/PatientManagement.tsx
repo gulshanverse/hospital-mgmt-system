@@ -15,7 +15,47 @@ export default function PatientManagement() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
-  const { data: patients, isLoading } = trpc.patient.list.useQuery();
+  // Form State
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "other">("male");
+  const [dob, setDob] = useState("");
+
+  const { data: patients, isLoading, refetch } = trpc.patient.list.useQuery();
+  
+  const createMutation = trpc.patient.create.useMutation({
+    onSuccess: () => {
+      toast.success("Patient created successfully");
+      setIsCreateOpen(false);
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPhone("");
+      setDob("");
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to create patient");
+    },
+  });
+
+  const handleCreate = () => {
+    if (!firstName || !lastName || !phone || !dob) {
+      toast.error("First Name, Last Name, Phone, and Date of Birth are required");
+      return;
+    }
+    createMutation.mutate({
+      firstName,
+      lastName,
+      email: email || undefined,
+      phone,
+      gender,
+      dateOfBirth: dob,
+    });
+  };
+
   const { data: searchResults } = trpc.patient.search.useQuery(
     { query: searchQuery, limit: 20 },
     { enabled: searchQuery.length > 0 }
@@ -124,11 +164,26 @@ export default function PatientManagement() {
             <DialogTitle>Create New Patient</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input placeholder="First Name" />
-            <Input placeholder="Last Name" />
-            <Input placeholder="Email" type="email" />
-            <Input placeholder="Phone" type="tel" />
-            <Button className="w-full">Create Patient</Button>
+            <Input placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            <Input placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            <Input placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input placeholder="Phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <select
+              value={gender}
+              onChange={(e: any) => setGender(e.target.value)}
+              className="w-full border rounded px-3 py-2 text-sm bg-background"
+            >
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Date of Birth</label>
+              <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+            </div>
+            <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
+              {createMutation.isPending ? "Creating..." : "Create Patient"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
