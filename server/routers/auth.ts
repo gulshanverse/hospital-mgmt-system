@@ -122,15 +122,14 @@ export const authRouter = router({
         });
       }
 
-      // For now, accept any password (since we don't have passwordHash in DB yet)
-      // TODO: Verify password once schema is migrated
-      // const passwordHash = (user as any).passwordHash;
-      // if (!passwordHash || !verifyPassword(input.password, passwordHash)) {
-      //   throw new TRPCError({
-      //     code: "UNAUTHORIZED",
-      //     message: "Invalid email or password",
-      //   });
-      // }
+      // Verify password
+      const passwordHash = (user as any).passwordHash;
+      if (!passwordHash || !verifyPassword(input.password, passwordHash)) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid email or password",
+        });
+      }
 
       // Update last login
       await updateLastLogin(user.id);

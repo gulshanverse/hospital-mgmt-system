@@ -40,8 +40,9 @@ export const users = mysqlTable(
       "receptionist",
       "pharmacist",
       "lab_technician",
+      "patient",
     ])
-      .default("receptionist")
+      .default("patient")
       .notNull(),
     isActive: boolean("isActive").default(true).notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),

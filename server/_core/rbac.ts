@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import type { TrpcContext } from "./context";
 
-export type HMSRole = "admin" | "doctor" | "nurse" | "receptionist" | "pharmacist" | "lab_technician";
+export type HMSRole = "admin" | "doctor" | "nurse" | "receptionist" | "pharmacist" | "lab_technician" | "patient";
 
 /**
  * Role-based permission matrix
@@ -201,6 +201,24 @@ export const rolePermissions: Record<HMSRole, Set<string>> = {
     // EHR (read only)
     "ehr:read",
     "ehr:list",
+  ]),
+
+  patient: new Set([
+    // User profile (read own)
+    "user:read",
+    // Appointments (own)
+    "appointment:create",
+    "appointment:read",
+    "appointment:list",
+    // EHR (own records)
+    "ehr:read",
+    "ehr:list",
+    // Prescriptions (own)
+    "prescription:read",
+    "prescription:list",
+    // Billing (own)
+    "billing:read",
+    "billing:list",
   ]),
 };
 

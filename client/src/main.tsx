@@ -53,7 +53,20 @@ const trpcClient = trpc.createClient({
       url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
       headers() {
-        // Phase 2: JWT token will be added here
+        // Get access token from localStorage
+        const stored = localStorage.getItem("auth-tokens");
+        if (stored) {
+          try {
+            const { accessToken } = JSON.parse(stored);
+            if (accessToken) {
+              return {
+                Authorization: `Bearer ${accessToken}`,
+              };
+            }
+          } catch (e) {
+            console.error("Failed to parse stored tokens:", e);
+          }
+        }
         return {};
       },
       fetch(input, init) {
