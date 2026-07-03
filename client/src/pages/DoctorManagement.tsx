@@ -35,7 +35,7 @@ export default function DoctorManagement() {
   // Queries
   const { data: doctorsList, refetch } = trpc.doctor.list.useQuery();
   const { data: departments } = trpc.department.list.useQuery();
-  const { data: userDoctors } = trpc.user.list.useQuery({ role: "doctor" });
+  const { data: activeUsers } = trpc.user.list.useQuery({ isActive: true });
 
   // Mutations
   const createMutation = trpc.doctor.create.useMutation({
@@ -91,53 +91,60 @@ export default function DoctorManagement() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    const uId = parseInt(userId, 10);
-    const deptId = parseInt(departmentId, 10);
-    const expYears = experience ? parseInt(experience, 10) : undefined;
-
-    if (isNaN(uId) || isNaN(deptId) || !specialty) {
-      toast.error("User, Department and Specialty are required");
+    if (!userId || !departmentId || !specialty) {
+      toast.error("User, department, and specialty are required");
       return;
     }
-
     createMutation.mutate({
-      userId: uId,
-      departmentId: deptId,
+      userId: parseInt(userId, 10),
+      departmentId: parseInt(departmentId, 10),
       specialty,
       qualification: qualification || undefined,
-      experience: expYears,
+      experience: experience ? parseInt(experience, 10) : undefined,
       licenseNumber: licenseNumber || undefined,
       profilePhoto: profilePhoto || undefined,
-      availabilitySchedule: { monday, tuesday, wednesday, thursday, friday },
+      availabilitySchedule: {
+        monday,
+        tuesday,
+        wednesday,
+        thursday,
+        friday,
+      },
     });
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEdit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDocId) return;
-    const expYears = experience ? parseInt(experience, 10) : undefined;
+    if (!selectedDocId || !departmentId || !specialty) return;
     updateMutation.mutate({
       id: selectedDocId,
-      specialty: specialty || undefined,
+      departmentId: parseInt(departmentId, 10),
+      specialty,
       qualification: qualification || undefined,
-      experience: expYears,
+      experience: experience ? parseInt(experience, 10) : undefined,
       licenseNumber: licenseNumber || undefined,
       profilePhoto: profilePhoto || undefined,
       isAvailable,
-      availabilitySchedule: { monday, tuesday, wednesday, thursday, friday },
+      availabilitySchedule: {
+        monday,
+        tuesday,
+        wednesday,
+        thursday,
+        friday,
+      },
     });
   };
 
   const openEdit = (doc: any) => {
     setSelectedDocId(doc.id);
-    setSpecialty(doc.specialty || "");
-    setDepartmentId(doc.departmentId ? doc.departmentId.toString() : "");
-    setUserId(doc.userId ? doc.userId.toString() : "");
+    setUserId(doc.userId.toString());
+    setDepartmentId(doc.departmentId.toString());
+    setSpecialty(doc.specialty);
     setQualification(doc.qualification || "");
     setExperience(doc.experience ? doc.experience.toString() : "");
     setLicenseNumber(doc.licenseNumber || "");
     setProfilePhoto(doc.profilePhoto || "");
-    setIsAvailable(doc.isAvailable !== false);
+    setIsAvailable(doc.isAvailable);
 
     const sched = doc.availabilitySchedule as any;
     if (sched) {
@@ -157,10 +164,11 @@ export default function DoctorManagement() {
     }
   };
 
-  // Filter doctor users who don't have profiles yet
-  const availableDoctors = userDoctors?.filter((u: any) => 
-    !doctorsList?.some((d: any) => d.userId === u.id)
-  ) || [];
+  // Filter users who can be assigned a doctor profile (active staff who do not have a doctor profile yet)
+  const availableDoctors = activeUsers?.filter((u: any) => {
+    if (u.role === "patient") return false;
+    return !doctorsList?.some((d: any) => d.userId === u.id);
+  }) || [];
 
   return (
     <DashboardLayout>
@@ -330,7 +338,7 @@ export default function DoctorManagement() {
           <DialogHeader>
             <DialogTitle>Edit Doctor Profile</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4">
+          <form onSubmit={handleEdit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Specialty</label>

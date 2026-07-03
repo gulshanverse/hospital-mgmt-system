@@ -151,6 +151,18 @@ export const doctorRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      // Check for duplicate profile
+      const existing = await dbInstance.select().from(doctors).where(eq(doctors.userId, input.userId)).limit(1);
+      if (existing.length > 0) {
+        throw new TRPCError({ code: "CONFLICT", message: "This user already has a doctor profile." });
+      }
+
+      // Update user's role to doctor
+      await dbInstance.update(users).set({ role: "doctor" }).where(eq(users.id, input.userId));
+
       return db.createDoctor({
         ...input,
         isAvailable: true,
@@ -203,6 +215,7 @@ export const doctorRouter = router({
     .input(
       z.object({
         id: z.number(),
+        departmentId: z.number().optional(),
         specialty: z.string().optional(),
         qualification: z.string().optional(),
         experience: z.number().optional(),

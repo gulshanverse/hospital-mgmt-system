@@ -57,11 +57,11 @@ export default function StaffManagement() {
 
   const deleteMutation = trpc.user.delete.useMutation({
     onSuccess: () => {
-      toast.success("Staff member deactivated successfully");
+      toast.success("Staff member permanently deleted successfully");
       refetch();
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to deactivate staff member");
+      toast.error(err.message || "Failed to delete staff member");
     },
   });
 
@@ -127,7 +127,7 @@ export default function StaffManagement() {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to deactivate this staff member?")) {
+    if (window.confirm("Are you sure you want to permanently delete this staff member? This action cannot be undone.")) {
       deleteMutation.mutate({ id });
     }
   };

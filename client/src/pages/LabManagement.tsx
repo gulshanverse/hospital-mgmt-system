@@ -15,6 +15,12 @@ export default function LabManagement() {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
+  // View Detail State
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isOrderViewOpen, setIsOrderViewOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [isReportViewOpen, setIsReportViewOpen] = useState(false);
+
   // Create Order State
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [patientSearch, setPatientSearch] = useState("");
@@ -130,6 +136,110 @@ export default function LabManagement() {
     });
   };
 
+  const openOrderView = (order: any) => {
+    setSelectedOrder(order);
+    setIsOrderViewOpen(true);
+  };
+
+  const openReportView = (report: any) => {
+    setSelectedReport(report);
+    setIsReportViewOpen(true);
+  };
+
+  const generateAndDownloadPdf = (report: any) => {
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lab Report - ${report.labOrderId}</title>
+<style>
+body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #1a1a1a; }
+.header { display: flex; justify-content: space-between; border-bottom: 3px solid #4f46e5; padding-bottom: 16px; margin-bottom: 24px; }
+.hospital { font-size: 24px; font-weight: bold; color: #4f46e5; }
+.subtitle { font-size: 12px; color: #6b7280; }
+.report-title { font-size: 18px; font-weight: bold; text-align: center; margin: 20px 0; background: #f1f5f9; padding: 12px; border-radius: 8px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.field-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.field-value { font-size: 14px; font-weight: 500; margin-top: 2px; }
+.results-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0; }
+.results-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #334155; }
+.normal-range { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; margin: 12px 0; }
+.footer { text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; }
+.status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #dcfce7; color: #166534; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="hospital">CareFlow HMS</div>
+    <div class="subtitle">100 Health Sciences Blvd, Metro City</div>
+    <div class="subtitle">Phone: +1 (555) 019-9000</div>
+  </div>
+  <div style="text-align: right;">
+    <div style="font-size: 16px; font-weight: bold;">LABORATORY REPORT</div>
+    <div class="subtitle">Lab Order #${report.labOrderId}</div>
+    <div class="subtitle">Date: ${new Date(report.reportDate).toLocaleDateString()}</div>
+  </div>
+</div>
+
+<div class="report-title">Diagnostic Test Report</div>
+
+<div class="grid">
+  <div>
+    <div class="field-label">Patient Name</div>
+    <div class="field-value">${report.patientName || 'N/A'}</div>
+  </div>
+  <div>
+    <div class="field-label">Report Date</div>
+    <div class="field-value">${new Date(report.reportDate).toLocaleDateString()}</div>
+  </div>
+  <div>
+    <div class="field-label">Status</div>
+    <div class="field-value"><span class="status-badge">${report.status || 'Completed'}</span></div>
+  </div>
+  <div>
+    <div class="field-label">Report ID</div>
+    <div class="field-value">#${report.id}</div>
+  </div>
+</div>
+
+<div class="results-box">
+  <div class="results-title">Test Results</div>
+  <p style="white-space: pre-wrap; font-size: 14px;">${report.results}</p>
+</div>
+
+${report.normalRange ? `
+<div class="normal-range">
+  <div class="results-title" style="color: #065f46;">Reference / Normal Range</div>
+  <p style="font-size: 13px;">${report.normalRange}</p>
+</div>
+` : ''}
+
+<div class="footer">
+  <p>This report has been generated electronically by CareFlow HMS.</p>
+  <p>For queries, contact the laboratory department at lab@careflowhms.com</p>
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    } else {
+      // Fallback: download as HTML file
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lab-report-${report.labOrderId}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Report downloaded. Open and use Print > Save as PDF to generate PDF.');
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -228,7 +338,7 @@ export default function LabManagement() {
                                   Upload Report
                                 </Button>
                               )}
-                              <Button size="sm" variant="outline">
+                              <Button size="sm" variant="outline" onClick={() => openOrderView(order)}>
                                 View
                               </Button>
                             </div>
@@ -276,16 +386,14 @@ export default function LabManagement() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button size="sm" variant="outline" className="gap-1">
+                              <Button size="sm" variant="outline" className="gap-1" onClick={() => openReportView(report)}>
                                 <Eye className="w-4 h-4" />
                                 View
                               </Button>
-                              {report.reportPdfUrl && (
-                                <Button size="sm" variant="outline" className="gap-1">
-                                  <Download className="w-4 h-4" />
-                                  PDF
-                                </Button>
-                              )}
+                              <Button size="sm" variant="outline" className="gap-1" onClick={() => generateAndDownloadPdf(report)}>
+                                <Download className="w-4 h-4" />
+                                PDF
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -302,6 +410,109 @@ export default function LabManagement() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* View Lab Order Detail Dialog */}
+      <Dialog open={isOrderViewOpen} onOpenChange={setIsOrderViewOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Lab Order Details</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 border rounded-lg bg-slate-50">
+                  <p className="text-xs text-gray-500 font-semibold uppercase">Order Code</p>
+                  <p className="font-mono font-bold">{selectedOrder.orderCode}</p>
+                </div>
+                <div className="p-3 border rounded-lg bg-slate-50">
+                  <p className="text-xs text-gray-500 font-semibold uppercase">Status</p>
+                  <Badge className={getStatusColor(selectedOrder.status)}>{selectedOrder.status}</Badge>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Patient</p>
+                  <p className="font-semibold">{selectedOrder.patientName || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Test Type</p>
+                  <p>{getTestTypeLabel(selectedOrder.testType)}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Order Date</p>
+                  <p>{new Date(selectedOrder.orderDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Assigned To</p>
+                  <p>{selectedOrder.assignedToName || 'Unassigned'}</p>
+                </div>
+              </div>
+              {selectedOrder.notes && (
+                <div className="border-t pt-3">
+                  <p className="text-xs text-gray-500 font-semibold mb-1">Notes</p>
+                  <p className="text-sm whitespace-pre-wrap">{selectedOrder.notes}</p>
+                </div>
+              )}
+              <Button variant="outline" className="w-full" onClick={() => setIsOrderViewOpen(false)}>Close</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Lab Report Detail Dialog */}
+      <Dialog open={isReportViewOpen} onOpenChange={setIsReportViewOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Lab Report Details</DialogTitle>
+          </DialogHeader>
+          {selectedReport && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 border rounded-lg bg-slate-50">
+                  <p className="text-xs text-gray-500 font-semibold uppercase">Report ID</p>
+                  <p className="font-mono font-bold">#{selectedReport.id}</p>
+                </div>
+                <div className="p-3 border rounded-lg bg-slate-50">
+                  <p className="text-xs text-gray-500 font-semibold uppercase">Lab Order</p>
+                  <p className="font-mono font-bold">#{selectedReport.labOrderId}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Patient</p>
+                  <p className="font-semibold">{selectedReport.patientName || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Report Date</p>
+                  <p>{new Date(selectedReport.reportDate).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs text-gray-500 font-semibold mb-2">Test Results</p>
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm whitespace-pre-wrap">{selectedReport.results}</p>
+                </div>
+              </div>
+              {selectedReport.normalRange && (
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold mb-2">Normal Range</p>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm">{selectedReport.normalRange}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 pt-2 border-t">
+                <Button variant="outline" className="flex-1 gap-1" onClick={() => generateAndDownloadPdf(selectedReport)}>
+                  <Download className="w-4 h-4" /> Download PDF
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={() => setIsReportViewOpen(false)}>Close</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Create Lab Order Dialog */}
       <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Edit2, Eye } from "lucide-react";
+import { Search, Plus, Edit2, Eye, Trash2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ export default function PatientManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
 
   // Create Form State
   const [firstName, setFirstName] = useState("");
@@ -22,6 +23,7 @@ export default function PatientManagement() {
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other">("male");
   const [dob, setDob] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
 
   // Edit Form State
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -52,6 +54,16 @@ export default function PatientManagement() {
     setIsEditOpen(true);
   };
   
+  const deleteMutation = trpc.patient.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Patient deleted successfully");
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to delete patient");
+    },
+  });
+
   const createMutation = trpc.patient.create.useMutation({
     onSuccess: () => {
       toast.success("Patient created successfully");
@@ -61,6 +73,7 @@ export default function PatientManagement() {
       setEmail("");
       setPhone("");
       setDob("");
+      setBloodGroup("");
       refetch();
     },
     onError: (err) => {
@@ -109,7 +122,19 @@ export default function PatientManagement() {
       phone,
       gender,
       dateOfBirth: dob,
+      bloodGroup: (bloodGroup || undefined) as any,
     });
+  };
+
+  const openView = (patient: any) => {
+    setSelectedPatient(patient);
+    setIsViewOpen(true);
+  };
+
+  const handleDeletePatient = (id: number) => {
+    if (window.confirm("Are you sure you want to permanently delete this patient?")) {
+      deleteMutation.mutate({ id });
+    }
   };
 
   const { data: searchResults } = trpc.patient.search.useQuery(
@@ -192,7 +217,7 @@ export default function PatientManagement() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setSelectedPatient(patient)}
+                            onClick={() => openView(patient)}
                             className="gap-1"
                           >
                             <Eye className="w-4 h-4" />
@@ -206,6 +231,14 @@ export default function PatientManagement() {
                           >
                             <Edit2 className="w-4 h-4" />
                             Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeletePatient(patient.id)}
+                            className="gap-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -245,6 +278,24 @@ export default function PatientManagement() {
             <div className="space-y-1">
               <label className="text-xs text-gray-500 font-semibold px-1">Date of Birth</label>
               <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Blood Group</label>
+              <select
+                value={bloodGroup}
+                onChange={(e: any) => setBloodGroup(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-background"
+              >
+                <option value="">Unknown</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
             </div>
             <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
               {createMutation.isPending ? "Creating..." : "Create Patient"}
@@ -326,6 +377,114 @@ export default function PatientManagement() {
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Patient Details Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Patient Details</DialogTitle>
+          </DialogHeader>
+          {selectedPatient && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 border rounded-lg bg-slate-50">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Patient Code</p>
+                  <p className="font-mono font-bold text-base">{selectedPatient.patientCode}</p>
+                </div>
+                <div className="p-3 border rounded-lg bg-slate-50">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Status</p>
+                  <Badge className={getStatusColor(selectedPatient.status)}>
+                    {selectedPatient.status}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">First Name</p>
+                  <p className="font-semibold">{selectedPatient.firstName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Last Name</p>
+                  <p className="font-semibold">{selectedPatient.lastName}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Gender</p>
+                  <p className="capitalize">{selectedPatient.gender}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Date of Birth</p>
+                  <p>{selectedPatient.dateOfBirth ? new Date(selectedPatient.dateOfBirth).toLocaleDateString() : "-"}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Phone</p>
+                  <p>{selectedPatient.phone || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Email</p>
+                  <p>{selectedPatient.email || "-"}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Blood Group</p>
+                  <p className="font-bold text-red-600">{selectedPatient.bloodGroup || "Unknown"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Registered</p>
+                  <p>{selectedPatient.createdAt ? new Date(selectedPatient.createdAt).toLocaleDateString() : "-"}</p>
+                </div>
+              </div>
+
+              {(selectedPatient.address || selectedPatient.city || selectedPatient.state) && (
+                <div className="border-t pt-3">
+                  <p className="text-xs text-gray-500 font-semibold mb-1">Address</p>
+                  <p className="text-sm">
+                    {selectedPatient.address || ""}
+                    {selectedPatient.city ? `, ${selectedPatient.city}` : ""}
+                    {selectedPatient.state ? `, ${selectedPatient.state}` : ""}
+                    {selectedPatient.zipCode ? ` ${selectedPatient.zipCode}` : ""}
+                  </p>
+                </div>
+              )}
+
+              {(selectedPatient.emergencyContactName || selectedPatient.emergencyContactPhone) && (
+                <div className="border-t pt-3">
+                  <p className="text-xs text-gray-500 font-semibold mb-1">Emergency Contact</p>
+                  <p className="text-sm">
+                    {selectedPatient.emergencyContactName || "N/A"} — {selectedPatient.emergencyContactPhone || "N/A"}
+                  </p>
+                </div>
+              )}
+
+              {(selectedPatient.insuranceProvider || selectedPatient.insuranceNumber) && (
+                <div className="border-t pt-3">
+                  <p className="text-xs text-gray-500 font-semibold mb-1">Insurance</p>
+                  <p className="text-sm">
+                    {selectedPatient.insuranceProvider || "N/A"} — {selectedPatient.insuranceNumber || "N/A"}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2 border-t">
+                <Button variant="outline" className="flex-1" onClick={() => { setIsViewOpen(false); openEdit(selectedPatient); }}>
+                  <Edit2 className="w-4 h-4 mr-2" /> Edit Patient
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={() => setIsViewOpen(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>

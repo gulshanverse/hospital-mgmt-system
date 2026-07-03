@@ -2,7 +2,24 @@ import { z } from "zod";
 import { router, adminProcedure } from "../_core/trpc";
 import * as db from "../db";
 import { eq, and } from "drizzle-orm";
-import { users, staff, departments } from "../../drizzle/schema";
+import {
+  users,
+  staff,
+  departments,
+  doctors,
+  appointments,
+  admissions,
+  medicalRecords,
+  labOrders,
+  labReports,
+  pharmacyDispensing,
+  invoices,
+  prescriptions,
+  refreshTokens,
+  notifications,
+  auditLogs,
+  uploadedFiles,
+} from "../../drizzle/schema";
 import { hashPassword } from "../_core/password";
 import { TRPCError } from "@trpc/server";
 
@@ -156,8 +173,90 @@ export const userRouter = router({
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
 
-      await dbInstance.update(users).set({ isActive: false, updatedAt: new Date() }).where(eq(users.id, input.id));
-      await dbInstance.update(staff).set({ isActive: false }).where(eq(staff.userId, input.id));
+      // 1. Fetch user to verify they exist
+      const userList = await dbInstance.select().from(users).where(eq(users.id, input.id)).limit(1);
+      if (userList.length === 0) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User account not found" });
+      }
+      const userObj = userList[0];
+
+      // 2. Fetch doctor profile if it exists
+      const docList = await dbInstance.select().from(doctors).where(eq(doctors.userId, input.id)).limit(1);
+      const doctorId = docList[0]?.id;
+
+      const conflicts: string[] = [];
+
+      // 3. Check for dependencies
+      // Appointments created by this user
+      const apptsCreated = await dbInstance.select().from(appointments).where(eq(appointments.createdBy, input.id)).limit(5);
+      if (apptsCreated.length > 0) conflicts.push("created appointments");
+
+      // If doctor, appointments assigned to this doctor
+      if (doctorId) {
+        const apptsDoctor = await dbInstance.select().from(appointments).where(eq(appointments.doctorId, doctorId)).limit(5);
+        if (apptsDoctor.length > 0) conflicts.push("assigned patient appointments");
+      }
+
+      // Admissions admitted by this user
+      const adms = await dbInstance.select().from(admissions).where(eq(admissions.admittedBy, input.id)).limit(5);
+      if (adms.length > 0) conflicts.push("patient admissions");
+
+      // Medical records created by this user
+      const medRecs = await dbInstance.select().from(medicalRecords).where(eq(medicalRecords.createdBy, input.id)).limit(5);
+      if (medRecs.length > 0) conflicts.push("EHR medical records");
+
+      // Lab orders ordered by this user
+      const labOrdCreated = await dbInstance.select().from(labOrders).where(eq(labOrders.orderedBy, input.id)).limit(5);
+      if (labOrdCreated.length > 0) conflicts.push("ordered laboratory tests");
+
+      // Lab orders assigned to this user (e.g. lab tech)
+      const labOrdAssigned = await dbInstance.select().from(labOrders).where(eq(labOrders.assignedTo, input.id)).limit(5);
+      if (labOrdAssigned.length > 0) conflicts.push("assigned laboratory tasks");
+
+      // Lab reports reviewed by this user
+      const labRepReviewed = await dbInstance.select().from(labReports).where(eq(labReports.reviewedBy, input.id)).limit(5);
+      if (labRepReviewed.length > 0) conflicts.push("reviewed laboratory reports");
+
+      // Pharmacy dispensing dispensed by this user
+      const pharmDisp = await dbInstance.select().from(pharmacyDispensing).where(eq(pharmacyDispensing.dispensedBy, input.id)).limit(5);
+      if (pharmDisp.length > 0) conflicts.push("dispensed prescriptions");
+
+      // Invoices created by this user
+      const invCreated = await dbInstance.select().from(invoices).where(eq(invoices.createdBy, input.id)).limit(5);
+      if (invCreated.length > 0) conflicts.push("created billing invoices");
+
+      // Prescriptions prescribed by this doctor
+      if (doctorId) {
+        const presc = await dbInstance.select().from(prescriptions).where(eq(prescriptions.prescribedBy, doctorId)).limit(5);
+        if (presc.length > 0) conflicts.push("prescriptions prescribed to patients");
+      }
+
+      // Departments managed by this doctor
+      if (doctorId) {
+        const deptHead = await dbInstance.select().from(departments).where(eq(departments.headDoctorId, doctorId)).limit(5);
+        if (deptHead.length > 0) conflicts.push("department leadership roles");
+      }
+
+      // 4. Reject deletion if conflicts exist
+      if (conflicts.length > 0) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `Cannot delete ${userObj.name || "staff member"} because they are linked to existing: ${conflicts.join(", ")}. Please reassign or delete those records first.`,
+        });
+      }
+
+      // 5. Clean up non-clinical helper records to satisfy DB constraints
+      await dbInstance.delete(refreshTokens).where(eq(refreshTokens.userId, input.id));
+      await dbInstance.delete(notifications).where(eq(notifications.userId, input.id));
+      await dbInstance.delete(auditLogs).where(eq(auditLogs.userId, input.id));
+      await dbInstance.delete(uploadedFiles).where(eq(uploadedFiles.uploadedBy, input.id));
+
+      if (doctorId) {
+        await dbInstance.delete(doctors).where(eq(doctors.userId, input.id));
+      }
+      await dbInstance.delete(staff).where(eq(staff.userId, input.id));
+      await dbInstance.delete(users).where(eq(users.id, input.id));
+
       return { success: true };
     }),
 });
