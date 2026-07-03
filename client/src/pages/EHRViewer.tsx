@@ -4,9 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, FileText, Pill, Microscope, Stethoscope } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 export default function EHRViewer() {
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
@@ -25,10 +27,42 @@ export default function EHRViewer() {
 
   const selectedPatient = displayPatients?.find((p: any) => p.id === selectedPatientId) || (allPatients?.find((p: any) => p.id === selectedPatientId));
 
-  const { data: records } = trpc.ehr.getByPatient.useQuery(
+  const { data: records, refetch } = trpc.ehr.getByPatient.useQuery(
     { patientId: selectedPatientId || 0 },
     { enabled: selectedPatientId !== null }
   );
+
+  const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
+  const [recordTitle, setRecordTitle] = useState("");
+  const [recordType, setRecordType] = useState<"diagnosis" | "prescription" | "lab_result" | "doctor_note" | "attachment">("diagnosis");
+  const [recordContent, setRecordContent] = useState("");
+
+  const addRecordMutation = trpc.ehr.create.useMutation({
+    onSuccess: () => {
+      toast.success("Medical record added successfully");
+      setIsAddRecordOpen(false);
+      setRecordTitle("");
+      setRecordContent("");
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to add medical record");
+    },
+  });
+
+  const handleAddRecord = () => {
+    if (!selectedPatientId) return;
+    if (!recordTitle) {
+      toast.error("Record title is required");
+      return;
+    }
+    addRecordMutation.mutate({
+      patientId: selectedPatientId,
+      recordType,
+      title: recordTitle,
+      content: recordContent || undefined,
+    });
+  };
 
   const getRecordIcon = (type: string) => {
     switch (type) {
@@ -116,7 +150,7 @@ export default function EHRViewer() {
                     <h2 className="text-2xl font-bold">
                       Medical Records Timeline — {selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : `Patient #${selectedPatientId}`}
                     </h2>
-                    <Button className="gap-2">
+                    <Button onClick={() => setIsAddRecordOpen(true)} className="gap-2">
                       <Plus className="w-4 h-4" />
                       Add Record
                     </Button>
@@ -161,6 +195,50 @@ export default function EHRViewer() {
           </div>
         </div>
       </div>
+      {/* Add Record Dialog */}
+      <Dialog open={isAddRecordOpen} onOpenChange={setIsAddRecordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Medical Record</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Title</label>
+              <Input
+                placeholder="e.g. Chronic Hypertension Follow-up, Lab results review"
+                value={recordTitle}
+                onChange={(e) => setRecordTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Record Type</label>
+              <select
+                value={recordType}
+                onChange={(e: any) => setRecordType(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-background"
+              >
+                <option value="diagnosis">Diagnosis</option>
+                <option value="prescription">Prescription</option>
+                <option value="lab_result">Lab Result</option>
+                <option value="doctor_note">Doctor Note</option>
+                <option value="attachment">Attachment</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Content</label>
+              <textarea
+                placeholder="Record details, notes, clinical observations..."
+                value={recordContent}
+                onChange={(e) => setRecordContent(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-background min-h-[100px]"
+              />
+            </div>
+            <Button onClick={handleAddRecord} disabled={addRecordMutation.isPending} className="w-full">
+              {addRecordMutation.isPending ? "Adding..." : "Add Record"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

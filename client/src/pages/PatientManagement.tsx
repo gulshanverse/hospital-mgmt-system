@@ -15,7 +15,7 @@ export default function PatientManagement() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
-  // Form State
+  // Create Form State
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,7 +23,34 @@ export default function PatientManagement() {
   const [gender, setGender] = useState<"male" | "female" | "other">("male");
   const [dob, setDob] = useState("");
 
+  // Edit Form State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editGender, setEditGender] = useState<"male" | "female" | "other">("male");
+  const [editDob, setEditDob] = useState("");
+  const [editBloodGroup, setEditBloodGroup] = useState("");
+  const [editStatus, setEditStatus] = useState<"active" | "admitted" | "discharged">("active");
+
   const { data: patients, isLoading, refetch } = trpc.patient.list.useQuery();
+
+  const openEdit = (patient: any) => {
+    setSelectedPatient(patient);
+    setEditFirstName(patient.firstName);
+    setEditLastName(patient.lastName);
+    setEditEmail(patient.email || "");
+    setEditPhone(patient.phone);
+    setEditGender(patient.gender);
+    const formattedDob = patient.dateOfBirth
+      ? new Date(patient.dateOfBirth).toISOString().split("T")[0]
+      : "";
+    setEditDob(formattedDob);
+    setEditBloodGroup(patient.bloodGroup || "");
+    setEditStatus(patient.status);
+    setIsEditOpen(true);
+  };
   
   const createMutation = trpc.patient.create.useMutation({
     onSuccess: () => {
@@ -40,6 +67,35 @@ export default function PatientManagement() {
       toast.error(err.message || "Failed to create patient");
     },
   });
+
+  const updateMutation = trpc.patient.update.useMutation({
+    onSuccess: () => {
+      toast.success("Patient details updated successfully");
+      setIsEditOpen(false);
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to update patient");
+    },
+  });
+
+  const handleUpdate = () => {
+    if (!editFirstName || !editLastName || !editPhone || !editDob) {
+      toast.error("First Name, Last Name, Phone, and Date of Birth are required");
+      return;
+    }
+    updateMutation.mutate({
+      id: selectedPatient.id,
+      firstName: editFirstName,
+      lastName: editLastName,
+      email: editEmail || undefined,
+      phone: editPhone,
+      gender: editGender,
+      dateOfBirth: editDob,
+      bloodGroup: (editBloodGroup || undefined) as any,
+      status: editStatus,
+    });
+  };
 
   const handleCreate = () => {
     if (!firstName || !lastName || !phone || !dob) {
@@ -142,6 +198,15 @@ export default function PatientManagement() {
                             <Eye className="w-4 h-4" />
                             View
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEdit(patient)}
+                            className="gap-1"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                            Edit
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -183,6 +248,82 @@ export default function PatientManagement() {
             </div>
             <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
               {createMutation.isPending ? "Creating..." : "Create Patient"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Patient Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Patient Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">First Name</label>
+              <Input placeholder="First Name" value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Last Name</label>
+              <Input placeholder="Last Name" value={editLastName} onChange={(e) => setEditLastName(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Email</label>
+              <Input placeholder="Email" type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Phone</label>
+              <Input placeholder="Phone" type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Gender</label>
+              <select
+                value={editGender}
+                onChange={(e: any) => setEditGender(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-background"
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Date of Birth</label>
+              <Input type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Blood Group</label>
+              <select
+                value={editBloodGroup}
+                onChange={(e: any) => setEditBloodGroup(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-background"
+              >
+                <option value="">Unknown</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Status</label>
+              <select
+                value={editStatus}
+                onChange={(e: any) => setEditStatus(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-background"
+              >
+                <option value="active">Active</option>
+                <option value="admitted">Admitted</option>
+                <option value="discharged">Discharged</option>
+              </select>
+            </div>
+            <Button onClick={handleUpdate} disabled={updateMutation.isPending} className="w-full">
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </DialogContent>

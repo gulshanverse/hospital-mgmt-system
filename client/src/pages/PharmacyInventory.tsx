@@ -24,8 +24,47 @@ export default function PharmacyInventory() {
   const [expiryDate, setExpiryDate] = useState("");
   const [storageLocation, setStorageLocation] = useState("");
 
+  // Edit Form State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [editQuantity, setEditQuantity] = useState("");
+  const [editStatus, setEditStatus] = useState<"available" | "low_stock" | "expired" | "discontinued">("available");
+
+  const openEdit = (item: any) => {
+    setSelectedItem(item);
+    setEditQuantity(item.quantity.toString());
+    setEditStatus(item.status);
+    setIsEditOpen(true);
+  };
+
   const { data: inventory, refetch: refetchInventory } = trpc.pharmacy.getInventory.useQuery();
   const { data: lowStock, refetch: refetchLowStock } = trpc.pharmacy.getLowStock.useQuery();
+
+  const updateStockMutation = trpc.pharmacy.updateStock.useMutation({
+    onSuccess: () => {
+      toast.success("Medicine stock updated successfully");
+      setIsEditOpen(false);
+      refetchInventory();
+      refetchLowStock();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to update stock");
+    },
+  });
+
+  const handleUpdateStock = () => {
+    if (!selectedItem) return;
+    const qty = parseInt(editQuantity, 10);
+    if (isNaN(qty)) {
+      toast.error("Please enter a valid quantity");
+      return;
+    }
+    updateStockMutation.mutate({
+      inventoryId: selectedItem.id,
+      quantity: qty,
+      status: editStatus,
+    });
+  };
 
   const addMedicineMutation = trpc.pharmacy.addMedicine.useMutation({
     onSuccess: () => {
@@ -151,7 +190,7 @@ export default function PharmacyInventory() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline" className="gap-1">
+                        <Button size="sm" variant="outline" className="gap-1" onClick={() => openEdit(item)}>
                           <Edit2 className="w-4 h-4" />
                           Edit
                         </Button>
@@ -192,6 +231,52 @@ export default function PharmacyInventory() {
               {addMedicineMutation.isPending ? "Adding..." : "Add Medicine"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Medicine Stock Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Update Medicine Stock</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div className="p-3 border rounded-lg bg-gray-50 text-sm">
+                <p><strong>Drug Name:</strong> {selectedItem.drugName}</p>
+                <p><strong>Drug Code:</strong> {selectedItem.drugCode}</p>
+                <p><strong>Category:</strong> {selectedItem.category}</p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-500 font-semibold px-1">Quantity</label>
+                <Input
+                  type="number"
+                  placeholder="Quantity"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-500 font-semibold px-1">Status</label>
+                <select
+                  value={editStatus}
+                  onChange={(e: any) => setEditStatus(e.target.value)}
+                  className="w-full border rounded px-3 py-2 text-sm bg-background"
+                >
+                  <option value="available">Available</option>
+                  <option value="low_stock">Low Stock</option>
+                  <option value="expired">Expired</option>
+                  <option value="discontinued">Discontinued</option>
+                </select>
+              </div>
+
+              <Button onClick={handleUpdateStock} disabled={updateStockMutation.isPending} className="w-full">
+                {updateStockMutation.isPending ? "Updating..." : "Update Stock"}
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>

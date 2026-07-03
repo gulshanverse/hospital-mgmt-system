@@ -81,6 +81,8 @@ export const patientRouter = router({
         city: z.string().optional(),
         state: z.string().optional(),
         zipCode: z.string().optional(),
+        gender: z.enum(["male", "female", "other"]).optional(),
+        dateOfBirth: z.string().transform(s => new Date(s)).optional(),
         bloodGroup: z.enum(["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]).optional(),
         emergencyContactName: z.string().optional(),
         emergencyContactPhone: z.string().optional(),

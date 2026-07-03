@@ -26,6 +26,19 @@ export default function AppointmentScheduling() {
   const [patientSearch, setPatientSearch] = useState("");
   const [doctorSearch, setDoctorSearch] = useState("");
 
+  // Edit State
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editStatus, setEditStatus] = useState<"scheduled" | "in_progress" | "completed" | "cancelled">("scheduled");
+  const [editNotes, setEditNotes] = useState("");
+
+  const openEdit = (apt: any) => {
+    setSelectedAppointment(apt);
+    setEditStatus(apt.status);
+    setEditNotes(apt.notes || "");
+    setIsEditOpen(true);
+  };
+
   const [date, setDate] = useState(selectedDate);
   const [time, setTime] = useState("");
   const [reason, setReason] = useState("");
@@ -51,6 +64,26 @@ export default function AppointmentScheduling() {
       toast.error(err.message || "Failed to schedule appointment");
     },
   });
+
+  const updateMutation = trpc.appointment.update.useMutation({
+    onSuccess: () => {
+      toast.success("Appointment updated successfully");
+      setIsEditOpen(false);
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to update appointment");
+    },
+  });
+
+  const handleUpdate = () => {
+    if (!selectedAppointment) return;
+    updateMutation.mutate({
+      id: selectedAppointment.id,
+      status: editStatus,
+      notes: editNotes || undefined,
+    });
+  };
 
   const handleSchedule = () => {
     if (!selectedPatient) {
@@ -166,7 +199,7 @@ export default function AppointmentScheduling() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => openEdit(apt)}>
                           Edit
                         </Button>
                       </TableCell>
@@ -361,6 +394,44 @@ export default function AppointmentScheduling() {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Appointment Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Appointment Status & Notes</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Status</label>
+              <select
+                value={editStatus}
+                onChange={(e: any) => setEditStatus(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-background"
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500 font-semibold px-1">Notes</label>
+              <textarea
+                placeholder="Appointment notes, diagnoses, or follow-up details..."
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-background min-h-[100px]"
+              />
+            </div>
+
+            <Button onClick={handleUpdate} disabled={updateMutation.isPending} className="w-full">
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </DashboardLayout>

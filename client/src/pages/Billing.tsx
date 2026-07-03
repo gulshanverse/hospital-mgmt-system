@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Download, Eye } from "lucide-react";
+import { FileText, Plus, Download, Eye, Edit } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -26,9 +26,43 @@ export default function Billing() {
   const [itemQty, setItemQty] = useState("1");
   const [itemPrice, setItemPrice] = useState("");
 
+  // Edit Form State
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [editStatus, setEditStatus] = useState<"paid" | "pending" | "overdue">("pending");
+  const [editPaidAmount, setEditPaidAmount] = useState("");
+
+  const openStatusEdit = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setEditStatus(invoice.status);
+    setEditPaidAmount(invoice.paidAmount ? invoice.paidAmount.toString() : "0");
+    setIsStatusOpen(true);
+  };
+
   const { data: pendingInvoices, refetch } = trpc.billing.getPending.useQuery(undefined, {
     enabled: isAdmin,
   });
+
+  const updateStatusMutation = trpc.billing.updateStatus.useMutation({
+    onSuccess: () => {
+      toast.success("Invoice status updated successfully");
+      setIsStatusOpen(false);
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to update status");
+    },
+  });
+
+  const handleUpdateStatus = () => {
+    if (!selectedInvoice) return;
+    const amount = parseFloat(editPaidAmount);
+    updateStatusMutation.mutate({
+      invoiceId: selectedInvoice.id,
+      status: editStatus,
+      paidAmount: isNaN(amount) ? undefined : amount,
+    });
+  };
 
   const createMutation = trpc.billing.createInvoice.useMutation({
     onSuccess: () => {
@@ -172,6 +206,10 @@ export default function Billing() {
                             <Download className="w-4 h-4" />
                             PDF
                           </Button>
+                          <Button size="sm" variant="outline" className="gap-1" onClick={() => openStatusEdit(invoice)}>
+                            <Edit className="w-4 h-4" />
+                            Update
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -222,6 +260,53 @@ export default function Billing() {
               {createMutation.isPending ? "Creating..." : "Create Invoice"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Invoice Payment Status Dialog */}
+      <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Update Payment Status</DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4">
+              <div className="p-3 border rounded-lg bg-gray-50 text-sm">
+                <p><strong>Invoice Number:</strong> {selectedInvoice.invoiceNumber}</p>
+                <p><strong>Patient Name:</strong> {selectedInvoice.patientName || "N/A"}</p>
+                <p><strong>Total Amount:</strong> ${selectedInvoice.totalAmount}</p>
+                <p><strong>Currently Paid:</strong> ${selectedInvoice.paidAmount || 0}</p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-500 font-semibold px-1">Payment Status</label>
+                <select
+                  value={editStatus}
+                  onChange={(e: any) => setEditStatus(e.target.value)}
+                  className="w-full border rounded px-3 py-2 text-sm bg-background"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-500 font-semibold px-1">Amount Paid ($)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Paid Amount"
+                  value={editPaidAmount}
+                  onChange={(e) => setEditPaidAmount(e.target.value)}
+                />
+              </div>
+
+              <Button onClick={handleUpdateStatus} disabled={updateStatusMutation.isPending} className="w-full">
+                {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
