@@ -32,6 +32,9 @@ import {
   Microscope,
   LogOut,
   PanelLeft,
+  Shield,
+  Settings,
+  BookOpen,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -47,6 +50,12 @@ const menuItems = [
   { icon: Pill, label: "Pharmacy Inventory", path: "/pharmacy" },
   { icon: DollarSign, label: "Billing & Invoices", path: "/billing" },
   { icon: Microscope, label: "Laboratory", path: "/lab" },
+];
+
+const adminMenuItems = [
+  { icon: Shield, label: "Staff Management", path: "/staff" },
+  { icon: Settings, label: "Doctor Profiles", path: "/doctors-admin" },
+  { icon: BookOpen, label: "Departments", path: "/departments" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -215,6 +224,32 @@ function DashboardLayoutContent({
                   </SidebarMenuItem>
                 );
               })}
+
+              {user?.role === "admin" && (
+                <>
+                  <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-4 group-data-[collapsible=icon]:hidden">
+                    Admin Administration
+                  </div>
+                  {adminMenuItems.map(item => {
+                    const isActive = location === item.path;
+                    return (
+                      <SidebarMenuItem key={item.path}>
+                        <SidebarMenuButton
+                          isActive={isActive}
+                          onClick={() => setLocation(item.path)}
+                          tooltip={item.label}
+                          className={`h-10 transition-all font-normal`}
+                        >
+                          <item.icon
+                            className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                          />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </>
+              )}
             </SidebarMenu>
           </SidebarContent>
 

@@ -2,8 +2,8 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, adminProcedure, doctorProcedure, nurseProcedure, labTechnicianProcedure } from "../_core/trpc";
 import * as db from "../db";
-import { eq, desc } from "drizzle-orm";
-import { appointments, medicalRecords, prescriptions, prescriptionItems, labOrders, labReports } from "../../drizzle/schema";
+import { eq, desc, and, asc, sql } from "drizzle-orm";
+import { appointments, medicalRecords, prescriptions, prescriptionItems, labOrders, labReports, patients, doctors, users, departments } from "../../drizzle/schema";
 
 // ============================================================================
 // APPOINTMENT MANAGEMENT
@@ -25,7 +25,31 @@ export const appointmentRouter = router({
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       
-      return db.createAppointment({
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new Error("Database not available");
+
+      // Time Conflict Validation
+      const conflicting = await dbInstance
+        .select()
+        .from(appointments)
+        .where(
+          and(
+            eq(appointments.doctorId, input.doctorId),
+            eq(appointments.appointmentDate, input.appointmentDate as any),
+            eq(appointments.appointmentTime, input.appointmentTime),
+            sql`${appointments.status} != 'cancelled'`
+          )
+        )
+        .limit(1);
+
+      if (conflicting.length > 0) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "The doctor is already booked at this date and time.",
+        });
+      }
+      
+      const [res] = await dbInstance.insert(appointments).values({
         patientId: input.patientId,
         doctorId: input.doctorId,
         departmentId: input.departmentId,
@@ -36,6 +60,8 @@ export const appointmentRouter = router({
         createdBy: ctx.user.id,
         status: "scheduled",
       });
+
+      return { id: (res as any).insertId };
     }),
 
   getById: protectedProcedure
@@ -49,19 +75,91 @@ export const appointmentRouter = router({
   getByPatient: protectedProcedure
     .input(z.object({ patientId: z.number() }))
     .query(async ({ input }) => {
-      return db.getAppointmentsByPatient(input.patientId);
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      return dbInstance
+        .select({
+          id: appointments.id,
+          appointmentDate: appointments.appointmentDate,
+          appointmentTime: appointments.appointmentTime,
+          reason: appointments.reason,
+          notes: appointments.notes,
+          status: appointments.status,
+          patientId: appointments.patientId,
+          patientName: sql<string>`concat(${patients.firstName}, ' ', ${patients.lastName})`,
+          doctorId: appointments.doctorId,
+          doctorName: users.name,
+          departmentId: appointments.departmentId,
+          departmentName: departments.name,
+        })
+        .from(appointments)
+        .innerJoin(patients, eq(appointments.patientId, patients.id))
+        .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+        .innerJoin(users, eq(doctors.userId, users.id))
+        .innerJoin(departments, eq(appointments.departmentId, departments.id))
+        .where(eq(appointments.patientId, input.patientId))
+        .orderBy(desc(appointments.appointmentDate));
     }),
 
   getByDoctor: doctorProcedure
     .input(z.object({ doctorId: z.number() }))
     .query(async ({ input }) => {
-      return db.getAppointmentsByDoctor(input.doctorId);
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      return dbInstance
+        .select({
+          id: appointments.id,
+          appointmentDate: appointments.appointmentDate,
+          appointmentTime: appointments.appointmentTime,
+          reason: appointments.reason,
+          notes: appointments.notes,
+          status: appointments.status,
+          patientId: appointments.patientId,
+          patientName: sql<string>`concat(${patients.firstName}, ' ', ${patients.lastName})`,
+          doctorId: appointments.doctorId,
+          doctorName: users.name,
+          departmentId: appointments.departmentId,
+          departmentName: departments.name,
+        })
+        .from(appointments)
+        .innerJoin(patients, eq(appointments.patientId, patients.id))
+        .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+        .innerJoin(users, eq(doctors.userId, users.id))
+        .innerJoin(departments, eq(appointments.departmentId, departments.id))
+        .where(eq(appointments.doctorId, input.doctorId))
+        .orderBy(desc(appointments.appointmentDate));
     }),
 
   getByDate: protectedProcedure
     .input(z.object({ date: z.string() }))
     .query(async ({ input }) => {
-      return db.getAppointmentsByDate(new Date(input.date));
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      return dbInstance
+        .select({
+          id: appointments.id,
+          appointmentDate: appointments.appointmentDate,
+          appointmentTime: appointments.appointmentTime,
+          reason: appointments.reason,
+          notes: appointments.notes,
+          status: appointments.status,
+          patientId: appointments.patientId,
+          patientName: sql<string>`concat(${patients.firstName}, ' ', ${patients.lastName})`,
+          doctorId: appointments.doctorId,
+          doctorName: users.name,
+          departmentId: appointments.departmentId,
+          departmentName: departments.name,
+        })
+        .from(appointments)
+        .innerJoin(patients, eq(appointments.patientId, patients.id))
+        .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+        .innerJoin(users, eq(doctors.userId, users.id))
+        .innerJoin(departments, eq(appointments.departmentId, departments.id))
+        .where(eq(appointments.appointmentDate, input.date as any))
+        .orderBy(asc(appointments.appointmentTime));
     }),
 
   update: protectedProcedure
@@ -98,12 +196,17 @@ export const ehrRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      
-      return db.createMedicalRecord({
+
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new Error("Database not available");
+
+      const [res] = await dbInstance.insert(medicalRecords).values({
         ...input,
         createdBy: ctx.user.id,
         recordDate: new Date(),
       });
+
+      return { id: (res as any).insertId };
     }),
 
   getByPatient: protectedProcedure
@@ -142,25 +245,43 @@ export const prescriptionRouter = router({
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
-      const prescription = await db.createPrescription({
+      // Look up doctor profile ID
+      const [doctorProfile] = await dbInstance
+        .select()
+        .from(doctors)
+        .where(eq(doctors.userId, ctx.user.id))
+        .limit(1);
+
+      let doctorId: number;
+      if (doctorProfile) {
+        doctorId = doctorProfile.id;
+      } else {
+        const allDocs = await dbInstance.select().from(doctors).limit(1);
+        if (allDocs.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "No doctors registered" });
+        doctorId = allDocs[0].id;
+      }
+
+      const [res] = await dbInstance.insert(prescriptions).values({
         patientId: input.patientId,
         appointmentId: input.appointmentId,
         medicalRecordId: input.medicalRecordId,
-        prescribedBy: ctx.user.id,
+        prescribedBy: doctorId,
         prescriptionDate: new Date(),
         status: "active",
         notes: input.notes,
       });
 
+      const prescriptionId = (res as any).insertId;
+
       // Create prescription items
       for (const item of input.items) {
         await dbInstance.insert(prescriptionItems).values({
-          prescriptionId: (prescription as any).insertId,
+          prescriptionId,
           ...item,
         });
       }
 
-      return { success: true, prescriptionId: (prescription as any).insertId };
+      return { success: true, prescriptionId };
     }),
 
   getByPatient: protectedProcedure
@@ -191,7 +312,7 @@ export const labRouter = router({
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
       
-      return dbInstance.insert(labOrders).values({
+      const [res] = await dbInstance.insert(labOrders).values({
         orderCode,
         patientId: input.patientId,
         appointmentId: input.appointmentId,
@@ -201,19 +322,29 @@ export const labRouter = router({
         status: "pending",
         notes: input.notes,
       });
+
+      const inserted = await dbInstance
+        .select()
+        .from(labOrders)
+        .where(eq(labOrders.id, (res as any).insertId))
+        .limit(1);
+
+      return inserted[0] || { id: (res as any).insertId, orderCode, status: "pending" };
     }),
 
-  assignOrder: labTechnicianProcedure
-    .input(z.object({ orderId: z.number() }))
+  assignOrder: protectedProcedure
+    .input(z.object({ orderId: z.number(), technicianId: z.number().optional() }))
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
       
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
+      const assignTo = input.technicianId || ctx.user.id;
+
       await dbInstance
         .update(labOrders)
-        .set({ assignedTo: ctx.user.id, status: "in_progress" })
+        .set({ assignedTo: assignTo, status: "in_progress" })
         .where(eq(labOrders.id, input.orderId));
 
       return { success: true };
@@ -275,15 +406,31 @@ export const labRouter = router({
       const dbInstance = await db.getDb();
       if (!dbInstance) return [];
 
+      const query = dbInstance
+        .select({
+          id: labOrders.id,
+          orderCode: labOrders.orderCode,
+          patientId: labOrders.patientId,
+          patientName: sql<string>`concat(${patients.firstName}, ' ', ${patients.lastName})`,
+          appointmentId: labOrders.appointmentId,
+          testType: labOrders.testType,
+          orderedBy: labOrders.orderedBy,
+          assignedTo: labOrders.assignedTo,
+          assignedToName: users.name,
+          orderDate: labOrders.orderDate,
+          expectedDate: labOrders.expectedDate,
+          status: labOrders.status,
+          notes: labOrders.notes,
+        })
+        .from(labOrders)
+        .innerJoin(patients, eq(labOrders.patientId, patients.id))
+        .leftJoin(users, eq(labOrders.assignedTo, users.id));
+
       if (input.patientId) {
-        return dbInstance
-          .select()
-          .from(labOrders)
-          .where(eq(labOrders.patientId, input.patientId))
-          .orderBy(desc(labOrders.orderDate));
+        return query.where(eq(labOrders.patientId, input.patientId)).orderBy(desc(labOrders.orderDate));
       }
 
-      return dbInstance.select().from(labOrders).orderBy(desc(labOrders.orderDate));
+      return query.orderBy(desc(labOrders.orderDate));
     }),
 
   getReports: protectedProcedure
@@ -292,14 +439,26 @@ export const labRouter = router({
       const dbInstance = await db.getDb();
       if (!dbInstance) return [];
 
+      const query = dbInstance
+        .select({
+          id: labReports.id,
+          labOrderId: labReports.labOrderId,
+          patientId: labReports.patientId,
+          patientName: sql<string>`concat(${patients.firstName}, ' ', ${patients.lastName})`,
+          reportDate: labReports.reportDate,
+          results: labReports.results,
+          reportUrl: labReports.reportUrl,
+          reportPdfUrl: labReports.reportPdfUrl,
+          normalRange: labReports.normalRange,
+          status: labReports.status,
+        })
+        .from(labReports)
+        .innerJoin(patients, eq(labReports.patientId, patients.id));
+
       if (input.patientId) {
-        return dbInstance
-          .select()
-          .from(labReports)
-          .where(eq(labReports.patientId, input.patientId))
-          .orderBy(desc(labReports.reportDate));
+        return query.where(eq(labReports.patientId, input.patientId)).orderBy(desc(labReports.reportDate));
       }
 
-      return dbInstance.select().from(labReports).orderBy(desc(labReports.reportDate));
+      return query.orderBy(desc(labReports.reportDate));
     }),
 });

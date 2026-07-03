@@ -152,6 +152,7 @@ export const authRouter = router({
           email: user.email,
           role: user.role,
           phone: user.phone,
+          isVerified: user.isVerified,
         },
         tokens,
       };
@@ -224,6 +225,7 @@ export const authRouter = router({
         role: ctx.user.role,
         phone: ctx.user.phone,
         isActive: ctx.user.isActive,
+        isVerified: ctx.user.isVerified,
       };
     } catch (error) {
       if (error instanceof TRPCError) throw error;
@@ -322,4 +324,108 @@ export const authRouter = router({
       message: "Logged out successfully",
     };
   }),
+
+  /**
+   * Request password reset
+   */
+  forgotPassword: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const user = await findUserByEmail(input.email);
+      if (!user) {
+        return { success: true };
+      }
+      const { signGeneralToken } = await import("../_core/jwt");
+      const resetToken = await signGeneralToken(
+        { userId: user.id, email: user.email, purpose: "password_reset" },
+        "15m"
+      );
+      console.log(`\n==================================================`);
+      console.log(`[Email Mock] Password Reset Request for ${user.email}`);
+      console.log(`Reset Link: http://localhost:3000/reset-password?token=${resetToken}`);
+      console.log(`==================================================\n`);
+      return { success: true, token: resetToken };
+    }),
+
+  /**
+   * Reset password using token
+   */
+  resetPassword: publicProcedure
+    .input(
+      z.object({
+        token: z.string(),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { verifyGeneralToken } = await import("../_core/jwt");
+      try {
+        const payload = await verifyGeneralToken(input.token);
+        if (payload.purpose !== "password_reset") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid reset token purpose" });
+        }
+        const user = await findUserById(payload.userId);
+        if (!user) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+        }
+        const passwordHash = hashPassword(input.password);
+        await updateUserPassword(user.id, passwordHash);
+        return { success: true };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid or expired reset token" });
+      }
+    }),
+
+  /**
+   * Send verification email (OTP)
+   */
+  sendVerification: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const { signGeneralToken } = await import("../_core/jwt");
+      const verificationToken = await signGeneralToken(
+        { userId: ctx.user.id, code: otp, purpose: "email_verification" },
+        "15m"
+      );
+      console.log(`\n==================================================`);
+      console.log(`[Email Mock] Verification Code for ${ctx.user.email}`);
+      console.log(`Verification Code (OTP): ${otp}`);
+      console.log(`==================================================\n`);
+      return { success: true, token: verificationToken, code: otp };
+    }),
+
+  /**
+   * Verify email OTP
+   */
+  verifyEmail: protectedProcedure
+    .input(
+      z.object({
+        token: z.string(),
+        code: z.string().length(6, "Code must be 6 digits"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      const { verifyGeneralToken } = await import("../_core/jwt");
+      try {
+        const payload = await verifyGeneralToken(input.token);
+        if (payload.purpose !== "email_verification") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid verification token purpose" });
+        }
+        if (payload.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Token belongs to another user" });
+        }
+        if (payload.code !== input.code) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Incorrect verification code" });
+        }
+        const { verifyUserEmail } = await import("../_core/authDb");
+        await verifyUserEmail(ctx.user.id);
+        return { success: true };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid or expired verification token" });
+      }
+    }),
 });

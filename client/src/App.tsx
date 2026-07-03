@@ -9,6 +9,11 @@ import BedManagement from "@/pages/BedManagement";
 import PharmacyInventory from "@/pages/PharmacyInventory";
 import Billing from "@/pages/Billing";
 import LabManagement from "@/pages/LabManagement";
+import ResetPassword from "@/pages/ResetPassword";
+import VerifyEmail from "@/pages/VerifyEmail";
+import StaffManagement from "@/pages/StaffManagement";
+import DoctorManagement from "@/pages/DoctorManagement";
+import DepartmentManagement from "@/pages/DepartmentManagement";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -43,6 +48,10 @@ function Router() {
           <Route path="/pharmacy" component={PharmacyInventory} />
           <Route path="/billing" component={Billing} />
           <Route path="/lab" component={LabManagement} />
+          <Route path="/verify-email" component={VerifyEmail} />
+          <Route path="/staff" component={StaffManagement} />
+          <Route path="/doctors-admin" component={DoctorManagement} />
+          <Route path="/departments" component={DepartmentManagement} />
           <Route path="/" component={Dashboard} />
         </>
       ) : (
@@ -51,6 +60,7 @@ function Router() {
           <Route path="/login" component={Login} />
           <Route path="/signup" component={Signup} />
           <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
         </>
       )}
       <Route path="/404" component={NotFound} />

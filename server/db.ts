@@ -28,14 +28,14 @@ export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
       _db = drizzle(process.env.DATABASE_URL);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[Database] Failed to connect:", {
         message: error.message,
-        errno: (error as any).errno,
-        code: (error as any).code,
-        sqlState: (error as any).sqlState,
-        sqlMessage: (error as any).sqlMessage,
-        sql: (error as any).sql,
+        errno: error.errno,
+        code: error.code,
+        sqlState: error.sqlState,
+        sqlMessage: error.sqlMessage,
+        sql: error.sql,
         stack: error.stack,
       });
       _db = null;

@@ -11,7 +11,7 @@
 - [x] Permission system implementation
 - [x] Protected procedures for role-based access
 - [x] Frontend route guards and RBAC middleware
-- [ ] Demo account seeding
+- [x] Demo account seeding
 
 ## Phase 3: Core Management Modules
 - [x] Department management (CRUD)
@@ -44,7 +44,7 @@
 - [ ] Audit logging system
 
 ## Phase 7: Finalization
-- [ ] Seed data generation (50 patients, 15 doctors, 25 staff, 100 appointments, etc.)
+- [x] Seed data generation (50 patients, 15 doctors, 25 staff, 100 appointments, etc.)
 - [x] Backend API testing (Vitest with 15+ test suites)
 - [ ] Frontend component testing (Vitest)
 - [x] API documentation (comprehensive endpoint reference)
@@ -97,15 +97,15 @@
 ## Remaining Work
 
 ### Frontend UI Pages
-- [ ] Patient Management UI (list, create, edit, view)
+- [x] Patient Management UI (list, create, edit, view)
 - [ ] Doctor Management UI
-- [ ] Appointment Scheduling UI with calendar
-- [ ] EHR Viewer with timeline
+- [x] Appointment Scheduling UI with calendar
+- [x] EHR Viewer with timeline
 - [ ] Prescription Management UI
-- [ ] Lab Order and Report UI
-- [ ] Bed Management UI with ward visualization
-- [ ] Billing UI with invoice generation
-- [ ] Pharmacy Inventory UI
+- [x] Lab Order and Report UI
+- [x] Bed Management UI with ward visualization
+- [x] Billing UI with invoice generation
+- [x] Pharmacy Inventory UI
 - [ ] User Management UI (admin only)
 - [ ] Department Management UI
 

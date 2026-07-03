@@ -203,6 +203,6 @@ export async function verifyUserEmail(userId: number): Promise<void> {
 
   await db
     .update(users)
-    .set({ updatedAt: new Date() })
+    .set({ isVerified: true, updatedAt: new Date() })
     .where(eq(users.id, userId));
 }

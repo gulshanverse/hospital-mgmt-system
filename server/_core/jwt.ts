@@ -122,3 +122,26 @@ export function extractTokenFromHeader(authHeader: string | undefined): string |
   if (!authHeader.startsWith("Bearer ")) return null;
   return authHeader.slice(7);
 }
+
+/**
+ * Sign a general payload using the access secret
+ */
+export async function signGeneralToken(payload: Record<string, any>, expiry: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const expirySec = parseExpiry(expiry);
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt(now)
+    .setExpirationTime(now + expirySec)
+    .sign(getAccessSecret());
+}
+
+/**
+ * Verify a general token using the access secret
+ */
+export async function verifyGeneralToken(token: string): Promise<Record<string, any>> {
+  const { payload } = await jwtVerify(token, getAccessSecret(), {
+    algorithms: ["HS256"],
+  });
+  return payload;
+}

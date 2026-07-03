@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, adminProcedure, receptionistProcedure, doctorProcedure } from "../\_core/trpc";
 import { requirePermission } from "../\_core/rbac";
 import * as db from "../db";
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { doctors, departments, patients, users } from "../../drizzle/schema";
 
 // ============================================================================
@@ -33,12 +33,26 @@ export const patientRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const patientCode = `PAT-${Date.now()}`;
-      const result = await db.createPatient({
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      const [res] = await dbInstance.insert(patients).values({
         patientCode,
         ...input,
         status: "active",
       });
-      return result;
+
+      const inserted = await dbInstance
+        .select()
+        .from(patients)
+        .where(eq(patients.id, (res as any).insertId))
+        .limit(1);
+
+      if (inserted.length === 0) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve created patient" });
+      }
+
+      return inserted[0];
     }),
 
   getById: protectedProcedure
@@ -63,11 +77,22 @@ export const patientRouter = router({
       return db.searchPatients(input.query, input.limit, input.offset);
     }),
 
-  list: protectedProcedure.query(async () => {
-    const dbInstance = await db.getDb();
-    if (!dbInstance) return [];
-    return dbInstance.select().from(patients);
-  }),
+  list: protectedProcedure
+    .input(
+      z.object({
+        status: z.enum(["active", "admitted", "discharged"]).optional(),
+      }).optional()
+    )
+    .query(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      let query = dbInstance.select().from(patients);
+      if (input?.status) {
+        query = query.where(eq(patients.status, input.status)) as any;
+      }
+      return query.orderBy(desc(patients.createdAt));
+    }),
 
   update: receptionistProcedure
     .input(
@@ -94,6 +119,15 @@ export const patientRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { id, ...updateData } = input;
       await db.updatePatient(id, updateData);
+      return { success: true };
+    }),
+
+  delete: receptionistProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      await dbInstance.delete(patients).where(eq(patients.id, input.id));
       return { success: true };
     }),
 });
@@ -154,6 +188,10 @@ export const doctorRouter = router({
         userId: doctors.userId,
         departmentId: doctors.departmentId,
         specialty: doctors.specialty,
+        qualification: doctors.qualification,
+        experience: doctors.experience,
+        licenseNumber: doctors.licenseNumber,
+        availabilitySchedule: doctors.availabilitySchedule,
         isAvailable: doctors.isAvailable,
         name: users.name,
       })
@@ -180,6 +218,15 @@ export const doctorRouter = router({
       if (!dbInstance) throw new Error("Database not available");
       
       await dbInstance.update(doctors).set(updateData).where(eq(doctors.id, id));
+      return { success: true };
+    }),
+
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      await dbInstance.delete(doctors).where(eq(doctors.id, input.id));
       return { success: true };
     }),
 });
@@ -236,6 +283,16 @@ export const departmentRouter = router({
       if (!dbInstance) throw new Error("Database not available");
       
       await dbInstance.update(departments).set(updateData).where(eq(departments.id, id));
+      return { success: true };
+    }),
+
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      // Safely deactivate department rather than hard delete to preserve audits and relationships
+      await dbInstance.update(departments).set({ isActive: false }).where(eq(departments.id, input.id));
       return { success: true };
     }),
 });

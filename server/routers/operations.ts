@@ -2,8 +2,8 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, adminProcedure, nurseProcedure, pharmacistProcedure } from "../_core/trpc";
 import * as db from "../db";
-import { eq, desc } from "drizzle-orm";
-import { beds, admissions, pharmacyInventory, invoices, invoiceItems } from "../../drizzle/schema";
+import { eq, desc, sql } from "drizzle-orm";
+import { beds, admissions, pharmacyInventory, invoices, invoiceItems, wards, patients } from "../../drizzle/schema";
 
 // ============================================================================
 // BED MANAGEMENT
@@ -11,19 +11,58 @@ import { beds, admissions, pharmacyInventory, invoices, invoiceItems } from "../
 
 export const bedRouter = router({
   getAvailable: protectedProcedure.query(async () => {
-    return db.getAvailableBeds();
+    const dbInstance = await db.getDb();
+    if (!dbInstance) return [];
+    return dbInstance
+      .select({
+        id: beds.id,
+        bedCode: beds.bedCode,
+        bedNumber: beds.bedCode,
+        wardId: beds.wardId,
+        wardName: wards.name,
+        roomNumber: beds.roomNumber,
+        status: beds.status,
+      })
+      .from(beds)
+      .innerJoin(wards, eq(beds.wardId, wards.id))
+      .where(eq(beds.status, "available"));
   }),
 
   list: protectedProcedure.query(async () => {
     const dbInstance = await db.getDb();
     if (!dbInstance) return [];
-    return dbInstance.select().from(beds);
+    return dbInstance
+      .select({
+        id: beds.id,
+        bedCode: beds.bedCode,
+        bedNumber: beds.bedCode,
+        wardId: beds.wardId,
+        wardName: wards.name,
+        roomNumber: beds.roomNumber,
+        status: beds.status,
+      })
+      .from(beds)
+      .innerJoin(wards, eq(beds.wardId, wards.id));
   }),
 
   getByWard: protectedProcedure
     .input(z.object({ wardId: z.number() }))
     .query(async ({ input }) => {
-      return db.getBedsByWard(input.wardId);
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+      return dbInstance
+        .select({
+          id: beds.id,
+          bedCode: beds.bedCode,
+          bedNumber: beds.bedCode,
+          wardId: beds.wardId,
+          wardName: wards.name,
+          roomNumber: beds.roomNumber,
+          status: beds.status,
+        })
+        .from(beds)
+        .innerJoin(wards, eq(beds.wardId, wards.id))
+        .where(eq(beds.wardId, input.wardId));
     }),
 
   updateStatus: nurseProcedure
@@ -64,7 +103,7 @@ export const admissionRouter = router({
       if (!dbInstance) throw new Error("Database not available");
 
       // Create admission record
-      const admission = await db.createAdmission({
+      const [admission] = await db.createAdmission({
         patientId: input.patientId,
         bedId: input.bedId,
         departmentId: input.departmentId,
@@ -85,18 +124,46 @@ export const admissionRouter = router({
     }),
 
   discharge: nurseProcedure
-    .input(z.object({ admissionId: z.number() }))
+    .input(z.object({ admissionId: z.number(), dischargeSummary: z.string().optional() }))
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
 
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
-      // Update admission to discharged
+      // Get the admission record to find the bed and patient
+      const [admission] = await dbInstance
+        .select()
+        .from(admissions)
+        .where(eq(admissions.id, input.admissionId))
+        .limit(1);
+
+      if (!admission) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Admission not found" });
+      }
+
+      // Update admission to discharged (store discharge summary in notes)
       await dbInstance
         .update(admissions)
-        .set({ status: "discharged", dischargeDate: new Date() })
+        .set({
+          status: "discharged",
+          dischargeDate: new Date(),
+          notes: input.dischargeSummary || admission.notes,
+        })
         .where(eq(admissions.id, input.admissionId));
+
+      // Free the bed — set back to available
+      if (admission.bedId) {
+        await dbInstance
+          .update(beds)
+          .set({ status: "available" })
+          .where(eq(beds.id, admission.bedId));
+      }
+
+      // Update patient status back to active
+      if (admission.patientId) {
+        await db.updatePatient(admission.patientId, { status: "active" });
+      }
 
       return { success: true };
     }),
@@ -212,7 +279,7 @@ export const billingRouter = router({
       const invoiceNumber = `INV-${Date.now()}`;
       const totalAmount = input.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
-      const invoice = await db.createInvoice({
+      const [invoice] = await db.createInvoice({
         invoiceNumber,
         patientId: input.patientId,
         admissionId: input.admissionId,
@@ -246,12 +313,100 @@ export const billingRouter = router({
   getByPatient: protectedProcedure
     .input(z.object({ patientId: z.number() }))
     .query(async ({ input }) => {
-      return db.getInvoicesByPatient(input.patientId);
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+      return dbInstance
+        .select({
+          id: invoices.id,
+          invoiceNumber: invoices.invoiceNumber,
+          patientId: invoices.patientId,
+          patientName: sql<string>`concat(${patients.firstName}, ' ', ${patients.lastName})`,
+          admissionId: invoices.admissionId,
+          appointmentId: invoices.appointmentId,
+          invoiceDate: invoices.invoiceDate,
+          dueDate: invoices.dueDate,
+          totalAmount: invoices.totalAmount,
+          paidAmount: invoices.paidAmount,
+          status: invoices.status,
+          notes: invoices.notes,
+          createdBy: invoices.createdBy,
+        })
+        .from(invoices)
+        .innerJoin(patients, eq(invoices.patientId, patients.id))
+        .where(eq(invoices.patientId, input.patientId))
+        .orderBy(desc(invoices.invoiceDate));
     }),
 
   getPending: adminProcedure.query(async () => {
-    return db.getPendingInvoices();
+    const dbInstance = await db.getDb();
+    if (!dbInstance) return [];
+    return dbInstance
+      .select({
+        id: invoices.id,
+        invoiceNumber: invoices.invoiceNumber,
+        patientId: invoices.patientId,
+        patientName: sql<string>`concat(${patients.firstName}, ' ', ${patients.lastName})`,
+        admissionId: invoices.admissionId,
+        appointmentId: invoices.appointmentId,
+        invoiceDate: invoices.invoiceDate,
+        dueDate: invoices.dueDate,
+        totalAmount: invoices.totalAmount,
+        paidAmount: invoices.paidAmount,
+        status: invoices.status,
+        notes: invoices.notes,
+        createdBy: invoices.createdBy,
+      })
+      .from(invoices)
+      .innerJoin(patients, eq(invoices.patientId, patients.id))
+      .where(eq(invoices.status, "pending"))
+      .orderBy(desc(invoices.invoiceDate));
   }),
+
+  getInvoiceDetails: protectedProcedure
+    .input(z.object({ invoiceId: z.number() }))
+    .query(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      const invoice = await dbInstance
+        .select({
+          id: invoices.id,
+          invoiceNumber: invoices.invoiceNumber,
+          patientId: invoices.patientId,
+          patientName: sql<string>`concat(${patients.firstName}, ' ', ${patients.lastName})`,
+          patientCode: patients.patientCode,
+          patientPhone: patients.phone,
+          patientEmail: patients.email,
+          patientAddress: patients.address,
+          patientCity: patients.city,
+          patientState: patients.state,
+          patientZip: patients.zipCode,
+          invoiceDate: invoices.invoiceDate,
+          dueDate: invoices.dueDate,
+          totalAmount: invoices.totalAmount,
+          paidAmount: invoices.paidAmount,
+          status: invoices.status,
+          notes: invoices.notes,
+        })
+        .from(invoices)
+        .innerJoin(patients, eq(invoices.patientId, patients.id))
+        .where(eq(invoices.id, input.invoiceId))
+        .limit(1);
+
+      if (invoice.length === 0) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found" });
+      }
+
+      const items = await dbInstance
+        .select()
+        .from(invoiceItems)
+        .where(eq(invoiceItems.invoiceId, input.invoiceId));
+
+      return {
+        invoice: invoice[0],
+        items,
+      };
+    }),
 
   updateStatus: adminProcedure
     .input(

@@ -6,10 +6,12 @@ import { patientRouter, doctorRouter, departmentRouter } from "./routers/managem
 import { appointmentRouter, ehrRouter, prescriptionRouter, labRouter } from "./routers/clinical";
 import { bedRouter, admissionRouter, pharmacyRouter, billingRouter } from "./routers/operations";
 import { analyticsRouter, searchRouter } from "./routers/analytics";
+import { userRouter } from "./routers/user";
 
 export const appRouter = router({
   system: systemRouter,
   auth: authRouter,
+  user: userRouter,
 
   // Management Routers
   patient: patientRouter,

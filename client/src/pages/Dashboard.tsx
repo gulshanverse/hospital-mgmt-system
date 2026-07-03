@@ -48,8 +48,25 @@ export default function Dashboard() {
     return (
       <DashboardLayout>
         <div className="space-y-6">
+          {!user?.isVerified && (
+            <Card className="p-4 bg-yellow-50 border border-yellow-200 flex items-center justify-between print:hidden">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <div>
+                  <p className="text-sm font-semibold text-yellow-800">Your email address is not verified</p>
+                  <p className="text-xs text-yellow-700">Verify your email to ensure secure account access and recoverability.</p>
+                </div>
+              </div>
+              <a href="/verify-email">
+                <Button size="sm" variant="outline" className="border-yellow-300 text-yellow-800 hover:bg-yellow-100">
+                  Verify Now
+                </Button>
+              </a>
+            </Card>
+          )}
+
           <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-            <h1 className="text-2xl font-bold text-blue-900">Welcome to JeevanOS, {user?.fullName || user?.name || "User"}!</h1>
+            <h1 className="text-2xl font-bold text-blue-900">Welcome to JeevanOS, {user?.fullName || "User"}!</h1>
             <p className="text-blue-700 mt-2">You are logged in as <span className="font-semibold capitalize">{user?.role}</span>. Access the sidebar navigation to view and manage features allowed for your role.</p>
           </Card>
 
@@ -82,6 +99,23 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {!user?.isVerified && (
+          <Card className="p-4 bg-yellow-50 border border-yellow-200 flex items-center justify-between print:hidden">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-yellow-600" />
+              <div>
+                <p className="text-sm font-semibold text-yellow-800">Your email address is not verified</p>
+                <p className="text-xs text-yellow-700">Verify your email to ensure secure account access and recoverability.</p>
+              </div>
+            </div>
+            <a href="/verify-email">
+              <Button size="sm" variant="outline" className="border-yellow-300 text-yellow-800 hover:bg-yellow-100">
+                Verify Now
+              </Button>
+            </a>
+          </Card>
+        )}
+
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard icon={Users} label="Total Patients" value={kpis?.totalPatients || 0} color="#3b82f6" />

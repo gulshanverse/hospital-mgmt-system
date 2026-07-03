@@ -26,6 +26,12 @@ export default function Billing() {
   const [itemQty, setItemQty] = useState("1");
   const [itemPrice, setItemPrice] = useState("");
 
+  // Autocomplete and Details State
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [activeInvoiceId, setActiveInvoiceId] = useState<number | null>(null);
+
   // Edit Form State
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
@@ -38,6 +44,25 @@ export default function Billing() {
     setEditPaidAmount(invoice.paidAmount ? invoice.paidAmount.toString() : "0");
     setIsStatusOpen(true);
   };
+
+  const { data: patientsList } = trpc.patient.list.useQuery();
+  const { data: patientAdmissions } = trpc.admission.getByPatient.useQuery(
+    { patientId: selectedPatient?.id || 0 },
+    { enabled: !!selectedPatient }
+  );
+
+  const { data: invoiceDetails, isLoading: isDetailsLoading } = trpc.billing.getInvoiceDetails.useQuery(
+    { invoiceId: activeInvoiceId || 0 },
+    { enabled: !!activeInvoiceId }
+  );
+
+  const filteredPatients = patientSearch
+    ? patientsList?.filter((p: any) =>
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
+        p.phone?.includes(patientSearch) ||
+        p.patientCode?.toLowerCase().includes(patientSearch.toLowerCase())
+      ) || []
+    : [];
 
   const { data: pendingInvoices, refetch } = trpc.billing.getPending.useQuery(undefined, {
     enabled: isAdmin,
@@ -198,11 +223,28 @@ export default function Billing() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1"
+                            onClick={() => {
+                              setActiveInvoiceId(invoice.id);
+                              setIsDetailOpen(true);
+                            }}
+                          >
                             <Eye className="w-4 h-4" />
                             View
                           </Button>
-                          <Button size="sm" variant="outline" className="gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1"
+                            onClick={() => {
+                              setActiveInvoiceId(invoice.id);
+                              setIsDetailOpen(true);
+                              setTimeout(() => window.print(), 500);
+                            }}
+                          >
                             <Download className="w-4 h-4" />
                             PDF
                           </Button>
@@ -233,8 +275,80 @@ export default function Billing() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input placeholder="Patient ID (Number)" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
-              <Input placeholder="Admission ID (optional Number)" value={admissionId} onChange={(e) => setAdmissionId(e.target.value)} />
+              <div className="space-y-1 relative">
+                <label className="text-xs text-gray-500 font-semibold px-1">Patient</label>
+                {selectedPatient ? (
+                  <div className="flex items-center justify-between p-2.5 border rounded-lg bg-blue-50 border-blue-200">
+                    <div>
+                      <p className="font-semibold text-sm text-blue-900">
+                        {selectedPatient.firstName} {selectedPatient.lastName}
+                      </p>
+                      <p className="text-xs text-blue-700">
+                        {selectedPatient.patientCode} {selectedPatient.phone ? `• ${selectedPatient.phone}` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedPatient(null);
+                        setPatientSearch("");
+                        setPatientId("");
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Input
+                      placeholder="Search Patient..."
+                      value={patientSearch}
+                      onChange={(e) => setPatientSearch(e.target.value)}
+                    />
+                    {patientSearch && (
+                      <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {filteredPatients.length > 0 ? (
+                          filteredPatients.map((p: any) => (
+                            <div
+                              key={p.id}
+                              className="p-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm"
+                              onClick={() => {
+                                setSelectedPatient(p);
+                                setPatientId(p.id.toString());
+                                setPatientSearch("");
+                              }}
+                            >
+                              <span className="font-semibold">{p.firstName} {p.lastName}</span>
+                              <span className="text-xs text-muted-foreground block">{p.patientCode} • {p.phone}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-2 text-sm text-muted-foreground text-center">No patients found</div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-500 font-semibold px-1 font-sans">Active Admission</label>
+                <select
+                  disabled={!selectedPatient || !patientAdmissions || patientAdmissions.length === 0}
+                  value={admissionId}
+                  onChange={(e) => setAdmissionId(e.target.value)}
+                  className="w-full border rounded px-3 py-2.5 text-sm bg-background"
+                >
+                  <option value="">No Active Admission</option>
+                  {patientAdmissions?.map((adm: any) => (
+                    <option key={adm.id} value={adm.id.toString()}>
+                      Bed Code: {adm.bedCode || `Bed #${adm.bedId}`} (Admitted {new Date(adm.admissionDate).toLocaleDateString()})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="space-y-2">
               <p className="font-semibold text-sm">Invoice Item</p>
@@ -305,6 +419,131 @@ export default function Billing() {
               <Button onClick={handleUpdateStatus} disabled={updateStatusMutation.isPending} className="w-full">
                 {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
               </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice Details printable dialog */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto print:p-0 print:border-none print:shadow-none">
+          <div className="flex justify-between items-center print:hidden border-b pb-4 mb-4">
+            <DialogTitle className="text-xl">Invoice Details</DialogTitle>
+            <Button onClick={() => window.print()} className="gap-2">
+              <Download className="w-4 h-4" />
+              Print / Save PDF
+            </Button>
+          </div>
+
+          {isDetailsLoading && (
+            <div className="text-center py-12 text-muted-foreground">Loading invoice details...</div>
+          )}
+
+          {invoiceDetails && (
+            <div className="space-y-6 print:space-y-4 print:text-black">
+              {/* Header section */}
+              <div className="flex justify-between border-b pb-6">
+                <div>
+                  <h1 className="text-2xl font-bold text-indigo-600 print:text-black">CareFlow HMS</h1>
+                  <p className="text-sm text-gray-500">100 Health Sciences Blvd, Metro City</p>
+                  <p className="text-sm text-gray-500">Phone: +1 (555) 019-9000</p>
+                </div>
+                <div className="text-right">
+                  <h2 className="text-xl font-bold">INVOICE</h2>
+                  <p className="text-sm font-mono text-gray-600">#{invoiceDetails.invoice.invoiceNumber}</p>
+                  <p className="text-sm mt-2"><strong>Date:</strong> {new Date(invoiceDetails.invoice.invoiceDate).toLocaleDateString()}</p>
+                  <p className="text-sm"><strong>Status:</strong> <span className="uppercase font-semibold">{invoiceDetails.invoice.status}</span></p>
+                </div>
+              </div>
+
+              {/* Patient info */}
+              <div className="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-lg print:bg-transparent print:border print:p-3">
+                <div>
+                  <h3 className="font-semibold text-sm text-gray-500 uppercase tracking-wider mb-2">Patient Details</h3>
+                  <p className="font-bold text-base">{invoiceDetails.invoice.patientName}</p>
+                  <p className="text-sm text-gray-600">Code: {invoiceDetails.invoice.patientCode}</p>
+                  <p className="text-sm text-gray-600">Phone: {invoiceDetails.invoice.patientPhone || "-"}</p>
+                  <p className="text-sm text-gray-600">Email: {invoiceDetails.invoice.patientEmail || "-"}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm text-gray-500 uppercase tracking-wider mb-2">Billing Address</h3>
+                  <p className="text-sm text-gray-600">{invoiceDetails.invoice.patientAddress || "-"}</p>
+                  <p className="text-sm text-gray-600">
+                    {invoiceDetails.invoice.patientCity || "-"}
+                    {invoiceDetails.invoice.patientState ? `, ${invoiceDetails.invoice.patientState}` : ""}
+                    {invoiceDetails.invoice.patientZip ? ` ${invoiceDetails.invoice.patientZip}` : ""}
+                  </p>
+                </div>
+              </div>
+
+              {/* Line items table */}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Unit Price</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoiceDetails.items.map((item: any) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="capitalize text-sm">{item.itemType.replace("_", " ")}</TableCell>
+                      <TableCell className="text-sm">{item.description}</TableCell>
+                      <TableCell className="text-right text-sm">{item.quantity}</TableCell>
+                      <TableCell className="text-right text-sm">${parseFloat(item.unitPrice).toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-sm font-semibold">${parseFloat(item.totalPrice).toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Totals */}
+              <div className="flex justify-end pt-4 border-t">
+                <div className="w-64 space-y-2 text-sm text-right">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Subtotal:</span>
+                    <span>${parseFloat(invoiceDetails.invoice.totalAmount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Tax (0%):</span>
+                    <span>$0.00</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Discount:</span>
+                    <span>$0.00</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2 text-base font-bold text-indigo-600 print:text-black">
+                    <span>Grand Total:</span>
+                    <span>${parseFloat(invoiceDetails.invoice.totalAmount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-500 pt-1">
+                    <span>Amount Paid:</span>
+                    <span>${parseFloat(invoiceDetails.invoice.paidAmount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold border-t pt-1">
+                    <span>Balance Due:</span>
+                    <span>
+                      ${(
+                        parseFloat(invoiceDetails.invoice.totalAmount) -
+                        parseFloat(invoiceDetails.invoice.paidAmount)
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {invoiceDetails.invoice.notes && (
+                <div className="border-t pt-4 text-xs text-gray-500">
+                  <strong>Notes:</strong> {invoiceDetails.invoice.notes}
+                </div>
+              )}
+
+              <div className="text-center pt-8 border-t text-xs text-gray-400 print:block">
+                Thank you for choosing CareFlow HMS. For billing queries, support@careflowhms.com
+              </div>
             </div>
           )}
         </DialogContent>

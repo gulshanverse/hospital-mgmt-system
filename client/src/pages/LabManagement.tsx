@@ -100,7 +100,7 @@ export default function LabManagement() {
   });
 
   const handleAssignOrder = (orderId: number) => {
-    assignOrderMutation.mutate({ labOrderId: orderId });
+    assignOrderMutation.mutate({ orderId });
   };
 
   const openUploadReport = (order: any) => {
