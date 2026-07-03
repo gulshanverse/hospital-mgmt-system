@@ -160,8 +160,11 @@ export const doctorRouter = router({
         throw new TRPCError({ code: "CONFLICT", message: "This user already has a doctor profile." });
       }
 
-      // Update user's role to doctor
-      await dbInstance.update(users).set({ role: "doctor" }).where(eq(users.id, input.userId));
+      // Update user's role to doctor only if they are not an admin
+      const [user] = await dbInstance.select().from(users).where(eq(users.id, input.userId)).limit(1);
+      if (user && user.role !== "admin") {
+        await dbInstance.update(users).set({ role: "doctor" }).where(eq(users.id, input.userId));
+      }
 
       return db.createDoctor({
         ...input,
