@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { users } from "../../drizzle/schema";
-import type { User } from "../../drizzle/schema";
+import { users, refreshTokens } from "../../drizzle/schema";
+import type { User, RefreshToken } from "../../drizzle/schema";
 
 /**
  * Authentication Database Helpers
@@ -205,4 +205,53 @@ export async function verifyUserEmail(userId: number): Promise<void> {
     .update(users)
     .set({ isVerified: true, updatedAt: new Date() })
     .where(eq(users.id, userId));
+}
+
+/**
+ * Save refresh token
+ */
+export async function saveRefreshToken(userId: number, token: string, expiresAt: Date): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(refreshTokens).values({
+    userId,
+    token,
+    expiresAt,
+  });
+}
+
+/**
+ * Find refresh token
+ */
+export async function findRefreshToken(token: string): Promise<RefreshToken | undefined> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(refreshTokens)
+    .where(eq(refreshTokens.token, token))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Delete refresh token (Logout)
+ */
+export async function deleteRefreshToken(token: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(refreshTokens).where(eq(refreshTokens.token, token));
+}
+
+/**
+ * Delete all refresh tokens for user (Global Logout)
+ */
+export async function deleteAllRefreshTokens(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
 }

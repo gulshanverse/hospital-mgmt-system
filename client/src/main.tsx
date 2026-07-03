@@ -9,18 +9,25 @@ import "./index.css";
 const queryClient = new QueryClient();
 
 /**
- * Simplified Error Handling (Phase 1)
+ * Error Handling for Unauthorized Requests
  * 
- * Removed Manus OAuth redirect.
- * Phase 2 will implement proper JWT-based error handling.
+ * When a 401 Unauthorized error occurs, clear auth tokens and redirect to login.
  */
 const handleUnauthorizedError = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
   
-  // Phase 1: Log unauthorized errors
-  // Phase 2: Redirect to login page
-  console.warn("[Auth] Unauthorized:", error.message);
+  // Check if this is an authorization error
+  if (error.data?.code === "UNAUTHORIZED") {
+    console.warn("[Auth] Unauthorized:", error.message);
+    // Clear stored tokens
+    localStorage.removeItem("auth-tokens");
+    localStorage.removeItem("manus-runtime-user-info");
+    // Redirect to login
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
+    }
+  }
 };
 
 queryClient.getQueryCache().subscribe(event => {

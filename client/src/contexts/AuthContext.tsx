@@ -76,8 +76,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(new Error(err?.message || "Authentication failed"));
       setUser(null);
       setAccessToken(null);
+      setRefreshToken(null);
+      localStorage.removeItem("auth-tokens");
     }
   }, [meQuery.error]);
+
+  // Effect to redirect to login after logout
+  useEffect(() => {
+    if (!user && !loading && !accessToken) {
+      // User has been cleared, tokens removed - logout complete
+      // The App router will automatically show login page
+    }
+  }, [user, loading, accessToken]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -138,19 +148,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       await logoutMutation.mutateAsync();
-      setUser(null);
-      setAccessToken(null);
-      setRefreshToken(null);
-      localStorage.removeItem("auth-tokens");
-      setError(null);
     } catch (err) {
       console.error("Logout error:", err);
-      // Clear local state even if logout fails
+    } finally {
+      // Clear all authentication data
       setUser(null);
       setAccessToken(null);
       setRefreshToken(null);
       localStorage.removeItem("auth-tokens");
-    } finally {
+      localStorage.removeItem("manus-runtime-user-info");
+      setError(null);
       setLoading(false);
     }
   };

@@ -2,6 +2,9 @@ import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
 import type { User } from "../../drizzle/schema";
 import { extractTokenFromHeader, verifyAccessToken } from "./jwt";
 import * as authDb from "./authDb";
+import { refreshTokens } from "../../drizzle/schema";
+import { eq, and, gt } from "drizzle-orm";
+import { getDb } from "../db";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -29,7 +32,22 @@ export async function createContext(
 
         // Load user from database
         const dbUser = await authDb.findUserById(payload.userId);
-        if (dbUser && dbUser.isActive) {
+        
+        // Verify if the user has any active refresh tokens. 
+        // If not, it means they have logged out (global logout).
+        const db = await getDb();
+        const activeTokens = await db!
+          .select()
+          .from(refreshTokens)
+          .where(
+            and(
+              eq(refreshTokens.userId, payload.userId),
+              gt(refreshTokens.expiresAt, new Date())
+            )
+          )
+          .limit(1);
+        
+        if (dbUser && dbUser.isActive && activeTokens.length > 0) {
           user = dbUser;
         }
       } catch (error) {

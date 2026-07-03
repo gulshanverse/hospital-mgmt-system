@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Users, Calendar, Bed, DollarSign, AlertCircle, Activity } from "lucide-
 import { trpc } from "@/lib/trpc";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const isAdmin = user?.role === "admin";
 
   const { data: kpis, isLoading: kpisLoading } = trpc.analytics.getDashboardKPIs.useQuery(undefined, {

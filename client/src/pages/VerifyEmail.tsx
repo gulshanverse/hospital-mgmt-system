@@ -4,14 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { ShieldCheck, Mail } from "lucide-react";
 
 export default function VerifyEmail() {
   const [location, setLocation] = useLocation();
-  const { user, refresh } = useAuth();
+  const { user, refresh } = useAuthContext();
   
   const [token, setToken] = useState("");
   const [code, setCode] = useState("");

@@ -32,20 +32,33 @@ export function useAuth(options?: UseAuthOptions) {
         error instanceof TRPCClientError &&
         error.data?.code === "UNAUTHORIZED"
       ) {
-        return;
+        // Already logged out on server
+      } else {
+        console.error("Logout error:", error);
       }
-      throw error;
     } finally {
-      // Clear the Preview auto-login token mirrored into sessionStorage, so
-      // header-based sessions (Safari ITP / WebView) are logged out too. The
-      // backend cookie is cleared by the logout mutation.
+      // Clear all authentication data
       try {
         sessionStorage.removeItem("manus-cookie");
       } catch {}
+      
+      // Clear localStorage tokens
+      localStorage.removeItem("auth-tokens");
+      localStorage.removeItem("manus-runtime-user-info");
+      
+      // Clear tRPC cache
       utils.auth.me.setData(undefined, undefined);
       await utils.auth.me.invalidate();
+      
+      // Invalidate all queries to ensure clean state
+      await utils.invalidate();
+      
+      // Redirect to login page
+      if (typeof window !== "undefined") {
+        window.location.href = redirectPath;
+      }
     }
-  }, [logoutMutation, utils]);
+  }, [logoutMutation, utils, redirectPath]);
 
   const state = useMemo(() => {
     localStorage.setItem(
@@ -86,5 +99,6 @@ export function useAuth(options?: UseAuthOptions) {
     ...state,
     refresh: () => meQuery.refetch(),
     logout,
+    isLoading: loading,
   };
 }

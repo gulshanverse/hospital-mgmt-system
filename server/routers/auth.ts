@@ -9,6 +9,9 @@ import {
   updateLastLogin,
   updateUserPassword,
   updateUserProfile,
+  saveRefreshToken,
+  findRefreshToken,
+  deleteRefreshToken,
 } from "../_core/authDb";
 import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "../../shared/const";
@@ -81,6 +84,10 @@ export const authRouter = router({
         role: user.role,
       });
 
+      // Save refresh token
+      const decoded = await verifyRefreshToken(tokens.refreshToken);
+      await saveRefreshToken(user.id, tokens.refreshToken, new Date((decoded.exp || 0) * 1000));
+
       return {
         success: true,
         user: {
@@ -144,6 +151,10 @@ export const authRouter = router({
         role: user.role,
       });
 
+      // Save refresh token
+      const decoded = await verifyRefreshToken(tokens.refreshToken);
+      await saveRefreshToken(user.id, tokens.refreshToken, new Date((decoded.exp || 0) * 1000));
+
       return {
         success: true,
         user: {
@@ -173,6 +184,15 @@ export const authRouter = router({
     .input(z.object({ refreshToken: z.string() }))
     .mutation(async ({ input }) => {
       try {
+        // Check if token exists in DB
+        const storedToken = await findRefreshToken(input.refreshToken);
+        if (!storedToken) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Refresh token has been revoked",
+          });
+        }
+
         // Verify refresh token
         const payload = await verifyRefreshToken(input.refreshToken);
 
@@ -185,12 +205,19 @@ export const authRouter = router({
           });
         }
 
+        // Delete old token
+        await deleteRefreshToken(input.refreshToken);
+
         // Generate new tokens
         const tokens = await generateTokens({
           userId: user.id,
           email: user.email || "",
           role: user.role,
         });
+
+        // Save new refresh token
+        const decoded = await verifyRefreshToken(tokens.refreshToken);
+        await saveRefreshToken(user.id, tokens.refreshToken, new Date((decoded.exp || 0) * 1000));
 
         return {
           success: true,
@@ -315,10 +342,15 @@ export const authRouter = router({
    * Logout
    */
   logout: protectedProcedure.mutation(async ({ ctx }) => {
-    // Token revocation would be implemented here
-    // For backwards compatibility and cookie cleanup, clear the session cookie
+    // Clear the session cookie
     const cookieOptions = getSessionCookieOptions(ctx.req as any);
     ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+    
+    // Revoke all refresh tokens for the user
+    if (ctx.user) {
+      await (await import("../_core/authDb")).deleteAllRefreshTokens(ctx.user.id);
+    }
+    
     return {
       success: true,
       message: "Logged out successfully",
