@@ -34,7 +34,7 @@ export default function PatientManagement() {
   const [editGender, setEditGender] = useState<"male" | "female" | "other">("male");
   const [editDob, setEditDob] = useState("");
   const [editBloodGroup, setEditBloodGroup] = useState("");
-  const [editStatus, setEditStatus] = useState<"active" | "admitted" | "discharged">("active");
+  const [editStatus, setEditStatus] = useState<any>("Registered");
 
   const { data: patients, isLoading, refetch } = trpc.patient.list.useQuery();
 
@@ -146,11 +146,20 @@ export default function PatientManagement() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "admitted":
+      case "Registered":
         return "bg-blue-100 text-blue-800";
-      case "discharged":
+      case "Checked-In":
+      case "Waiting":
+      case "Consultation":
+        return "bg-amber-100 text-amber-800";
+      case "Laboratory":
+      case "Radiology":
+      case "Pharmacy":
+      case "Admitted":
+        return "bg-purple-100 text-purple-800";
+      case "Discharged":
+        return "bg-green-100 text-green-800";
+      case "Archived":
         return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -368,9 +377,16 @@ export default function PatientManagement() {
                 onChange={(e: any) => setEditStatus(e.target.value)}
                 className="w-full border rounded px-3 py-2 text-sm bg-background"
               >
-                <option value="active">Active</option>
-                <option value="admitted">Admitted</option>
-                <option value="discharged">Discharged</option>
+                <option value="Registered">Registered</option>
+                <option value="Checked-In">Checked-In</option>
+                <option value="Waiting">Waiting</option>
+                <option value="Consultation">Consultation</option>
+                <option value="Laboratory">Laboratory</option>
+                <option value="Radiology">Radiology</option>
+                <option value="Pharmacy">Pharmacy</option>
+                <option value="Admitted">Admitted</option>
+                <option value="Discharged">Discharged</option>
+                <option value="Archived">Archived</option>
               </select>
             </div>
             <Button onClick={handleUpdate} disabled={updateMutation.isPending} className="w-full">

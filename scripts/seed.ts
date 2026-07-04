@@ -300,7 +300,7 @@ async function main() {
       emergencyContactPhone: "9876510" + i.toString().padStart(3, "0"),
       insuranceProvider: i % 3 === 0 ? "Aetna" : i % 3 === 1 ? "BlueCross" : "Medicare",
       insuranceNumber: `INS-NO-${100000 + i}`,
-      status: i === 1 ? ("admitted" as const) : ("active" as const)
+      status: i === 1 ? ("Admitted" as const) : ("Registered" as const)
     });
     patientIds.push(res.insertId);
   }

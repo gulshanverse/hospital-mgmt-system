@@ -118,7 +118,7 @@ export const admissionRouter = router({
       await dbInstance.update(beds).set({ status: "occupied" }).where(eq(beds.id, input.bedId));
 
       // Update patient status to admitted
-      await db.updatePatient(input.patientId, { status: "admitted" });
+      await db.updatePatient(input.patientId, { status: "Admitted" });
 
       return { success: true, admissionId: (admission as any).insertId };
     }),
@@ -162,7 +162,7 @@ export const admissionRouter = router({
 
       // Update patient status back to active
       if (admission.patientId) {
-        await db.updatePatient(admission.patientId, { status: "active" });
+        await db.updatePatient(admission.patientId, { status: "Discharged" });
       }
 
       return { success: true };

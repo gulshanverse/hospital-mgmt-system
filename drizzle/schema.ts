@@ -163,7 +163,27 @@ export const patients = mysqlTable(
     emergencyContactPhone: varchar("emergencyContactPhone", { length: 20 }),
     insuranceProvider: varchar("insuranceProvider", { length: 100 }),
     insuranceNumber: varchar("insuranceNumber", { length: 50 }),
-    status: mysqlEnum("status", ["active", "admitted", "discharged"]).default("active").notNull(),
+    status: mysqlEnum("status", [
+      "Registered",
+      "Checked-In",
+      "Waiting",
+      "Consultation",
+      "Laboratory",
+      "Radiology",
+      "Pharmacy",
+      "Admitted",
+      "Discharged",
+      "Archived",
+    ])
+      .default("Registered")
+      .notNull(),
+    isDeleted: boolean("isDeleted").default(false).notNull(),
+    deletedAt: timestamp("deletedAt"),
+    deletedBy: int("deletedBy"),
+    restoredAt: timestamp("restoredAt"),
+    restoredBy: int("restoredBy"),
+    isArchived: boolean("isArchived").default(false).notNull(),
+    archivedAt: timestamp("archivedAt"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
@@ -172,11 +192,40 @@ export const patients = mysqlTable(
     index("idx_phone").on(table.phone),
     index("idx_email").on(table.email),
     index("idx_status").on(table.status),
+    foreignKey({ columns: [table.deletedBy], foreignColumns: [users.id] }),
+    foreignKey({ columns: [table.restoredBy], foreignColumns: [users.id] }),
   ]
 );
 
 export type Patient = typeof patients.$inferSelect;
 export type InsertPatient = typeof patients.$inferInsert;
+
+export const patientAuditLogs = mysqlTable(
+  "patientAuditLogs",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(), // UUID format
+    timestamp: timestamp("timestamp").defaultNow().notNull(),
+    userId: int("userId").notNull(),
+    userRole: varchar("userRole", { length: 50 }).notNull(),
+    patientUhid: varchar("patientUhid", { length: 20 }).notNull(),
+    action: varchar("action", { length: 100 }).notNull(), // E.g., CREATE, UPDATE, SOFT_DELETE, RESTORE
+    previousValue: json("previousValue"),
+    newValue: json("newValue"),
+    ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
+    browser: varchar("browser", { length: 150 }).notNull(),
+    device: varchar("device", { length: 50 }).notNull(),
+    sessionId: varchar("sessionId", { length: 100 }).notNull(),
+    changeReason: text("changeReason"),
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
+    index("idx_audit_patient").on(table.patientUhid),
+    index("idx_audit_user").on(table.userId),
+  ]
+);
+
+export type PatientAuditLog = typeof patientAuditLogs.$inferSelect;
+export type InsertPatientAuditLog = typeof patientAuditLogs.$inferInsert;
 
 // ============================================================================
 // APPOINTMENTS

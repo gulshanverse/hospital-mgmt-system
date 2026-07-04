@@ -39,7 +39,7 @@ export const patientRouter = router({
       const [res] = await dbInstance.insert(patients).values({
         patientCode,
         ...input,
-        status: "active",
+        status: "Registered",
       });
 
       const inserted = await dbInstance
@@ -80,7 +80,18 @@ export const patientRouter = router({
   list: protectedProcedure
     .input(
       z.object({
-        status: z.enum(["active", "admitted", "discharged"]).optional(),
+        status: z.enum([
+          "Registered",
+          "Checked-In",
+          "Waiting",
+          "Consultation",
+          "Laboratory",
+          "Radiology",
+          "Pharmacy",
+          "Admitted",
+          "Discharged",
+          "Archived",
+        ]).optional(),
       }).optional()
     )
     .query(async ({ input }) => {
@@ -113,7 +124,18 @@ export const patientRouter = router({
         emergencyContactPhone: z.string().optional(),
         insuranceProvider: z.string().optional(),
         insuranceNumber: z.string().optional(),
-        status: z.enum(["active", "admitted", "discharged"]).optional(),
+        status: z.enum([
+          "Registered",
+          "Checked-In",
+          "Waiting",
+          "Consultation",
+          "Laboratory",
+          "Radiology",
+          "Pharmacy",
+          "Admitted",
+          "Discharged",
+          "Archived",
+        ]).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
