@@ -23,8 +23,9 @@ const handleUnauthorizedError = (error: unknown) => {
     // Clear stored tokens
     localStorage.removeItem("auth-tokens");
     localStorage.removeItem("manus-runtime-user-info");
-    // Redirect to login
-    if (window.location.pathname !== "/login") {
+    // Redirect to login only if not on a public path
+    const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/reset-password"];
+    if (!publicPaths.includes(window.location.pathname)) {
       window.location.href = "/login";
     }
   }
