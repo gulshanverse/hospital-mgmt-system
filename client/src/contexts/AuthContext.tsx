@@ -145,21 +145,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       await logoutMutation.mutateAsync();
     } catch (err) {
+      // Server-side logout may fail if token is already expired — that's OK
       console.error("Logout error:", err);
-    } finally {
-      // Clear all authentication data
-      setUser(null);
-      setAccessToken(null);
-      setRefreshToken(null);
-      localStorage.removeItem("auth-tokens");
-      localStorage.removeItem("manus-runtime-user-info");
-      setError(null);
-      setLoading(false);
     }
+    // Clear all local auth state and storage
+    setUser(null);
+    setAccessToken(null);
+    setRefreshToken(null);
+    setError(null);
+    localStorage.removeItem("auth-tokens");
+    try { sessionStorage.removeItem("manus-cookie"); } catch {}
+    // Hard redirect to landing page — replaces history entry so Back
+    // button cannot return to protected page, and full navigation
+    // purges all React state / React Query cache
+    window.location.replace("/");
   };
 
   const refresh = async () => {

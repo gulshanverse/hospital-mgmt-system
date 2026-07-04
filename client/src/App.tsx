@@ -14,7 +14,7 @@ import VerifyEmail from "@/pages/VerifyEmail";
 import StaffManagement from "@/pages/StaffManagement";
 import DoctorManagement from "@/pages/DoctorManagement";
 import DepartmentManagement from "@/pages/DepartmentManagement";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -27,6 +27,7 @@ import { Loader2 } from "lucide-react";
 
 function Router() {
   const { user, loading } = useAuthContext();
+  const [location] = useLocation();
 
   if (loading) {
     return (
@@ -34,6 +35,15 @@ function Router() {
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
+  }
+
+  // Redirect unauthenticated users away from protected routes
+  if (!user) {
+    const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/reset-password"];
+    if (!publicPaths.includes(location)) {
+      window.location.replace("/");
+      return null;
+    }
   }
 
   return (
