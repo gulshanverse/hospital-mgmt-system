@@ -1,58 +1,14 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import * as React from "react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -62,1376 +18,610 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { Input } from "@/components/ui/input";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import { Label } from "@/components/ui/label";
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarTrigger,
-} from "@/components/ui/menubar";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Progress } from "@/components/ui/progress";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Toggle } from "@/components/ui/toggle";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle, EmptyContent, EmptyMedia } from "@/components/ui/empty";
+import { toast } from "sonner";
+import { DataTable, ColumnDef } from "@/components/ui/data-table";
+import { SectionCard, RequiredIndicator, FormValidationSummary, FormStepper } from "@/components/ui/form-system";
+import { ChartContainer } from "@/components/ui/chart-container";
+import { StatCard } from "@/components/ui/stat-card";
+import { FormProvider, useForm } from "react-hook-form";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useTheme } from "@/contexts/ThemeContext";
-import { format } from "date-fns";
-import { zhCN } from "date-fns/locale";
-import {
-  AlertCircle,
-  CalendarIcon,
+  Info,
   Check,
-  Clock,
-  Moon,
-  Sun,
-  X,
+  AlertTriangle,
+  RotateCcw,
+  Sparkles,
+  Smartphone,
+  Tablet as TabletIcon,
+  Monitor,
+  Eye,
 } from "lucide-react";
-import { useState } from "react";
-import { toast as sonnerToast } from "sonner";
-import { AIChatBox, type Message } from "@/components/AIChatBox";
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer } from "recharts";
+import { DESIGN_SYSTEM_VERSION, UPGRADE_NOTES } from "@/components/ui/version";
 
-export default function ComponentsShowcase() {
-  const { theme, toggleTheme } = useTheme();
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [datePickerDate, setDatePickerDate] = useState<Date>();
-  const [selectedFruits, setSelectedFruits] = useState<string[]>([]);
-  const [progress, setProgress] = useState(33);
-  const [currentPage, setCurrentPage] = useState(2);
-  const [openCombobox, setOpenCombobox] = useState(false);
-  const [selectedFramework, setSelectedFramework] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [dialogInput, setDialogInput] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
+// Reusable mock schema for showcases
+interface PatientRow {
+  id: string;
+  name: string;
+  age: number;
+  gender: string;
+  department: string;
+  status: "Admitted" | "Discharged" | "Scheduled";
+}
 
-  // AI ChatBox demo state
-  const [chatMessages, setChatMessages] = useState<Message[]>([
-    { role: "system", content: "You are a helpful assistant." },
-  ]);
-  const [isChatLoading, setIsChatLoading] = useState(false);
+const mockColumns: ColumnDef<PatientRow>[] = [
+  { key: "id", header: "Patient ID", sticky: "left" },
+  { key: "name", header: "Full Name", sortable: true },
+  { key: "age", header: "Age", sortable: true },
+  { key: "gender", header: "Gender" },
+  { key: "department", header: "Department", filterable: true },
+  {
+    key: "status",
+    header: "Status",
+    render: (row) => {
+      const variant =
+        row.status === "Admitted"
+          ? "default"
+          : row.status === "Discharged"
+            ? "secondary"
+            : "outline";
+      return <Badge variant={variant}>{row.status}</Badge>;
+    },
+  },
+];
 
-  const handleDialogSubmit = () => {
-    console.log("Dialog submitted with value:", dialogInput);
-    sonnerToast.success("Submitted successfully", {
-      description: `Input: ${dialogInput}`,
-    });
-    setDialogInput("");
-    setDialogOpen(false);
-  };
+const mockPatients: PatientRow[] = [
+  { id: "PT-001", name: "Aria Montgomery", age: 28, gender: "Female", department: "Cardiology", status: "Admitted" },
+  { id: "PT-002", name: "Ezra Fitz", age: 34, gender: "Male", department: "Neurology", status: "Scheduled" },
+  { id: "PT-003", name: "Spencer Hastings", age: 29, gender: "Female", department: "Pediatrics", status: "Discharged" },
+  { id: "PT-004", name: "Hanna Marin", age: 27, gender: "Female", department: "Cardiology", status: "Admitted" },
+  { id: "PT-005", name: "Caleb Rivers", age: 31, gender: "Male", department: "Emergency", status: "Admitted" },
+  { id: "PT-006", name: "Emily Fields", age: 28, gender: "Female", department: "Neurology", status: "Discharged" },
+];
 
-  const handleDialogKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-      e.preventDefault();
-      handleDialogSubmit();
-    }
-  };
+export default function ComponentShowcase() {
+  const [devicePreview, setDevicePreview] = React.useState<"mobile" | "tablet" | "desktop">("desktop");
 
-  const handleChatSend = (content: string) => {
-    // Add user message
-    const newMessages: Message[] = [...chatMessages, { role: "user", content }];
-    setChatMessages(newMessages);
+  // Form System showcase setup
+  const formMethods = useForm({
+    defaultValues: {
+      patientName: "",
+      patientEmail: "",
+      department: "",
+      terms: false,
+    },
+  });
 
-    // Simulate AI response with delay
-    setIsChatLoading(true);
-    setTimeout(() => {
-      const aiResponse: Message = {
-        role: "assistant",
-        content: `This is a **demo response**. In a real app, you would call a tRPC mutation here:\n\n\`\`\`typescript\nconst chatMutation = trpc.ai.chat.useMutation({\n  onSuccess: (response) => {\n    setChatMessages(prev => [...prev, {\n      role: "assistant",\n      content: response.choices[0].message.content\n    }]);\n  }\n});\n\nchatMutation.mutate({ messages: newMessages });\n\`\`\`\n\nYour message was: "${content}"`,
-      };
-      setChatMessages([...newMessages, aiResponse]);
-      setIsChatLoading(false);
-    }, 1500);
+  const onSubmitForm = (data: any) => {
+    toast.success("Form submitted successfully!");
+    console.log(data);
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <main className="container max-w-6xl mx-auto">
-        <div className="space-y-2 justify-between flex">
-          <h2 className="text-3xl font-bold tracking-tight mb-6">
-            Shadcn/ui Component Library
-          </h2>
-          <Button variant="outline" size="icon" onClick={toggleTheme}>
-            {theme === "light" ? (
-              <Moon className="h-5 w-5" />
-            ) : (
-              <Sun className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-
-        <div className="space-y-12">
-          {/* Text Colors Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Text Colors</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Foreground (Default)
-                      </p>
-                      <p className="text-foreground text-lg">
-                        Default text color for main content
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Muted Foreground
-                      </p>
-                      <p className="text-muted-foreground text-lg">
-                        Muted text for secondary information
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Primary
-                      </p>
-                      <p className="text-primary text-lg font-medium">
-                        Primary brand color text
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Secondary Foreground
-                      </p>
-                      <p className="text-secondary-foreground text-lg">
-                        Secondary action text color
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Accent Foreground
-                      </p>
-                      <p className="text-accent-foreground text-lg">
-                        Accent text for emphasis
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Destructive
-                      </p>
-                      <p className="text-destructive text-lg font-medium">
-                        Error or destructive action text
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Card Foreground
-                      </p>
-                      <p className="text-card-foreground text-lg">
-                        Text color on card backgrounds
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Popover Foreground
-                      </p>
-                      <p className="text-popover-foreground text-lg">
-                        Text color in popovers
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Color Combinations Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Color Combinations</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="bg-primary text-primary-foreground rounded-lg p-4">
-                    <p className="font-medium mb-1">Primary</p>
-                    <p className="text-sm opacity-90">
-                      Primary background with foreground text
-                    </p>
-                  </div>
-                  <div className="bg-secondary text-secondary-foreground rounded-lg p-4">
-                    <p className="font-medium mb-1">Secondary</p>
-                    <p className="text-sm opacity-90">
-                      Secondary background with foreground text
-                    </p>
-                  </div>
-                  <div className="bg-muted text-muted-foreground rounded-lg p-4">
-                    <p className="font-medium mb-1">Muted</p>
-                    <p className="text-sm opacity-90">
-                      Muted background with foreground text
-                    </p>
-                  </div>
-                  <div className="bg-accent text-accent-foreground rounded-lg p-4">
-                    <p className="font-medium mb-1">Accent</p>
-                    <p className="text-sm opacity-90">
-                      Accent background with foreground text
-                    </p>
-                  </div>
-                  <div className="bg-destructive text-destructive-foreground rounded-lg p-4">
-                    <p className="font-medium mb-1">Destructive</p>
-                    <p className="text-sm opacity-90">
-                      Destructive background with foreground text
-                    </p>
-                  </div>
-                  <div className="bg-card text-card-foreground rounded-lg p-4 border">
-                    <p className="font-medium mb-1">Card</p>
-                    <p className="text-sm opacity-90">
-                      Card background with foreground text
-                    </p>
-                  </div>
-                  <div className="bg-popover text-popover-foreground rounded-lg p-4 border">
-                    <p className="font-medium mb-1">Popover</p>
-                    <p className="text-sm opacity-90">
-                      Popover background with foreground text
-                    </p>
-                  </div>
-                  <div className="bg-background text-foreground rounded-lg p-4 border">
-                    <p className="font-medium mb-1">Background</p>
-                    <p className="text-sm opacity-90">
-                      Default background with foreground text
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Buttons Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Buttons</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-wrap gap-4">
-                  <Button>Default</Button>
-                  <Button variant="secondary">Secondary</Button>
-                  <Button variant="destructive">Destructive</Button>
-                  <Button variant="outline">Outline</Button>
-                  <Button variant="ghost">Ghost</Button>
-                  <Button variant="link">Link</Button>
-                  <Button size="sm">Small</Button>
-                  <Button size="lg">Large</Button>
-                  <Button size="icon">
-                    <Check className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Form Inputs Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Form Inputs</h3>
-            <Card>
-              <CardContent className="pt-6 space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Email" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Type your message here."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Select</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a fruit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="apple">Apple</SelectItem>
-                      <SelectItem value="banana">Banana</SelectItem>
-                      <SelectItem value="orange">Orange</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="terms" />
-                  <Label htmlFor="terms">Accept terms and conditions</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch id="airplane-mode" />
-                  <Label htmlFor="airplane-mode">Airplane Mode</Label>
-                </div>
-                <div className="space-y-2">
-                  <Label>Radio Group</Label>
-                  <RadioGroup defaultValue="option-one">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="option-one" id="option-one" />
-                      <Label htmlFor="option-one">Option One</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="option-two" id="option-two" />
-                      <Label htmlFor="option-two">Option Two</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                <div className="space-y-2">
-                  <Label>Slider</Label>
-                  <Slider defaultValue={[50]} max={100} step={1} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Input OTP</Label>
-                  <InputOTP maxLength={6}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-                <div className="space-y-2">
-                  <Label>Date Time Picker</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={`w-full justify-start text-left font-normal ${
-                          !datePickerDate && "text-muted-foreground"
-                        }`}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {datePickerDate ? (
-                          format(datePickerDate, "PPP HH:mm", { locale: zhCN })
-                        ) : (
-                          <span>Select date and time</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <div className="p-3 space-y-3">
-                        <Calendar
-                          mode="single"
-                          selected={datePickerDate}
-                          onSelect={setDatePickerDate}
-                        />
-                        <div className="border-t pt-3 space-y-2">
-                          <Label className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            Time
-                          </Label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="time"
-                              value={
-                                datePickerDate
-                                  ? format(datePickerDate, "HH:mm")
-                                  : "00:00"
-                              }
-                              onChange={e => {
-                                const [hours, minutes] =
-                                  e.target.value.split(":");
-                                const newDate = datePickerDate
-                                  ? new Date(datePickerDate)
-                                  : new Date();
-                                newDate.setHours(parseInt(hours));
-                                newDate.setMinutes(parseInt(minutes));
-                                setDatePickerDate(newDate);
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  {datePickerDate && (
-                    <p className="text-sm text-muted-foreground">
-                      Selected:{" "}
-                      {format(datePickerDate, "yyyy/MM/dd  HH:mm", {
-                        locale: zhCN,
-                      })}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label>Searchable Dropdown</Label>
-                  <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openCombobox}
-                        className="w-full justify-between"
-                      >
-                        {selectedFramework
-                          ? [
-                              { value: "react", label: "React" },
-                              { value: "vue", label: "Vue" },
-                              { value: "angular", label: "Angular" },
-                              { value: "svelte", label: "Svelte" },
-                              { value: "nextjs", label: "Next.js" },
-                              { value: "nuxt", label: "Nuxt" },
-                              { value: "remix", label: "Remix" },
-                            ].find(fw => fw.value === selectedFramework)?.label
-                          : "Select framework..."}
-                        <CalendarIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search frameworks..." />
-                        <CommandList>
-                          <CommandEmpty>No framework found</CommandEmpty>
-                          <CommandGroup>
-                            {[
-                              { value: "react", label: "React" },
-                              { value: "vue", label: "Vue" },
-                              { value: "angular", label: "Angular" },
-                              { value: "svelte", label: "Svelte" },
-                              { value: "nextjs", label: "Next.js" },
-                              { value: "nuxt", label: "Nuxt" },
-                              { value: "remix", label: "Remix" },
-                            ].map(framework => (
-                              <CommandItem
-                                key={framework.value}
-                                value={framework.value}
-                                onSelect={currentValue => {
-                                  setSelectedFramework(
-                                    currentValue === selectedFramework
-                                      ? ""
-                                      : currentValue
-                                  );
-                                  setOpenCombobox(false);
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    selectedFramework === framework.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  }`}
-                                />
-                                {framework.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {selectedFramework && (
-                    <p className="text-sm text-muted-foreground">
-                      Selected:{" "}
-                      {
-                        [
-                          { value: "react", label: "React" },
-                          { value: "vue", label: "Vue" },
-                          { value: "angular", label: "Angular" },
-                          { value: "svelte", label: "Svelte" },
-                          { value: "nextjs", label: "Next.js" },
-                          { value: "nuxt", label: "Nuxt" },
-                          { value: "remix", label: "Remix" },
-                        ].find(fw => fw.value === selectedFramework)?.label
-                      }
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="month" className="text-sm font-medium">
-                        Month
-                      </Label>
-                      <Select
-                        value={selectedMonth}
-                        onValueChange={setSelectedMonth}
-                      >
-                        <SelectTrigger id="month">
-                          <SelectValue placeholder="MM" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                            month => (
-                              <SelectItem
-                                key={month}
-                                value={month.toString().padStart(2, "0")}
-                              >
-                                {month.toString().padStart(2, "0")}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="year" className="text-sm font-medium">
-                        Year
-                      </Label>
-                      <Select
-                        value={selectedYear}
-                        onValueChange={setSelectedYear}
-                      >
-                        <SelectTrigger id="year">
-                          <SelectValue placeholder="YYYY" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from(
-                            { length: 10 },
-                            (_, i) => new Date().getFullYear() - 5 + i
-                          ).map(year => (
-                            <SelectItem key={year} value={year.toString()}>
-                              {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  {selectedMonth && selectedYear && (
-                    <p className="text-sm text-muted-foreground">
-                      Selected: {selectedYear}/{selectedMonth}/
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Data Display Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Data Display</h3>
-            <Card>
-              <CardContent className="pt-6 space-y-6">
-                <div className="space-y-2">
-                  <Label>Badges</Label>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge>Default</Badge>
-                    <Badge variant="secondary">Secondary</Badge>
-                    <Badge variant="destructive">Destructive</Badge>
-                    <Badge variant="outline">Outline</Badge>
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Avatar</Label>
-                  <div className="flex gap-4">
-                    <Avatar>
-                      <AvatarImage src="https://github.com/shadcn.png" />
-                      <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
-                    <Avatar>
-                      <AvatarFallback>AB</AvatarFallback>
-                    </Avatar>
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Progress</Label>
-                  <Progress value={progress} />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => setProgress(Math.max(0, progress - 10))}
-                    >
-                      -10
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setProgress(Math.min(100, progress + 10))}
-                    >
-                      +10
-                    </Button>
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Skeleton</Label>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Pagination</Label>
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={e => {
-                            e.preventDefault();
-                            setCurrentPage(Math.max(1, currentPage - 1));
-                          }}
-                        />
-                      </PaginationItem>
-                      {[1, 2, 3, 4, 5].map(page => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            href="#"
-                            isActive={currentPage === page}
-                            onClick={e => {
-                              e.preventDefault();
-                              setCurrentPage(page);
-                            }}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={e => {
-                            e.preventDefault();
-                            setCurrentPage(Math.min(5, currentPage + 1));
-                          }}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                  <p className="text-sm text-muted-foreground text-center">
-                    Current page: {currentPage}
-                  </p>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Table</Label>
-                  <Table>
-                    <TableCaption>A list of your recent invoices.</TableCaption>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Invoice</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">INV001</TableCell>
-                        <TableCell>Paid</TableCell>
-                        <TableCell>Credit Card</TableCell>
-                        <TableCell className="text-right">$250.00</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">INV002</TableCell>
-                        <TableCell>Pending</TableCell>
-                        <TableCell>PayPal</TableCell>
-                        <TableCell className="text-right">$150.00</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">INV003</TableCell>
-                        <TableCell>Unpaid</TableCell>
-                        <TableCell>Bank Transfer</TableCell>
-                        <TableCell className="text-right">$350.00</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Menubar</Label>
-                  <Menubar>
-                    <MenubarMenu>
-                      <MenubarTrigger>File</MenubarTrigger>
-                      <MenubarContent>
-                        <MenubarItem>New Tab</MenubarItem>
-                        <MenubarItem>New Window</MenubarItem>
-                        <MenubarSeparator />
-                        <MenubarItem>Share</MenubarItem>
-                        <MenubarSeparator />
-                        <MenubarItem>Print</MenubarItem>
-                      </MenubarContent>
-                    </MenubarMenu>
-                    <MenubarMenu>
-                      <MenubarTrigger>Edit</MenubarTrigger>
-                      <MenubarContent>
-                        <MenubarItem>Undo</MenubarItem>
-                        <MenubarItem>Redo</MenubarItem>
-                      </MenubarContent>
-                    </MenubarMenu>
-                    <MenubarMenu>
-                      <MenubarTrigger>View</MenubarTrigger>
-                      <MenubarContent>
-                        <MenubarItem>Reload</MenubarItem>
-                        <MenubarItem>Force Reload</MenubarItem>
-                      </MenubarContent>
-                    </MenubarMenu>
-                  </Menubar>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Breadcrumb</Label>
-                  <Breadcrumb>
-                    <BreadcrumbList>
-                      <BreadcrumbItem>
-                        <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                      </BreadcrumbItem>
-                      <BreadcrumbSeparator />
-                      <BreadcrumbItem>
-                        <BreadcrumbLink href="/components">
-                          Components
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-                      <BreadcrumbSeparator />
-                      <BreadcrumbItem>
-                        <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-                      </BreadcrumbItem>
-                    </BreadcrumbList>
-                  </Breadcrumb>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Alerts Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Alerts</h3>
-            <div className="space-y-4">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Heads up!</AlertTitle>
-                <AlertDescription>
-                  You can add components to your app using the cli.
-                </AlertDescription>
-              </Alert>
-              <Alert variant="destructive">
-                <X className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  Your session has expired. Please log in again.
-                </AlertDescription>
-              </Alert>
+    <DashboardLayout>
+      <div className="space-y-12 max-w-7xl mx-auto">
+        {/* Design System Header & Version info */}
+        <div className="border-b pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <Sparkles className="size-6 text-primary animate-pulse" />
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+                JeevanOS Design System
+              </h1>
             </div>
-          </section>
+            <p className="text-sm text-muted-foreground mt-2 max-w-xl">
+              Centralized visual tokens, layout variables, and reusable enterprise abstractions. 
+              Built for performance, scalability, and WCAG accessibility standards.
+            </p>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+              {DESIGN_SYSTEM_VERSION}
+            </span>
+            <span className="text-[10px] text-muted-foreground mt-1.5 font-mono">
+              Release date: July 2026
+            </span>
+          </div>
+        </div>
 
-          {/* Tabs Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Tabs</h3>
-            <Tabs defaultValue="account" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="account">Account</TabsTrigger>
-                <TabsTrigger value="password">Password</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-              <TabsContent value="account">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Account</CardTitle>
-                    <CardDescription>
-                      Make changes to your account here.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="name">Name</Label>
-                      <Input id="name" defaultValue="Pedro Duarte" />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button>Save changes</Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              <TabsContent value="password">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Password</CardTitle>
-                    <CardDescription>
-                      Change your password here.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="current">Current password</Label>
-                      <Input id="current" type="password" />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="new">New password</Label>
-                      <Input id="new" type="password" />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button>Save password</Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              <TabsContent value="settings">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Settings</CardTitle>
-                    <CardDescription>
-                      Manage your settings here.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      Settings content goes here.
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </section>
-
-          {/* Accordion Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Accordion</h3>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger>Is it accessible?</AccordionTrigger>
-                <AccordionContent>
-                  Yes. It adheres to the WAI-ARIA design pattern.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="item-2">
-                <AccordionTrigger>Is it styled?</AccordionTrigger>
-                <AccordionContent>
-                  Yes. It comes with default styles that matches the other
-                  components' aesthetic.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="item-3">
-                <AccordionTrigger>Is it animated?</AccordionTrigger>
-                <AccordionContent>
-                  Yes. It's animated by default, but you can disable it if you
-                  prefer.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </section>
-
-          {/* Collapsible Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Collapsible</h3>
-            <Collapsible>
-              <Card>
-                <CardHeader>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between">
-                      <CardTitle>@peduarte starred 3 repositories</CardTitle>
-                    </Button>
-                  </CollapsibleTrigger>
-                </CardHeader>
-                <CollapsibleContent>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="rounded-md border px-4 py-3 font-mono text-sm">
-                        @radix-ui/primitives
-                      </div>
-                      <div className="rounded-md border px-4 py-3 font-mono text-sm">
-                        @radix-ui/colors
-                      </div>
-                      <div className="rounded-md border px-4 py-3 font-mono text-sm">
-                        @stitches/react
-                      </div>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          </section>
-
-          {/* Dialog, Sheet, Drawer Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Overlays</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-wrap gap-4">
-                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline">Open Dialog</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Test Input</DialogTitle>
-                        <DialogDescription>
-                          Enter some text below. Press Enter to submit (IME composition supported).
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="dialog-input">Input</Label>
-                          <Input
-                            id="dialog-input"
-                            placeholder="Type something..."
-                            value={dialogInput}
-                            onChange={(e) => setDialogInput(e.target.value)}
-                            onKeyDown={handleDialogKeyDown}
-                            autoFocus
-                          />
-                        </div>
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setDialogOpen(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button onClick={handleDialogSubmit}>Submit</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="outline">Open Sheet</Button>
-                    </SheetTrigger>
-                    <SheetContent>
-                      <SheetHeader>
-                        <SheetTitle>Edit profile</SheetTitle>
-                        <SheetDescription>
-                          Make changes to your profile here. Click save when
-                          you're done.
-                        </SheetDescription>
-                      </SheetHeader>
-                    </SheetContent>
-                  </Sheet>
-
-                  <Drawer>
-                    <DrawerTrigger asChild>
-                      <Button variant="outline">Open Drawer</Button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                      <DrawerHeader>
-                        <DrawerTitle>Are you absolutely sure?</DrawerTitle>
-                        <DrawerDescription>
-                          This action cannot be undone.
-                        </DrawerDescription>
-                      </DrawerHeader>
-                      <DrawerFooter>
-                        <Button>Submit</Button>
-                        <DrawerClose asChild>
-                          <Button variant="outline">Cancel</Button>
-                        </DrawerClose>
-                      </DrawerFooter>
-                    </DrawerContent>
-                  </Drawer>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline">Open Popover</Button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                      <div className="space-y-2">
-                        <h4 className="font-medium leading-none">Dimensions</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Set the dimensions for the layer.
-                        </p>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline">Hover me</Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Add to library</p>
-                    </TooltipContent>
-                  </Tooltip>
+        {/* 1. TOKENS DOCUMENTATION CARD */}
+        <SectionCard title="1. Design Tokens System" description="Centralized CSS constants loaded at runtime.">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Color swatches */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Color Palette</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-primary text-primary-foreground border shadow-2xs">
+                  <p className="text-xs font-bold">Primary</p>
+                  <p className="text-[10px] opacity-80">Indigo Executive</p>
                 </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Menus Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Menus</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-wrap gap-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline">Dropdown Menu</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>Profile</DropdownMenuItem>
-                      <DropdownMenuItem>Billing</DropdownMenuItem>
-                      <DropdownMenuItem>Team</DropdownMenuItem>
-                      <DropdownMenuItem>Subscription</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <ContextMenu>
-                    <ContextMenuTrigger asChild>
-                      <Button variant="outline">Right Click Me</Button>
-                    </ContextMenuTrigger>
-                    <ContextMenuContent>
-                      <ContextMenuItem>Profile</ContextMenuItem>
-                      <ContextMenuItem>Billing</ContextMenuItem>
-                      <ContextMenuItem>Team</ContextMenuItem>
-                      <ContextMenuItem>Subscription</ContextMenuItem>
-                    </ContextMenuContent>
-                  </ContextMenu>
-
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <Button variant="outline">Hover Card</Button>
-                    </HoverCardTrigger>
-                    <HoverCardContent>
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold">@nextjs</h4>
-                        <p className="text-sm">
-                          The React Framework – created and maintained by
-                          @vercel.
-                        </p>
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
+                <div className="p-3 rounded-lg bg-secondary text-secondary-foreground border border-border/80 shadow-2xs">
+                  <p className="text-xs font-bold">Secondary</p>
+                  <p className="text-[10px] opacity-80">Zinc Soft</p>
                 </div>
-              </CardContent>
-            </Card>
-          </section>
+                <div className="p-3 rounded-lg bg-background text-foreground border shadow-2xs">
+                  <p className="text-xs font-bold">Background</p>
+                  <p className="text-[10px] opacity-80">Zinc 50</p>
+                </div>
+                <div className="p-3 rounded-lg bg-card text-card-foreground border shadow-2xs">
+                  <p className="text-xs font-bold">Card</p>
+                  <p className="text-[10px] opacity-80">White Pure</p>
+                </div>
+                <div className="p-3 rounded-lg bg-destructive text-destructive-foreground border shadow-2xs col-span-2">
+                  <p className="text-xs font-bold">Destructive Action</p>
+                  <p className="text-[10px] opacity-80">Rose 600</p>
+                </div>
+              </div>
+            </div>
 
-          {/* Calendar Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Calendar</h3>
-            <Card>
-              <CardContent className="pt-6 flex justify-center">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  className="rounded-md border"
-                />
-              </CardContent>
-            </Card>
-          </section>
+            {/* Typography */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Typography Scale</h3>
+              <div className="space-y-2.5">
+                <div className="flex items-baseline justify-between border-b pb-1">
+                  <span className="text-2xl font-extrabold tracking-tight">2xl font-extrabold</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">24px</span>
+                </div>
+                <div className="flex items-baseline justify-between border-b pb-1">
+                  <span className="text-lg font-bold tracking-tight">lg font-bold</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">18px</span>
+                </div>
+                <div className="flex items-baseline justify-between border-b pb-1">
+                  <span className="text-sm font-semibold">sm font-semibold</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">14px</span>
+                </div>
+                <div className="flex items-baseline justify-between border-b pb-1">
+                  <span className="text-xs font-medium">xs font-medium</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">12px</span>
+                </div>
+              </div>
+            </div>
 
-          {/* Carousel Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Carousel</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <Carousel className="w-full max-w-xs mx-auto">
-                  <CarouselContent>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <CarouselItem key={index}>
-                        <div className="p-1">
-                          <Card>
-                            <CardContent className="flex aspect-square items-center justify-center p-6">
-                              <span className="text-4xl font-semibold">
-                                {index + 1}
-                              </span>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious />
-                  <CarouselNext />
-                </Carousel>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Toggle Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Toggle</h3>
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="space-y-2">
-                  <Label>Toggle</Label>
-                  <div className="flex gap-2">
-                    <Toggle aria-label="Toggle italic">
-                      <span className="font-bold">B</span>
-                    </Toggle>
-                    <Toggle aria-label="Toggle italic">
-                      <span className="italic">I</span>
-                    </Toggle>
-                    <Toggle aria-label="Toggle underline">
-                      <span className="underline">U</span>
-                    </Toggle>
+            {/* Elevation, Radii, and Transitions */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Visual Metrics</h3>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 border rounded-xl shadow-md bg-card flex flex-col justify-between h-20">
+                  <span className="font-semibold text-muted-foreground">Shadow</span>
+                  <span className="font-bold">shadow-md</span>
+                </div>
+                <div className="p-3 border border-border/80 rounded-2xl bg-card flex flex-col justify-between h-20">
+                  <span className="font-semibold text-muted-foreground">Radius</span>
+                  <span className="font-bold">rounded-2xl</span>
+                </div>
+                <div className="p-3 border rounded-lg bg-card col-span-2 group hover:bg-secondary/40 transition-all duration-300 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">Hover Easing Transition</p>
+                    <p className="text-[10px] text-muted-foreground">300ms bezier curve</p>
                   </div>
+                  <div className="size-2 rounded-full bg-primary group-hover:scale-150 transition-transform duration-300" />
                 </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Toggle Group</Label>
-                  <ToggleGroup type="multiple">
-                    <ToggleGroupItem value="bold" aria-label="Toggle bold">
-                      <span className="font-bold">B</span>
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="italic" aria-label="Toggle italic">
-                      <span className="italic">I</span>
-                    </ToggleGroupItem>
-                    <ToggleGroupItem
-                      value="underline"
-                      aria-label="Toggle underline"
-                    >
-                      <span className="underline">U</span>
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+              </div>
+            </div>
+          </div>
 
-          {/* Aspect Ratio & Scroll Area Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Layout Components</h3>
-            <Card>
-              <CardContent className="pt-6 space-y-6">
-                <div className="space-y-2">
-                  <Label>Aspect Ratio (16/9)</Label>
-                  <AspectRatio ratio={16 / 9} className="bg-muted">
-                    <div className="flex h-full items-center justify-center">
-                      <p className="text-muted-foreground">16:9 Aspect Ratio</p>
-                    </div>
-                  </AspectRatio>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>Scroll Area</Label>
-                  <ScrollArea className="h-[200px] w-full rounded-md border overflow-hidden">
-                    <div className="p-4">
-                      <div className="space-y-4">
-                        {Array.from({ length: 20 }).map((_, i) => (
-                          <div key={i} className="text-sm">
-                            Item {i + 1}: This is a scrollable content area
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </ScrollArea>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+          <div className="mt-6 border-t pt-4 flex gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Info className="size-4 text-primary" />
+              <span>WCAG 2.1 Contrast AA compliant (indigo/slate ratios &gt; 4.5:1).</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Check className="size-4 text-emerald-600" />
+              <span>Centralized focus rings override default browser outlines.</span>
+            </div>
+          </div>
+        </SectionCard>
 
-          {/* Resizable Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Resizable Panels</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <ResizablePanelGroup
-                  direction="horizontal"
-                  className="min-h-[200px] rounded-lg border"
-                >
-                  <ResizablePanel defaultSize={50}>
-                    <div className="flex h-full items-center justify-center p-6">
-                      <span className="font-semibold">Panel One</span>
-                    </div>
-                  </ResizablePanel>
-                  <ResizableHandle />
-                  <ResizablePanel defaultSize={50}>
-                    <div className="flex h-full items-center justify-center p-6">
-                      <span className="font-semibold">Panel Two</span>
-                    </div>
-                  </ResizablePanel>
-                </ResizablePanelGroup>
-              </CardContent>
-            </Card>
-          </section>
+        {/* 2. REUSABLE PRIMITIVES PREVIEW */}
+        <SectionCard title="2. Primitives Library" description="Upgraded global form fields and interactive elements.">
+          <div className="space-y-8">
+            {/* Buttons */}
+            <div>
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Button Variants</h4>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="default">Primary Default</Button>
+                <Button variant="secondary">Secondary Button</Button>
+                <Button variant="outline">Outline Border</Button>
+                <Button variant="ghost">Ghost Button</Button>
+                <Button variant="destructive">Destructive Rose</Button>
+                <Button variant="link">Link Style</Button>
+                <Button variant="default" size="sm">Small size</Button>
+                <Button variant="default" size="lg">Large size</Button>
+              </div>
+            </div>
 
-          {/* Toast Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">Toast</h3>
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="space-y-2">
-                  <Label>Sonner Toast</Label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        sonnerToast.success("Operation successful", {
-                          description: "Your changes have been saved",
-                        });
-                      }}
-                    >
-                      Success
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        sonnerToast.error("Operation failed", {
-                          description:
-                            "Cannot complete operation, please try again",
-                        });
-                      }}
-                    >
-                      Error
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        sonnerToast.info("Information", {
-                          description: "This is an information message",
-                        });
-                      }}
-                    >
-                      Info
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        sonnerToast.warning("Warning", {
-                          description:
-                            "Please note the impact of this operation",
-                        });
-                      }}
-                    >
-                      Warning
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        sonnerToast.loading("Loading", {
-                          description: "Please wait",
-                        });
-                      }}
-                    >
-                      Loading
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        const promise = new Promise(resolve =>
-                          setTimeout(resolve, 2000)
-                        );
-                        sonnerToast.promise(promise, {
-                          loading: "Processing...",
-                          success: "Processing complete!",
-                          error: "Processing failed",
-                        });
-                      }}
-                    >
-                      Promise
-                    </Button>
+            {/* Inputs & Selections */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold">Text Input Field</label>
+                <Input placeholder="Enter patient details..." />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">Checkbox Control</label>
+                <div className="flex items-center gap-2 mt-2">
+                  <Checkbox id="chk-doc" />
+                  <label htmlFor="chk-doc" className="text-sm font-medium cursor-pointer">
+                    Required verification docs attached
+                  </label>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold">Switch Toggle</label>
+                <div className="flex items-center gap-2.5 mt-2">
+                  <Switch id="swt-verify" />
+                  <label htmlFor="swt-verify" className="text-sm font-medium cursor-pointer">
+                    Enable email notifications
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Radio group & Badges */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-6">
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold">Radio Selection Group</label>
+                <RadioGroup defaultValue="cardio" className="mt-1 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="cardio" id="rad-c" />
+                    <label htmlFor="rad-c" className="text-sm font-medium cursor-pointer">Cardiology Dept</label>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* AI ChatBox Section */}
-          <section className="space-y-4">
-            <h3 className="text-2xl font-semibold">AI ChatBox</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground">
-                    <p>
-                      A ready-to-use chat interface component that integrates with the LLM system.
-                      Features markdown rendering, auto-scrolling, and loading states.
-                    </p>
-                    <p className="mt-2">
-                      This is a demo with simulated responses. In a real app, you'd connect it to a tRPC mutation.
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="neuro" id="rad-n" />
+                    <label htmlFor="rad-n" className="text-sm font-medium cursor-pointer">Neurology Dept</label>
                   </div>
-                  <AIChatBox
-                    messages={chatMessages}
-                    onSendMessage={handleChatSend}
-                    isLoading={isChatLoading}
-                    placeholder="Try sending a message..."
-                    height="500px"
-                    emptyStateMessage="How can I help you today?"
-                    suggestedPrompts={[
-                      "What is React?",
-                      "Explain TypeScript",
-                      "How to use tRPC?",
-                      "Best practices for web development",
-                    ]}
+                </RadioGroup>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold mb-2 block">Badges & Avatars</label>
+                <div className="flex items-center gap-4 mt-2">
+                  <Badge variant="default">Admitted</Badge>
+                  <Badge variant="secondary">Discharged</Badge>
+                  <Badge variant="outline">Scheduled</Badge>
+                  <Avatar className="border">
+                    <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">GK</AvatarFallback>
+                  </Avatar>
+                </div>
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* 3. ENTERPRISE DATATABLE SHOWCASE */}
+        <SectionCard title="3. Reusable DataTable Component" description="Declartive setup containing column sort, bulk selections, and file export.">
+          <DataTable
+            columns={mockColumns}
+            data={mockPatients}
+            stickyHeader
+            bulkActions={[
+              { label: "Delete Selected", action: (rows) => toast.error(`Deleted ${rows.length} rows`), variant: "destructive" },
+              { label: "Verify Admission Status", action: (rows) => toast.success(`Updated ${rows.length} rows`), variant: "default" },
+            ]}
+            customFilters={[
+              {
+                key: "department",
+                label: "Department",
+                options: [
+                  { label: "Cardiology", value: "Cardiology" },
+                  { label: "Neurology", value: "Neurology" },
+                  { label: "Pediatrics", value: "Pediatrics" },
+                  { label: "Emergency", value: "Emergency" },
+                ],
+              },
+            ]}
+          />
+        </SectionCard>
+
+        {/* 4. ENTERPRISE FORM LAYOUT SYSTEM */}
+        <SectionCard title="4. Reusable Form Layout & Validation" description="Section cards, multi-column inputs, validation listings, and steppers.">
+          <FormStepper
+            steps={[
+              { id: "s1", title: "General Details", description: "Patient identifiers" },
+              { id: "s2", title: "Insurance & Coverage", description: "Payment credentials" },
+              { id: "s3", title: "Final Validation", description: "Register record" },
+            ]}
+            currentStepIndex={0}
+            className="mb-8"
+          />
+
+          <FormProvider {...formMethods}>
+            <form onSubmit={formMethods.handleSubmit(onSubmitForm)} className="space-y-6">
+              {/* Trigger validation messages mock */}
+              <FormValidationSummary />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">
+                    Patient Name <RequiredIndicator />
+                  </label>
+                  <Input
+                    {...formMethods.register("patientName", { required: "Patient Name is required" })}
+                    placeholder="e.g. Aria Montgomery"
                   />
                 </div>
-              </CardContent>
-            </Card>
-          </section>
-        </div>
-      </main>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold">
+                    Contact Email Address <RequiredIndicator />
+                  </label>
+                  <Input
+                    {...formMethods.register("patientEmail", { required: "Contact Email is required" })}
+                    type="email"
+                    placeholder="e.g. aria@example.com"
+                  />
+                </div>
+              </div>
 
-      <footer className="border-t py-6 mt-12">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p>Shadcn/ui Component Showcase</p>
-        </div>
-      </footer>
-    </div>
+              <div className="flex justify-end gap-2 border-t pt-4">
+                <Button type="button" variant="outline" onClick={() => formMethods.reset()}>
+                  Reset
+                </Button>
+                <Button type="submit">
+                  Save & Validate
+                </Button>
+              </div>
+            </form>
+          </FormProvider>
+        </SectionCard>
+
+        {/* 5. INTERACTIVE OVERLAYS & SHEETS */}
+        <SectionCard title="5. Overlays, Dialogs & Modals" description="Backdrop blurs, smooth keyframe scalings, and compact popovers.">
+          <div className="flex flex-wrap gap-4">
+            {/* Standard Modal Dialog */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">Trigger Dialog Modal</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Patient Registry Profile</DialogTitle>
+                  <DialogDescription>
+                    Update the medical registration detail card below. All changes will be saved to audit log history.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-3">
+                  <label className="text-xs font-bold block">Assigned Doctor</label>
+                  <Input placeholder="Enter practitioner name..." />
+                </div>
+                <div className="flex justify-end gap-2 border-t pt-4 mt-2">
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Discard</Button>
+                  </DialogTrigger>
+                  <Button onClick={() => toast.success("Record updated")}>Confirm Save</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Confirmation Dialog */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Trigger Alert Confirmation</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the selected patient registration and purge clinical history.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel purge</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => toast.error("Record purged")}>
+                    Confirm Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Popover trigger */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="secondary">View Popover Panel</Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold leading-none">Clinical Guidelines</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Reference standards for neurology patient transfers.
+                    </p>
+                  </div>
+                  <div className="grid gap-2 border-t pt-2.5">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span>Max wait threshold:</span>
+                      <span className="text-primary">45 mins</span>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Tooltip trigger */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline">Hover for Tooltip</Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs font-medium">Audit logs verified by JeevanOS core.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </SectionCard>
+
+        {/* 6. CHARTS & STAT CARDS */}
+        <SectionCard title="6. Charts & Stat Cards Containers" description="Unified recharts wrappers, data tooltip highlights, and stat KPI panels.">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <StatCard
+              icon={Smartphone}
+              title="Hospital Visits"
+              value="1,482"
+              description="New patients registered"
+              trend={{ value: "+8.2%", isPositive: true }}
+              iconColor="text-blue-600"
+            />
+            <StatCard
+              icon={TabletIcon}
+              title="Bed Occupancy"
+              value="82.4%"
+              description="Current admissions load"
+              trend={{ value: "+2.1%", isPositive: true }}
+              iconColor="text-emerald-600"
+            />
+            <StatCard
+              icon={Monitor}
+              title="Pending Invoices"
+              value="$4,281"
+              description="Awaiting claim validation"
+              trend={{ value: "-1.4%", isPositive: false }}
+              iconColor="text-amber-500"
+            />
+          </div>
+
+          <ChartContainer title="Admissions Volume Trend" description="Total clinical admissions per day in the current branch.">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={[{ date: "Mon", count: 42 }, { date: "Tue", count: 58 }, { date: "Wed", count: 62 }, { date: "Thu", count: 51 }, { date: "Fri", count: 70 }, { date: "Sat", count: 48 }, { date: "Sun", count: 35 }]}>
+                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.4} />
+                <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
+                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
+                <ChartTooltip contentStyle={{ background: "var(--popover)", borderColor: "var(--border)", borderRadius: "var(--radius)" }} />
+                <Line type="monotone" dataKey="count" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </SectionCard>
+
+        {/* 7. LOADING, EMPTY, & ERROR STATES */}
+        <SectionCard title="7. State Alternatives" description="Loading placeholders, visual blank slates, and clean logs boundary displays.">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Skeletal pulse */}
+            <div className="space-y-4 border p-4 rounded-xl bg-background/50 h-[260px] flex flex-col justify-between">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Loading Skeleton</span>
+              <div className="space-y-3 flex-1 justify-center flex flex-col">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-9 w-24 rounded-lg mt-2" />
+              </div>
+            </div>
+
+            {/* Empty illustration */}
+            <div className="border p-4 rounded-xl bg-background/50 h-[260px] flex flex-col justify-between overflow-hidden">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Empty State Primitive</span>
+              <div className="flex-1 flex items-center justify-center">
+                <Empty className="p-0 md:p-0 gap-2 border-0 bg-transparent shadow-none">
+                  <EmptyHeader className="gap-1">
+                    <EmptyTitle className="text-sm font-bold">No medication history</EmptyTitle>
+                    <EmptyDescription className="text-[10px]">
+                      Press 'Add Rx' to begin mapping prescription data.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              </div>
+            </div>
+
+            {/* Error preview */}
+            <div className="border p-4 rounded-xl bg-background/50 h-[260px] flex flex-col justify-between">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Error Detail Boundary</span>
+              <div className="space-y-3 flex-1 justify-center flex flex-col items-center text-center">
+                <div className="flex items-center justify-center size-10 rounded-full bg-destructive/10 text-destructive">
+                  <AlertTriangle size={18} />
+                </div>
+                <h5 className="text-xs font-bold">Verification Error</h5>
+                <div className="p-2 border rounded-md bg-destructive/5 text-[9px] font-mono text-destructive max-w-full truncate">
+                  CRITICAL: ER_DUP_ENTRY for key primary
+                </div>
+                <Button size="sm" variant="outline" className="h-7 text-xs px-2.5">
+                  <RotateCcw size={12} className="mr-1" /> Retry Query
+                </Button>
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* 8. RESPONSIVE FRAME PREVIEWS */}
+        <SectionCard title="8. Device Responsive Sandbox Preview" description="Render mock previews inside constrained devices viewports width.">
+          <div className="flex items-center gap-2 border-b pb-4 mb-4">
+            <Button
+              variant={devicePreview === "mobile" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setDevicePreview("mobile")}
+            >
+              <Smartphone className="mr-1.5 h-3.5 w-3.5" /> Mobile (375px)
+            </Button>
+            <Button
+              variant={devicePreview === "tablet" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setDevicePreview("tablet")}
+            >
+              <TabletIcon className="mr-1.5 h-3.5 w-3.5" /> Tablet (768px)
+            </Button>
+            <Button
+              variant={devicePreview === "desktop" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setDevicePreview("desktop")}
+            >
+              <Monitor className="mr-1.5 h-3.5 w-3.5" /> Desktop (100%)
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-center p-6 border rounded-xl bg-secondary/15 overflow-x-auto">
+            <div
+              className={cn(
+                "bg-background border shadow-md transition-all duration-300 rounded-lg p-6 space-y-4 overflow-hidden",
+                devicePreview === "mobile" && "w-[375px] h-[400px]",
+                devicePreview === "tablet" && "w-[640px] h-[300px]",
+                devicePreview === "desktop" && "w-full"
+              )}
+            >
+              <div className="flex justify-between items-center border-b pb-2">
+                <span className="text-xs font-extrabold text-primary tracking-tight">Responsive Sandbox</span>
+                <Badge variant="secondary">Live UI</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground leading-normal">
+                This card layout automatically accommodates the wrapping viewport boundary. Try selecting different options to verify layouts.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input placeholder="Enter test query..." />
+                <Button size="sm">Action Trigger</Button>
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* 9. RELEASE RECORDS */}
+        <SectionCard title="9. Release History & Audit Trail" description="JeevanOS Design System upgrade logs.">
+          <div className="space-y-6">
+            {UPGRADE_NOTES.map((log, idx) => (
+              <div key={idx} className="border-l-2 border-primary pl-4 py-1 space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-sm font-bold text-foreground">Version {log.version}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary font-medium text-muted-foreground">{log.date}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{log.description}</p>
+                <ul className="list-disc pl-4 text-xs space-y-1 text-muted-foreground mt-2">
+                  {log.changes.map((change, cIdx) => (
+                    <li key={cIdx}>{change}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      </div>
+    </DashboardLayout>
   );
 }
+ComponentShowcase.displayName = "ComponentShowcase";

@@ -14,6 +14,7 @@ import VerifyEmail from "@/pages/VerifyEmail";
 import StaffManagement from "@/pages/StaffManagement";
 import DoctorManagement from "@/pages/DoctorManagement";
 import DepartmentManagement from "@/pages/DepartmentManagement";
+import ComponentShowcase from "@/pages/ComponentShowcase";
 import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -72,6 +73,7 @@ function Router() {
       <Route path="/staff" component={StaffManagement} />
       <Route path="/doctors-admin" component={DoctorManagement} />
       <Route path="/departments" component={DepartmentManagement} />
+      <Route path="/design-system" component={ComponentShowcase} />
 
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}

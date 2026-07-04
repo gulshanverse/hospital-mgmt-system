@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Users, Calendar, Bed, DollarSign, AlertCircle, Activity } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { StatCard } from "@/components/ui/stat-card";
+import { ChartContainer } from "@/components/ui/chart-container";
 
 export default function Dashboard() {
   const { user } = useAuthContext();
@@ -31,18 +33,6 @@ export default function Dashboard() {
   if (isAdmin && kpisLoading) {
     return <DashboardLayout>Loading...</DashboardLayout>;
   }
-
-  const KPICard = ({ icon: Icon, label, value, color }: any) => (
-    <Card className="p-6 border-l-4" style={{ borderLeftColor: color }}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-600">{label}</p>
-          <p className="text-3xl font-bold mt-2">{value}</p>
-        </div>
-        <Icon className="w-12 h-12" style={{ color }} />
-      </div>
-    </Card>
-  );
 
   if (!isAdmin) {
     return (
@@ -117,11 +107,11 @@ export default function Dashboard() {
         )}
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard icon={Users} label="Total Patients" value={kpis?.totalPatients || 0} color="#3b82f6" />
-          <KPICard icon={Calendar} label="Today's Appointments" value={kpis?.todayAppointments || 0} color="#10b981" />
-          <KPICard icon={Bed} label="Available Beds" value={kpis?.availableBeds || 0} color="#f59e0b" />
-          <KPICard icon={DollarSign} label="Total Revenue" value={`$${kpis?.totalRevenue || 0}`} color="#8b5cf6" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard icon={Users} title="Total Patients" value={kpis?.totalPatients || 0} description="Registered patients" iconColor="text-blue-600" />
+          <StatCard icon={Calendar} title="Today's Appointments" value={kpis?.todayAppointments || 0} description="Scheduled for today" iconColor="text-emerald-600" />
+          <StatCard icon={Bed} title="Available Beds" value={kpis?.availableBeds || 0} description="Admissions ready" iconColor="text-amber-500" />
+          <StatCard icon={DollarSign} title="Total Revenue" value={`$${kpis?.totalRevenue || 0}`} description="Invoices collected" iconColor="text-purple-600" />
         </div>
 
         {/* Alerts */}
@@ -162,53 +152,50 @@ export default function Dashboard() {
           </TabsList>
 
           <TabsContent value="revenue" className="mt-4">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Monthly Revenue Trend</h3>
-              <ResponsiveContainer width="100%" height={300}>
+            <ChartContainer title="Monthly Revenue Trend" description="Total revenue generated per month in USD">
+              <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={monthlyRevenue || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="revenue" stroke="#8b5cf6" />
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.4} />
+                  <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={11} />
+                  <Tooltip contentStyle={{ background: "var(--popover)", borderColor: "var(--border)", borderRadius: "var(--radius)" }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="revenue" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartContainer>
           </TabsContent>
 
           <TabsContent value="admissions" className="mt-4">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Weekly Admissions</h3>
-              <ResponsiveContainer width="100%" height={300}>
+            <ChartContainer title="Weekly Admissions" description="New patient hospitalizations per week">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={weeklyAdmissions || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="admissions" fill="#10b981" />
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.4} />
+                  <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={11} />
+                  <Tooltip contentStyle={{ background: "var(--popover)", borderColor: "var(--border)", borderRadius: "var(--radius)" }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="admissions" fill="oklch(0.62 0.17 150)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartContainer>
           </TabsContent>
 
           <TabsContent value="appointments" className="mt-4">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Appointment Status Distribution</h3>
-              <ResponsiveContainer width="100%" height={300}>
+            <ChartContainer title="Appointment Status Distribution" description="Current share of appointments categorized by status">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={appointmentTrends || []} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={100} label>
+                  <Pie data={appointmentTrends || []} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} label>
                     {(appointmentTrends || []).map((entry: any, index: number) => {
-                      const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
+                      const COLORS = ["oklch(0.48 0.16 250)", "oklch(0.62 0.17 150)", "oklch(0.78 0.14 70)", "oklch(0.58 0.22 25)"];
                       return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
                     })}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip contentStyle={{ background: "var(--popover)", borderColor: "var(--border)", borderRadius: "var(--radius)" }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
                 </PieChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartContainer>
           </TabsContent>
 
           <TabsContent value="beds" className="mt-4">
