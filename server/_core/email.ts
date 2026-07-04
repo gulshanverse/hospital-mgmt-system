@@ -21,6 +21,15 @@ async function initTransporter(): Promise<void> {
     return;
   }
 
+  // Warn if port 587 is used — Railway and most PaaS block outbound port 587.
+  // Use port 465 (SMTPS/SSL) instead.
+  if (SMTP_PORT === 587) {
+    console.warn(
+      "[Email Service] WARNING: SMTP_PORT=587 (STARTTLS) is blocked by most cloud providers (Railway, Heroku, Render, etc.)." +
+      " Set SMTP_PORT=465 and SMTP_PASSWORD to an App Password for Gmail to use SMTPS/SSL."
+    );
+  }
+
   // Resolve SMTP hostname to an IPv4 address so Nodemailer never attempts IPv6
   let resolvedHost = SMTP_HOST;
   try {
@@ -32,6 +41,8 @@ async function initTransporter(): Promise<void> {
   } catch (err) {
     console.warn(`[Email Service] dns.resolve4(${SMTP_HOST}) failed, using hostname directly.`);
   }
+
+  console.log(`[Email Service] Creating transporter: host=${resolvedHost} port=${SMTP_PORT} secure=${SMTP_PORT === 465} user=${SMTP_USER}`);
 
   transporter = nodemailer.createTransport({
     host: resolvedHost,
@@ -51,8 +62,8 @@ async function initTransporter(): Promise<void> {
   try {
     await transporter.verify();
     console.log("[Email Service] SMTP Connection verified successfully (IPv4).");
-  } catch (error) {
-    console.error("[Email Service] SMTP Connection verification failed:", error);
+  } catch (error: any) {
+    console.error(`[Email Service] SMTP Connection verification failed: ${error.code} ${error.message}`);
   }
 }
 
