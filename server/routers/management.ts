@@ -144,9 +144,16 @@ export const patientRouter = router({
       const dbInstance = await db.getDb();
       if (!dbInstance) return [];
 
-      let query = dbInstance.select().from(patients);
+      let query = dbInstance
+        .select()
+        .from(patients)
+        .where(eq(patients.isDeleted, false)) as any;
+
       if (input?.status) {
-        query = query.where(eq(patients.status, input.status)) as any;
+        query = dbInstance
+          .select()
+          .from(patients)
+          .where(and(eq(patients.isDeleted, false), eq(patients.status, input.status))) as any;
       }
       return query.orderBy(desc(patients.createdAt));
     }),
@@ -192,10 +199,35 @@ export const patientRouter = router({
 
   delete: receptionistProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
-      await dbInstance.delete(patients).where(eq(patients.id, input.id));
+      
+      // Perform Soft Delete
+      await dbInstance
+        .update(patients)
+        .set({
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: ctx.user.id,
+        })
+        .where(eq(patients.id, input.id));
+
+      // Log Audit Trail entry (Section 55 of spec)
+      try {
+        await dbInstance.insert(auditLogs).values({
+          userId: ctx.user.id,
+          action: "SOFT_DELETE_PATIENT",
+          entityType: "patients",
+          entityId: input.id,
+          changes: JSON.stringify({ isDeleted: true }),
+          ipAddress: "127.0.0.1",
+          userAgent: "System/EPMS",
+        });
+      } catch (auditErr) {
+        console.error("Failed to write audit log:", auditErr);
+      }
+
       return { success: true };
     }),
 });
