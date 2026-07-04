@@ -133,6 +133,7 @@ export const doctors = mysqlTable(
     nmcRegistrationExpiryDate: timestamp("nmcRegistrationExpiryDate"),
 
     availabilitySchedule: json("availabilitySchedule"), // JSON: { monday: [9-17], tuesday: [9-17], ... }
+    settings: json("settings"), // JSON storing consultation, telemedicine, notification settings
     isAvailable: boolean("isAvailable").default(true).notNull(),
     
     // Soft Delete & Archive fields
