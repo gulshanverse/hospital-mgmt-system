@@ -40,6 +40,8 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { CommandPalette } from "./ui/command-palette";
+import { NotificationCenter } from "./ui/notification-center";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -297,22 +299,52 @@ function DashboardLayoutContent({
         />
       </div>
 
-      <SidebarInset>
-        {isMobile && (
-          <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground">
-                    {activeMenuItem?.label ?? "Menu"}
-                  </span>
-                </div>
-              </div>
-            </div>
+      <SidebarInset className="bg-background">
+        <header className="flex h-14 items-center justify-between border-b bg-card px-4 sticky top-0 z-40 shadow-2xs transition-colors duration-200">
+          <div className="flex items-center gap-2">
+            {!isMobile && (
+              <button
+                onClick={toggleSidebar}
+                className="h-8 w-8 flex items-center justify-center hover:bg-secondary rounded-lg transition-colors focus:outline-none shrink-0 cursor-pointer"
+                aria-label="Toggle navigation"
+              >
+                <PanelLeft className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+            {isMobile && (
+              <SidebarTrigger className="h-8 w-8 rounded-lg bg-background" />
+            )}
+            <span className="text-sm font-bold text-foreground">
+              {activeMenuItem?.label ?? "JeevanOS Dashboard"}
+            </span>
           </div>
-        )}
-        <main className="flex-1 p-4">{children}</main>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                const e = new KeyboardEvent("keydown", {
+                  key: "k",
+                  ctrlKey: true,
+                  metaKey: true,
+                });
+                document.dispatchEvent(e);
+              }}
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground border border-border/80 bg-secondary/30 rounded-lg hover:border-border transition-all cursor-pointer select-none"
+            >
+              <span>Search dashboard...</span>
+              <kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background px-1.5 font-mono text-[9px] font-medium opacity-100">
+                <span className="text-[10px]">Ctrl</span>K
+              </kbd>
+            </button>
+
+            <NotificationCenter />
+          </div>
+        </header>
+
+        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        
+        {/* Mount command palette */}
+        <CommandPalette />
       </SidebarInset>
     </>
   );
