@@ -367,20 +367,36 @@ export const authRouter = router({
   forgotPassword: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
+      // Rate Limit: 3 requests per 15 minutes per email
+      const { checkRateLimit } = await import("../_core/rateLimiter");
+      const limit = checkRateLimit(`forgot:${input.email}`, 3, 900000);
+      if (!limit.allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: `Too many password reset requests. Please try again after ${limit.retryAfter} seconds.`,
+        });
+      }
+
       const user = await findUserByEmail(input.email);
       if (!user) {
+        // Prevent email enumeration
         return { success: true };
       }
       const { signGeneralToken } = await import("../_core/jwt");
+      // Use passwordHash in payload to enforce one-time use reset tokens
       const resetToken = await signGeneralToken(
-        { userId: user.id, email: user.email, purpose: "password_reset" },
+        { userId: user.id, email: user.email, passwordHash: user.passwordHash, purpose: "password_reset" },
         "15m"
       );
-      console.log(`\n==================================================`);
-      console.log(`[Email Mock] Password Reset Request for ${user.email}`);
-      console.log(`Reset Link: http://localhost:3000/reset-password?token=${resetToken}`);
-      console.log(`==================================================\n`);
-      return { success: true, token: resetToken };
+
+      const appUrl = process.env.APP_URL || "https://jeevanos.up.railway.app";
+      const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
+
+      // Deliver reset link via email service
+      const { sendPasswordReset } = await import("../_core/email");
+      await sendPasswordReset(user.email || "", user.name, resetLink);
+
+      return { success: true };
     }),
 
   /**
@@ -390,10 +406,18 @@ export const authRouter = router({
     .input(
       z.object({
         token: z.string(),
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        password: z.string(),
       })
     )
     .mutation(async ({ input }) => {
+      const passwordValidation = validatePasswordStrength(input.password);
+      if (!passwordValidation.isValid) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Password is too weak: ${passwordValidation.errors.join(", ")}`,
+        });
+      }
+
       const { verifyGeneralToken } = await import("../_core/jwt");
       try {
         const payload = await verifyGeneralToken(input.token);
@@ -404,8 +428,18 @@ export const authRouter = router({
         if (!user) {
           throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
         }
+        // One-time use reset token validation:
+        if (user.passwordHash !== payload.passwordHash) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "This reset link has already been used." });
+        }
+
         const passwordHash = hashPassword(input.password);
         await updateUserPassword(user.id, passwordHash);
+
+        // Send password changed confirmation
+        const { sendPasswordChangedConfirmation } = await import("../_core/email");
+        await sendPasswordChangedConfirmation(user.email || "", user.name);
+
         return { success: true };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
@@ -419,17 +453,32 @@ export const authRouter = router({
   sendVerification: protectedProcedure
     .mutation(async ({ ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      if (ctx.user.isVerified) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Email is already verified." });
+      }
+
+      // Rate Limit / Cooldown: 1 request per 60 seconds per user
+      const { checkRateLimit } = await import("../_core/rateLimiter");
+      const limit = checkRateLimit(`verify:${ctx.user.id}`, 1, 60000);
+      if (!limit.allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: `Please wait ${limit.retryAfter} seconds before requesting another verification email.`,
+        });
+      }
+
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       const { signGeneralToken } = await import("../_core/jwt");
       const verificationToken = await signGeneralToken(
         { userId: ctx.user.id, code: otp, purpose: "email_verification" },
         "15m"
       );
-      console.log(`\n==================================================`);
-      console.log(`[Email Mock] Verification Code for ${ctx.user.email}`);
-      console.log(`Verification Code (OTP): ${otp}`);
-      console.log(`==================================================\n`);
-      return { success: true, token: verificationToken, code: otp };
+
+      // Deliver verification code via email service
+      const { sendEmailVerification } = await import("../_core/email");
+      await sendEmailVerification(ctx.user.email || "", ctx.user.name, otp);
+
+      return { success: true, token: verificationToken };
     }),
 
   /**
@@ -444,6 +493,10 @@ export const authRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
+      if (ctx.user.isVerified) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Email is already verified." });
+      }
+
       const { verifyGeneralToken } = await import("../_core/jwt");
       try {
         const payload = await verifyGeneralToken(input.token);
@@ -458,6 +511,11 @@ export const authRouter = router({
         }
         const { verifyUserEmail } = await import("../_core/authDb");
         await verifyUserEmail(ctx.user.id);
+
+        // Send welcome email
+        const { sendWelcomeEmail } = await import("../_core/email");
+        await sendWelcomeEmail(ctx.user.email || "", ctx.user.name);
+
         return { success: true };
       } catch (error) {
         if (error instanceof TRPCError) throw error;

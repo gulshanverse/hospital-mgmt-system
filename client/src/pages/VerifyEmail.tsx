@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { trpc } from "@/lib/trpc";
@@ -16,23 +16,29 @@ export default function VerifyEmail() {
   const [token, setToken] = useState("");
   const [code, setCode] = useState("");
   const [isSent, setIsSent] = useState(false);
-  const [mockOtp, setMockOtp] = useState("");
+  const [cooldown, setCooldown] = useState(0);
 
   const sendOtpMutation = trpc.auth.sendVerification.useMutation({
     onSuccess: (data: any) => {
       setIsSent(true);
+      setCooldown(60);
       toast.success("Verification code sent successfully");
       if (data?.token) {
         setToken(data.token);
-      }
-      if (data?.code) {
-        setMockOtp(data.code);
       }
     },
     onError: (err) => {
       toast.error(err.message || "Failed to send code");
     },
   });
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const verifyOtpMutation = trpc.auth.verifyEmail.useMutation({
     onSuccess: async () => {
@@ -126,15 +132,6 @@ export default function VerifyEmail() {
                 />
               </div>
               
-              {mockOtp && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-xs text-yellow-800 font-semibold mb-1">Developer Notice (Mock Mailer):</p>
-                  <p className="text-xs text-gray-600">
-                    Your verification code (OTP) is: <strong className="font-mono text-sm text-blue-700">{mockOtp}</strong>
-                  </p>
-                </div>
-              )}
-
               <Button
                 type="submit"
                 className="w-full"
@@ -147,10 +144,10 @@ export default function VerifyEmail() {
                 <button
                   type="button"
                   onClick={handleSendCode}
-                  disabled={sendOtpMutation.isPending}
-                  className="text-xs text-indigo-600 hover:underline"
+                  disabled={sendOtpMutation.isPending || cooldown > 0}
+                  className="text-xs text-indigo-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Resend Verification Code
+                  {cooldown > 0 ? `Resend Code in ${cooldown}s` : "Resend Verification Code"}
                 </button>
               </div>
             </form>
