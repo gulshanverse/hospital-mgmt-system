@@ -14,6 +14,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
 import StaffManagement from "@/pages/StaffManagement";
 import DoctorManagement from "@/pages/DoctorManagement";
+import DoctorProfile from "@/pages/DoctorProfile";
 import DepartmentManagement from "@/pages/DepartmentManagement";
 import ComponentShowcase from "@/pages/ComponentShowcase";
 import { Route, Switch, useLocation } from "wouter";
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/patients" component={PatientManagement} />
       <Route path="/patients/:id" component={PatientProfile} />
+      <Route path="/doctors/:id" component={DoctorProfile} />
       <Route path="/appointments" component={AppointmentScheduling} />
       <Route path="/ehr" component={EHRViewer} />
       <Route path="/beds" component={BedManagement} />

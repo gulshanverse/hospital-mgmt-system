@@ -438,11 +438,52 @@ export const doctorRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
-      const doctor = await db.getDoctorById(input.id);
-      if (!doctor) {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      
+      const result = await dbInstance
+        .select({
+          id: doctors.id,
+          userId: doctors.userId,
+          departmentId: doctors.departmentId,
+          secondaryDepartmentIds: doctors.secondaryDepartmentIds,
+          specialty: doctors.specialty,
+          superSpecialty: doctors.superSpecialty,
+          qualification: doctors.qualification,
+          degrees: doctors.degrees,
+          experience: doctors.experience,
+          licenseNumber: doctors.licenseNumber,
+          consultationFees: doctors.consultationFees,
+          profilePhoto: doctors.profilePhoto,
+          encryptedSignature: doctors.encryptedSignature,
+          languagesSpoken: doctors.languagesSpoken,
+          emergencyContactName: doctors.emergencyContactName,
+          emergencyContactPhone: doctors.emergencyContactPhone,
+          employmentType: doctors.employmentType,
+          status: doctors.status,
+          verificationStatus: doctors.verificationStatus,
+          verifiedAt: doctors.verifiedAt,
+          verifiedBy: doctors.verifiedBy,
+          rejectionReason: doctors.rejectionReason,
+          licenseExpiryDate: doctors.licenseExpiryDate,
+          boardCertificationExpiryDate: doctors.boardCertificationExpiryDate,
+          nmcRegistrationExpiryDate: doctors.nmcRegistrationExpiryDate,
+          availabilitySchedule: doctors.availabilitySchedule,
+          settings: doctors.settings,
+          isAvailable: doctors.isAvailable,
+          createdAt: doctors.createdAt,
+          updatedAt: doctors.updatedAt,
+          name: users.name,
+        })
+        .from(doctors)
+        .innerJoin(users, eq(doctors.userId, users.id))
+        .where(eq(doctors.id, input.id))
+        .limit(1);
+
+      if (result.length === 0) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Doctor not found" });
       }
-      return doctor;
+      return result[0];
     }),
 
   getByUserId: protectedProcedure
