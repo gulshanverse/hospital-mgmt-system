@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
 
 // Retrieve SMTP settings from environment variables
 const SMTP_HOST = process.env.SMTP_HOST || "";
@@ -11,6 +12,9 @@ const SMTP_FROM = process.env.SMTP_FROM || `"JeevanOS Portal" <${SMTP_USER}>`;
 let transporter: nodemailer.Transporter | null = null;
 
 if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
+  // Force Node.js dns lookup to prioritize IPv4 over IPv6
+  dns.setDefaultResultOrder("ipv4first");
+  
   transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
@@ -19,7 +23,17 @@ if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
       user: SMTP_USER,
       pass: SMTP_PASSWORD,
     },
-  });
+    // Force Nodemailer socket connection to use IPv4
+    family: 4,
+  } as any);
+
+  transporter.verify()
+    .then(() => {
+      console.log("[Email Service] SMTP Connection verified successfully (forced IPv4).");
+    })
+    .catch((error) => {
+      console.error("[Email Service] SMTP Connection verification failed:", error);
+    });
 } else {
   console.warn(
     "[Email Service] SMTP configuration missing. Falling back to Mock Console Mailer."
