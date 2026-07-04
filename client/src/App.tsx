@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/pages/Dashboard";
 import PatientManagement from "@/pages/PatientManagement";
+import PatientProfile from "@/pages/PatientProfile";
 import AppointmentScheduling from "@/pages/AppointmentScheduling";
 import EHRViewer from "@/pages/EHRViewer";
 import BedManagement from "@/pages/BedManagement";
@@ -64,6 +65,7 @@ function Router() {
       {/* Protected routes */}
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/patients" component={PatientManagement} />
+      <Route path="/patients/:id" component={PatientProfile} />
       <Route path="/appointments" component={AppointmentScheduling} />
       <Route path="/ehr" component={EHRViewer} />
       <Route path="/beds" component={BedManagement} />

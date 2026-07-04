@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { PatientIntakeForm } from "@/components/enterprise/PatientIntakeForm";
 
 export default function PatientManagement() {
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
@@ -146,7 +148,7 @@ export default function PatientManagement() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => openView(row)}
+            onClick={() => setLocation(`/patients/${row.id}`)}
             className="h-8 gap-1.5"
           >
             <Eye className="w-3.5 h-3.5" />
