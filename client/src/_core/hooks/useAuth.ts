@@ -99,6 +99,6 @@ export function useAuth(options?: UseAuthOptions) {
     ...state,
     refresh: () => meQuery.refetch(),
     logout,
-    isLoading: loading,
+    isLoading: state.loading,
   };
 }

@@ -8,6 +8,7 @@ export interface AuthUser {
   role: string;
   phone: string | null;
   isActive?: boolean;
+  isVerified?: boolean;
 }
 
 export interface AuthContextType {
