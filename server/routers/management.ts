@@ -4,11 +4,13 @@ import { router, protectedProcedure, adminProcedure, receptionistProcedure, doct
 import { requirePermission } from "../\_core/rbac";
 import * as db from "../db";
 import { eq, and, desc } from "drizzle-orm";
-import { doctors, departments, patients, users } from "../../drizzle/schema";
+import { doctors, departments, patients, users, auditLogs } from "../../drizzle/schema";
 
 // ============================================================================
 // PATIENT MANAGEMENT
 // ============================================================================
+
+import { checkDuplicatePatient } from "../lib/duplicate-check";
 
 export const patientRouter = router({
   create: receptionistProcedure
@@ -19,26 +21,55 @@ export const patientRouter = router({
         gender: z.enum(["male", "female", "other"]),
         dateOfBirth: z.string().transform(s => new Date(s)),
         phone: z.string().min(10),
-        email: z.string().email().optional(),
+        email: z.string().email().optional().or(z.literal("")),
         address: z.string().optional(),
         city: z.string().optional(),
         state: z.string().optional(),
         zipCode: z.string().optional(),
-        bloodGroup: z.enum(["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]).optional(),
+        bloodGroup: z.enum(["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]).optional().or(z.literal("")),
         emergencyContactName: z.string().optional(),
         emergencyContactPhone: z.string().optional(),
         insuranceProvider: z.string().optional(),
         insuranceNumber: z.string().optional(),
+        forceRegister: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const patientCode = `PAT-${Date.now()}`;
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
 
+      const emailVal = input.email || null;
+      const bloodVal = (input.bloodGroup || null) as any;
+
+      // 1. Duplicate check (unless force flag is provided)
+      if (!input.forceRegister) {
+        const dupResult = await checkDuplicatePatient(dbInstance, {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          phone: input.phone,
+          dob: input.dateOfBirth,
+        });
+
+        if (dupResult.isDuplicate) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `DUPLICATE_TRIGGERED: ${dupResult.reason} (ID: ${dupResult.patient?.patientCode})`,
+          });
+        }
+      }
+
+      // 2. Generate unique UHID prefix
+      const currentYear = new Date().getFullYear();
+      const seq = Math.floor(100000 + Math.random() * 900000);
+      const patientCode = `JOS-${currentYear}-${seq}`;
+
+      const { forceRegister, ...insertData } = input;
+
       const [res] = await dbInstance.insert(patients).values({
         patientCode,
-        ...input,
+        ...insertData,
+        email: emailVal,
+        bloodGroup: bloodVal,
         status: "Registered",
       });
 
@@ -50,6 +81,21 @@ export const patientRouter = router({
 
       if (inserted.length === 0) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve created patient" });
+      }
+
+      // 3. Log Audit Trail entry (Section 55 of spec)
+      try {
+        await dbInstance.insert(auditLogs).values({
+          userId: ctx.user.id,
+          action: "CREATE_PATIENT",
+          entityType: "patients",
+          entityId: inserted[0].id,
+          changes: JSON.stringify({ newValue: inserted[0] }),
+          ipAddress: "127.0.0.1",
+          userAgent: "System/EPMS",
+        });
+      } catch (auditErr) {
+        console.error("Failed to write audit log:", auditErr);
       }
 
       return inserted[0];
