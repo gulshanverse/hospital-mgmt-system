@@ -1,119 +1,33 @@
-import nodemailer from "nodemailer";
-import SMTPTransport from "nodemailer/lib/smtp-transport";
-import dns from "dns";
+import { Resend } from "resend";
 
-// Force Node.js DNS lookup to prioritize IPv4 over IPv6 globally
-dns.setDefaultResultOrder("ipv4first");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Retrieve SMTP settings from environment variables
-const SMTP_HOST = process.env.SMTP_HOST || "";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
-const SMTP_USER = process.env.SMTP_USER || "";
-const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
-const SMTP_FROM = process.env.SMTP_FROM || `"JeevanOS Portal" <${SMTP_USER}>`;
-
-// Create transporter — initialized asynchronously to resolve IPv4 first
-let transporter: nodemailer.Transporter | null = null;
-
-async function initTransporter(): Promise<void> {
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD) {
-    console.warn("[Email Service] SMTP configuration missing. Falling back to Mock Console Mailer.");
-    return;
-  }
-
-  // Warn if port 587 is used — Railway and most PaaS block outbound port 587.
-  // Use port 465 (SMTPS/SSL) instead.
-  if (SMTP_PORT === 587) {
-    console.warn(
-      "[Email Service] WARNING: SMTP_PORT=587 (STARTTLS) is blocked by most cloud providers (Railway, Heroku, Render, etc.)." +
-      " Set SMTP_PORT=465 and SMTP_PASSWORD to an App Password for Gmail to use SMTPS/SSL."
-    );
-  }
-
-  // Resolve SMTP hostname to an IPv4 address so Nodemailer never attempts IPv6
-  let resolvedHost = SMTP_HOST;
-  try {
-    const ipv4Addresses = await dns.promises.resolve4(SMTP_HOST);
-    if (ipv4Addresses.length > 0) {
-      resolvedHost = ipv4Addresses[0];
-      console.log(`[Email Service] Resolved ${SMTP_HOST} → ${resolvedHost} (IPv4)`);
-    }
-  } catch (err) {
-    console.warn(`[Email Service] dns.resolve4(${SMTP_HOST}) failed, using hostname directly.`);
-  }
-
-  console.log(`[Email Service] Creating transporter: host=${resolvedHost} port=${SMTP_PORT} secure=${SMTP_PORT === 465} user=${SMTP_USER}`);
-
-  transporter = nodemailer.createTransport({
-    host: resolvedHost,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASSWORD,
-    },
-    family: 4,
-    tls: {
-      // Original hostname for TLS certificate validation when host is an IP
-      servername: SMTP_HOST,
-    },
-  } as SMTPTransport.Options);
-
-  try {
-    await transporter.verify();
-    console.log("[Email Service] SMTP Connection verified successfully (IPv4).");
-  } catch (error: any) {
-    console.error(`[Email Service] SMTP Connection verification failed: ${error.code} ${error.message}`);
-  }
-}
-
-// Start async init immediately
-initTransporter();
+const SMTP_FROM = "JeevanOS <onboarding@resend.dev>";
 
 /**
- * Diagnostic method to verify SMTP transporter connection
- */
-export async function verifyTransporter(): Promise<{ success: boolean; message: string; host: string; port: number; user: string }> {
-  if (!transporter) {
-    return { success: false, message: "Transporter not initialized (SMTP host/user/pass missing in env)", host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER };
-  }
-  try {
-    await transporter.verify();
-    return { success: true, message: "SMTP Connection verified successfully (forced IPv4).", host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER };
-  } catch (error: any) {
-    return { success: false, message: `SMTP Connection verification failed: ${error.message || error}`, host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER };
-  }
-}
-
-/**
- * Send a raw email
+ * Send a raw email via Resend
  */
 export async function sendEmail(
   to: string,
   subject: string,
   html: string
 ): Promise<boolean> {
-  if (transporter) {
-    try {
-      await transporter.sendMail({
-        from: SMTP_FROM,
-        to,
-        subject,
-        html,
-      });
-      return true;
-    } catch (error) {
-      console.error("[Email Service] Failed to send email via SMTP:", error);
+  try {
+    const { error } = await resend.emails.send({
+      from: SMTP_FROM,
+      to,
+      subject,
+      html,
+    });
+    if (error) {
+      console.error("[Email Service] Resend API error:", error);
       return false;
     }
-  } else {
-    console.log(`\n==================================================`);
-    console.log(`[Email Mock Logger] To: ${to}`);
-    console.log(`[Email Mock Logger] Subject: ${subject}`);
-    console.log(`[Email Mock Logger] Content:`);
-    console.log(html.replace(/<[^>]*>/g, " ").trim().substring(0, 500) + "...");
-    console.log(`==================================================\n`);
+    console.log(`[Email Service] Email sent successfully to ${to}`);
     return true;
+  } catch (err) {
+    console.error("[Email Service] Failed to send email:", err);
+    return false;
   }
 }
 
