@@ -3,8 +3,8 @@ import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, adminProcedure, receptionistProcedure, doctorProcedure } from "../\_core/trpc";
 import { requirePermission } from "../\_core/rbac";
 import * as db from "../db";
-import { eq, and, desc } from "drizzle-orm";
-import { doctors, departments, patients, users, auditLogs, uploadedFiles } from "../../drizzle/schema";
+import { eq, and, desc, or } from "drizzle-orm";
+import { doctors, departments, patients, users, auditLogs, uploadedFiles, doctorLeaves, doctorAttendance, shiftExchanges, doctorAuditLogs } from "../../drizzle/schema";
 
 // ============================================================================
 // PATIENT MANAGEMENT
@@ -354,15 +354,26 @@ export const doctorRouter = router({
       z.object({
         userId: z.number(),
         departmentId: z.number(),
+        secondaryDepartmentIds: z.array(z.number()).optional(),
         specialty: z.string().min(1),
+        superSpecialty: z.string().optional(),
         qualification: z.string().optional(),
+        degrees: z.array(z.string()).optional(),
         experience: z.number().optional(),
-        licenseNumber: z.string().optional(),
+        consultationFees: z.number().optional(),
         profilePhoto: z.string().optional(),
+        languagesSpoken: z.array(z.string()).optional(),
+        emergencyContactName: z.string().optional(),
+        emergencyContactPhone: z.string().optional(),
+        employmentType: z.enum(["Full-Time", "Part-Time", "On-Call", "Visiting Consultant"]).optional(),
+        licenseNumber: z.string().optional(),
+        licenseExpiryDate: z.string().transform(s => new Date(s)).optional(),
+        boardCertificationExpiryDate: z.string().transform(s => new Date(s)).optional(),
+        nmcRegistrationExpiryDate: z.string().transform(s => new Date(s)).optional(),
         availabilitySchedule: z.any().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
 
@@ -378,10 +389,50 @@ export const doctorRouter = router({
         await dbInstance.update(users).set({ role: "doctor" }).where(eq(users.id, input.userId));
       }
 
-      return db.createDoctor({
-        ...input,
+      const {
+        secondaryDepartmentIds,
+        degrees,
+        consultationFees,
+        languagesSpoken,
+        employmentType,
+        licenseExpiryDate,
+        boardCertificationExpiryDate,
+        nmcRegistrationExpiryDate,
+        ...rest
+      } = input;
+
+      const [res] = await dbInstance.insert(doctors).values({
+        ...rest,
+        secondaryDepartmentIds: secondaryDepartmentIds ? JSON.stringify(secondaryDepartmentIds) : null,
+        degrees: degrees ? JSON.stringify(degrees) : null,
+        consultationFees: consultationFees ? consultationFees.toString() : "50.00",
+        languagesSpoken: languagesSpoken ? JSON.stringify(languagesSpoken) : null,
+        employmentType: employmentType || "Full-Time",
+        licenseExpiryDate: licenseExpiryDate || null,
+        boardCertificationExpiryDate: boardCertificationExpiryDate || null,
+        nmcRegistrationExpiryDate: nmcRegistrationExpiryDate || null,
         isAvailable: true,
+        verificationStatus: "Draft",
+        status: "Active",
       });
+
+      const insertedId = (res as any).insertId;
+
+      // Log Audit Trail
+      try {
+        await dbInstance.insert(doctorAuditLogs).values({
+          operatorId: ctx.user.id,
+          action: "CREATE_DOCTOR",
+          targetDoctorId: insertedId,
+          newValue: JSON.stringify(input),
+          ipAddress: "127.0.0.1",
+          userAgent: "System/DMS",
+        });
+      } catch (auditErr) {
+        console.error("Failed to write audit log:", auditErr);
+      }
+
+      return { success: true, doctorId: insertedId };
     }),
 
   getById: protectedProcedure
@@ -420,10 +471,14 @@ export const doctorRouter = router({
         licenseNumber: doctors.licenseNumber,
         availabilitySchedule: doctors.availabilitySchedule,
         isAvailable: doctors.isAvailable,
+        verificationStatus: doctors.verificationStatus,
+        status: doctors.status,
+        consultationFees: doctors.consultationFees,
         name: users.name,
       })
       .from(doctors)
-      .innerJoin(users, eq(doctors.userId, users.id));
+      .innerJoin(users, eq(doctors.userId, users.id))
+      .where(eq(doctors.isDeleted, false));
   }),
 
   update: adminProcedure
@@ -431,30 +486,264 @@ export const doctorRouter = router({
       z.object({
         id: z.number(),
         departmentId: z.number().optional(),
+        secondaryDepartmentIds: z.array(z.number()).optional(),
         specialty: z.string().optional(),
+        superSpecialty: z.string().optional(),
         qualification: z.string().optional(),
+        degrees: z.array(z.string()).optional(),
         experience: z.number().optional(),
-        licenseNumber: z.string().optional(),
+        consultationFees: z.number().optional(),
         profilePhoto: z.string().optional(),
+        languagesSpoken: z.array(z.string()).optional(),
+        emergencyContactName: z.string().optional(),
+        emergencyContactPhone: z.string().optional(),
+        employmentType: z.enum(["Full-Time", "Part-Time", "On-Call", "Visiting Consultant"]).optional(),
+        licenseNumber: z.string().optional(),
+        licenseExpiryDate: z.string().transform(s => new Date(s)).optional(),
+        boardCertificationExpiryDate: z.string().transform(s => new Date(s)).optional(),
+        nmcRegistrationExpiryDate: z.string().transform(s => new Date(s)).optional(),
         availabilitySchedule: z.any().optional(),
         isAvailable: z.boolean().optional(),
+        verificationStatus: z.enum(["Draft", "Pending_Verification", "Under_Review", "Verified", "Rejected", "Suspended", "License_Expired"]).optional(),
+        rejectionReason: z.string().optional(),
+        status: z.enum(["Active", "Inactive", "Suspended", "On-Leave", "Retired"]).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, ...updateData } = input;
+      const { id, secondaryDepartmentIds, degrees, languagesSpoken, consultationFees, ...updateData } = input;
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
-      
-      await dbInstance.update(doctors).set(updateData).where(eq(doctors.id, id));
+
+      const [prev] = await dbInstance.select().from(doctors).where(eq(doctors.id, id)).limit(1);
+
+      const updateFields: any = {
+        ...updateData,
+      };
+      if (secondaryDepartmentIds) updateFields.secondaryDepartmentIds = JSON.stringify(secondaryDepartmentIds);
+      if (degrees) updateFields.degrees = JSON.stringify(degrees);
+      if (languagesSpoken) updateFields.languagesSpoken = JSON.stringify(languagesSpoken);
+      if (consultationFees) updateFields.consultationFees = consultationFees.toString();
+
+      await dbInstance.update(doctors).set(updateFields).where(eq(doctors.id, id));
+
+      // Log Audit Trail
+      try {
+        await dbInstance.insert(doctorAuditLogs).values({
+          operatorId: ctx.user.id,
+          action: "UPDATE_DOCTOR",
+          targetDoctorId: id,
+          previousValue: JSON.stringify(prev || {}),
+          newValue: JSON.stringify(updateFields),
+          ipAddress: "127.0.0.1",
+          userAgent: "System/DMS",
+        });
+      } catch (auditErr) {
+        console.error("Failed to write audit log:", auditErr);
+      }
+
       return { success: true };
     }),
 
   delete: adminProcedure
     .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      
+      // Perform Soft Delete
+      await dbInstance.update(doctors).set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        deletedBy: ctx.user.id,
+      }).where(eq(doctors.id, input.id));
+
+      return { success: true };
+    }),
+
+  applyLeave: doctorProcedure
+    .input(
+      z.object({
+        doctorId: z.number(),
+        startDate: z.string().transform(s => new Date(s)),
+        endDate: z.string().transform(s => new Date(s)),
+        leaveType: z.enum(["Annual", "Sabbatical", "Medical", "Casual"]),
+        reason: z.string().optional(),
+        coveringDoctorId: z.number().optional(),
+      })
+    )
     .mutation(async ({ input }) => {
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
-      await dbInstance.delete(doctors).where(eq(doctors.id, input.id));
+
+      const [res] = await dbInstance.insert(doctorLeaves).values({
+        doctorId: input.doctorId,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        leaveType: input.leaveType,
+        reason: input.reason || null,
+        coveringDoctorId: input.coveringDoctorId || null,
+        status: "Pending",
+      });
+
+      return { success: true, leaveId: (res as any).insertId };
+    }),
+
+  listLeaves: protectedProcedure
+    .input(z.object({ doctorId: z.number().optional() }).optional())
+    .query(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      let query = dbInstance.select().from(doctorLeaves);
+      if (input?.doctorId) {
+        query = query.where(eq(doctorLeaves.doctorId, input.doctorId)) as any;
+      }
+      return query.orderBy(desc(doctorLeaves.createdAt));
+    }),
+
+  reviewLeave: adminProcedure
+    .input(
+      z.object({
+        leaveId: z.number(),
+        status: z.enum(["Approved", "Rejected"]),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      await dbInstance
+        .update(doctorLeaves)
+        .set({
+          status: input.status,
+          reviewedBy: ctx.user.id,
+          reviewedAt: new Date(),
+        })
+        .where(eq(doctorLeaves.id, input.leaveId));
+
+      return { success: true };
+    }),
+
+  clockAttendance: doctorProcedure
+    .input(
+      z.object({
+        doctorId: z.number(),
+        action: z.enum(["Clock_In", "Clock_Out", "Break_Start", "Break_End"]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      const timestamp = new Date();
+
+      if (input.action === "Clock_In") {
+        await dbInstance.insert(doctorAttendance).values({
+          doctorId: input.doctorId,
+          clockIn: timestamp,
+          attendanceStatus: "Present",
+        });
+      } else {
+        const latest = await dbInstance
+          .select()
+          .from(doctorAttendance)
+          .where(eq(doctorAttendance.doctorId, input.doctorId))
+          .orderBy(desc(doctorAttendance.id))
+          .limit(1);
+
+        if (latest.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "No clock-in logs mapped for today." });
+        }
+
+        const record = latest[0];
+        const updateFields: any = {};
+        if (input.action === "Clock_Out") updateFields.clockOut = timestamp;
+        if (input.action === "Break_Start") updateFields.breakStart = timestamp;
+        if (input.action === "Break_End") updateFields.breakEnd = timestamp;
+
+        await dbInstance
+          .update(doctorAttendance)
+          .set(updateFields)
+          .where(eq(doctorAttendance.id, record.id));
+      }
+
+      return { success: true };
+    }),
+
+  getAttendanceHistory: protectedProcedure
+    .input(z.object({ doctorId: z.number() }))
+    .query(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      return dbInstance
+        .select()
+        .from(doctorAttendance)
+        .where(eq(doctorAttendance.doctorId, input.doctorId))
+        .orderBy(desc(doctorAttendance.createdAt));
+    }),
+
+  requestShiftExchange: doctorProcedure
+    .input(
+      z.object({
+        requestorDoctorId: z.number(),
+        targetDoctorId: z.number(),
+        sourceSlotId: z.number(),
+        targetSlotId: z.number(),
+        reason: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      await dbInstance.insert(shiftExchanges).values({
+        requestorDoctorId: input.requestorDoctorId,
+        targetDoctorId: input.targetDoctorId,
+        sourceSlotId: input.sourceSlotId,
+        targetSlotId: input.targetSlotId,
+        rejectionReason: input.reason || null,
+        status: "Pending_Peer",
+      });
+
+      return { success: true };
+    }),
+
+  listShiftExchanges: protectedProcedure
+    .input(z.object({ doctorId: z.number().optional() }).optional())
+    .query(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      let query = dbInstance.select().from(shiftExchanges);
+      if (input?.doctorId) {
+        query = query.where(
+          or(
+            eq(shiftExchanges.requestorDoctorId, input.doctorId),
+            eq(shiftExchanges.targetDoctorId, input.doctorId)
+          )
+        ) as any;
+      }
+      return query.orderBy(desc(shiftExchanges.createdAt));
+    }),
+
+  saveSettings: doctorProcedure
+    .input(
+      z.object({
+        doctorId: z.number(),
+        settings: z.any(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      await dbInstance
+        .update(doctors)
+        .set({
+          settings: JSON.stringify(input.settings),
+        })
+        .where(eq(doctors.id, input.doctorId));
+
       return { success: true };
     }),
 });
