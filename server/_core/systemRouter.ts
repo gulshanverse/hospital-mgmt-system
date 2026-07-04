@@ -13,6 +13,12 @@ export const systemRouter = router({
       ok: true,
     })),
 
+  verifyEmailTransporter: publicProcedure
+    .query(async () => {
+      const { verifyTransporter } = await import("./email");
+      return await verifyTransporter();
+    }),
+
   notifyOwner: adminProcedure
     .input(
       z.object({

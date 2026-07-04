@@ -41,6 +41,21 @@ if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
 }
 
 /**
+ * Diagnostic method to verify SMTP transporter connection
+ */
+export async function verifyTransporter(): Promise<{ success: boolean; message: string }> {
+  if (!transporter) {
+    return { success: false, message: "Transporter not initialized (SMTP host/user/pass missing in env)" };
+  }
+  try {
+    await transporter.verify();
+    return { success: true, message: "SMTP Connection verified successfully (forced IPv4)." };
+  } catch (error: any) {
+    return { success: false, message: `SMTP Connection verification failed: ${error.message || error}` };
+  }
+}
+
+/**
  * Send a raw email
  */
 export async function sendEmail(
