@@ -85,14 +85,62 @@ export const doctors = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     userId: int("userId").notNull().unique(),
-    departmentId: int("departmentId").notNull(),
-    specialty: varchar("specialty", { length: 100 }).notNull(),
+    departmentId: int("departmentId").notNull(), // treated as primary department
+    secondaryDepartmentIds: json("secondaryDepartmentIds"),
+    specialty: varchar("specialty", { length: 150 }).notNull(),
+    superSpecialty: varchar("superSpecialty", { length: 150 }),
     qualification: text("qualification"),
+    degrees: json("degrees"), // Array of strings e.g. ["MD", "DM"]
     experience: int("experience"), // years
     licenseNumber: varchar("licenseNumber", { length: 50 }).unique(),
+    consultationFees: decimal("consultationFees", { precision: 10, scale: 2 }).default("50.00").notNull(),
     profilePhoto: varchar("profilePhoto", { length: 500 }),
+    encryptedSignature: text("encryptedSignature"),
+    languagesSpoken: json("languagesSpoken"),
+    emergencyContactName: varchar("emergencyContactName", { length: 255 }),
+    emergencyContactPhone: varchar("emergencyContactPhone", { length: 50 }),
+    employmentType: mysqlEnum("employmentType", [
+      "Full-Time",
+      "Part-Time",
+      "On-Call",
+      "Visiting Consultant",
+    ]).default("Full-Time").notNull(),
+    status: mysqlEnum("status", [
+      "Active",
+      "Inactive",
+      "Suspended",
+      "On-Leave",
+      "Retired",
+    ]).default("Active").notNull(),
+    
+    // Verification & Credentialing Engine (Section 5)
+    verificationStatus: mysqlEnum("verificationStatus", [
+      "Draft",
+      "Pending_Verification",
+      "Under_Review",
+      "Verified",
+      "Rejected",
+      "Suspended",
+      "License_Expired"
+    ]).default("Draft").notNull(),
+    verifiedAt: timestamp("verifiedAt"),
+    verifiedBy: int("verifiedBy"),
+    rejectionReason: text("rejectionReason"),
+    
+    // License Validity Engine
+    licenseExpiryDate: timestamp("licenseExpiryDate"),
+    boardCertificationExpiryDate: timestamp("boardCertificationExpiryDate"),
+    nmcRegistrationExpiryDate: timestamp("nmcRegistrationExpiryDate"),
+
     availabilitySchedule: json("availabilitySchedule"), // JSON: { monday: [9-17], tuesday: [9-17], ... }
     isAvailable: boolean("isAvailable").default(true).notNull(),
+    
+    // Soft Delete & Archive fields
+    isDeleted: boolean("isDeleted").default(false).notNull(),
+    deletedAt: timestamp("deletedAt"),
+    deletedBy: int("deletedBy"),
+    archivedAt: timestamp("archivedAt"),
+    
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
@@ -101,11 +149,111 @@ export const doctors = mysqlTable(
     foreignKey({ columns: [table.departmentId], foreignColumns: [departments.id] }),
     index("idx_departmentId").on(table.departmentId),
     index("idx_isAvailable").on(table.isAvailable),
+    index("idx_doctor_specialty").on(table.specialty),
+    index("idx_doctor_status").on(table.status),
+    index("idx_doctor_isDeleted").on(table.isDeleted),
   ]
 );
 
 export type Doctor = typeof doctors.$inferSelect;
 export type InsertDoctor = typeof doctors.$inferInsert;
+
+// DOCTOR LEAVE MANAGEMENT
+export const doctorLeaves = mysqlTable(
+  "doctorLeaves",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    doctorId: int("doctorId").notNull(),
+    startDate: timestamp("startDate").notNull(),
+    endDate: timestamp("endDate").notNull(),
+    leaveType: mysqlEnum("leaveType", ["Annual", "Sabbatical", "Medical", "Casual"]).notNull(),
+    reason: text("reason"),
+    coveringDoctorId: int("coveringDoctorId"),
+    status: mysqlEnum("status", ["Pending", "Approved", "Rejected"]).default("Pending").notNull(),
+    reviewedBy: int("reviewedBy"),
+    reviewedAt: timestamp("reviewedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({ columns: [table.doctorId], foreignColumns: [doctors.id] }),
+    index("idx_leave_dates").on(table.startDate, table.endDate),
+  ]
+);
+
+export type DoctorLeave = typeof doctorLeaves.$inferSelect;
+export type InsertDoctorLeave = typeof doctorLeaves.$inferInsert;
+
+// DOCTOR ATTENDANCE LOGS
+export const doctorAttendance = mysqlTable(
+  "doctorAttendance",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    doctorId: int("doctorId").notNull(),
+    clockIn: timestamp("clockIn").notNull(),
+    clockOut: timestamp("clockOut"),
+    breakStart: timestamp("breakStart"),
+    breakEnd: timestamp("breakEnd"),
+    attendanceStatus: mysqlEnum("attendanceStatus", [
+      "Present",
+      "Late",
+      "Early_Exit",
+      "Half_Day",
+      "Absent",
+    ]).default("Present").notNull(),
+    overtimeMinutes: int("overtimeMinutes").default(0).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({ columns: [table.doctorId], foreignColumns: [doctors.id] }),
+  ]
+);
+
+export type DoctorAttendance = typeof doctorAttendance.$inferSelect;
+export type InsertDoctorAttendance = typeof doctorAttendance.$inferInsert;
+
+// SHIFT EXCHANGES TABLE
+export const shiftExchanges = mysqlTable(
+  "shiftExchanges",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    requestorDoctorId: int("requestorDoctorId").notNull(),
+    targetDoctorId: int("targetDoctorId").notNull(),
+    sourceSlotId: int("sourceSlotId").notNull(),
+    targetSlotId: int("targetSlotId").notNull(),
+    status: mysqlEnum("status", ["Pending_Peer", "Pending_HOD", "Approved", "Rejected"]).default("Pending_Peer").notNull(),
+    rejectionReason: text("rejectionReason"),
+    approvedByHODId: int("approvedByHODId"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({ columns: [table.requestorDoctorId], foreignColumns: [doctors.id] }),
+    foreignKey({ columns: [table.targetDoctorId], foreignColumns: [doctors.id] }),
+  ]
+);
+
+export type ShiftExchange = typeof shiftExchanges.$inferSelect;
+export type InsertShiftExchange = typeof shiftExchanges.$inferInsert;
+
+// IMMUTABLE AUDIT LOG
+export const doctorAuditLogs = mysqlTable(
+  "doctorAuditLogs",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    operatorId: int("operatorId").notNull(),
+    action: varchar("action", { length: 100 }).notNull(),
+    targetDoctorId: int("targetDoctorId").notNull(),
+    previousValue: json("previousValue"),
+    newValue: json("newValue"),
+    ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
+    userAgent: varchar("userAgent", { length: 255 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  }
+);
+
+export type DoctorAuditLog = typeof doctorAuditLogs.$inferSelect;
+export type InsertDoctorAuditLog = typeof doctorAuditLogs.$inferInsert;
+
+
 
 export const staff = mysqlTable(
   "staff",
