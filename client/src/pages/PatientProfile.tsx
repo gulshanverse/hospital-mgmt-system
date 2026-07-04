@@ -25,6 +25,7 @@ import {
   DollarSign,
   Download,
   Inbox,
+  Printer,
 } from "lucide-react";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { toast } from "sonner";
@@ -35,6 +36,49 @@ export default function PatientProfile() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const patientId = params?.id ? parseInt(params.id) : null;
+
+  const handleExportFHIR = () => {
+    if (!patient) return;
+    const fhir = {
+      resourceType: "Patient",
+      id: patient.id.toString(),
+      identifier: [
+        { system: "http://jeevanos.org/uhid", value: patient.patientCode }
+      ],
+      active: !patient.isDeleted,
+      name: [
+        { use: "official", family: patient.lastName, given: [patient.firstName] }
+      ],
+      telecom: [
+        { system: "phone", value: patient.phone, use: "home" }
+      ],
+      gender: patient.gender,
+      birthDate: new Date(patient.dateOfBirth).toISOString().split("T")[0],
+      address: [
+        {
+          use: "home",
+          line: [patient.address || ""],
+          city: patient.city || undefined,
+          state: patient.state || undefined,
+          postalCode: patient.zipCode || undefined
+        }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(fhir, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `FHIR_Patient_${patient.patientCode}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("FHIR Patient resource exported");
+  };
+
+  const handlePrintWristband = () => {
+    window.print();
+  };
 
   // 1. Core Profile Query
   const { data: patient, isLoading } = trpc.patient.getById.useQuery(
@@ -180,6 +224,14 @@ export default function PatientProfile() {
                 UHID: <span className="font-mono font-bold text-foreground">{patient.patientCode}</span> | Gender: <span className="capitalize text-foreground">{patient.gender}</span> | Age: <span className="text-foreground">{new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()}</span>
               </p>
             </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportFHIR} className="h-8 text-xs gap-1.5">
+              <Download className="size-3.5" /> Export FHIR
+            </Button>
+            <Button variant="outline" size="sm" onClick={handlePrintWristband} className="h-8 text-xs gap-1.5">
+              <Printer className="size-3.5" /> Print Wristband
+            </Button>
           </div>
         </div>
 
@@ -430,6 +482,23 @@ export default function PatientProfile() {
                 </CardContent>
               </Tabs>
             </Card>
+          </div>
+        </div>
+        {/* Hidden Print Wristband Area */}
+        <div id="wristband-print-area" className="hidden print:block font-mono text-[9px] p-2 w-[3.25in] h-[1in] border border-black rounded-sm absolute left-0 top-0 bg-white text-black">
+          <div className="flex justify-between items-start h-full">
+            <div>
+              <p className="font-extrabold text-[11px] uppercase leading-none mb-1">
+                {patient.lastName}, {patient.firstName}
+              </p>
+              <p>DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}</p>
+              <p>UHID: {patient.patientCode}</p>
+              <p className="mt-1 font-bold">BLOOD TYPE: {patient.bloodGroup || "Unknown"}</p>
+            </div>
+            <div className="text-right flex flex-col justify-between h-full items-end">
+              <Badge variant="outline" className="text-[7px] px-1 py-0 border-black text-black uppercase">{patient.gender}</Badge>
+              <p className="text-[6px] text-gray-500 font-sans">JeevanOS EPMS</p>
+            </div>
           </div>
         </div>
       </div>
