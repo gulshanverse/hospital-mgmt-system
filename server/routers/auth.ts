@@ -348,7 +348,11 @@ export const authRouter = router({
     
     // Revoke all refresh tokens for the user
     if (ctx.user) {
-      await (await import("../_core/authDb")).deleteAllRefreshTokens(ctx.user.id);
+      try {
+        await (await import("../_core/authDb")).deleteAllRefreshTokens(ctx.user.id);
+      } catch (dbError) {
+        console.error("Failed to delete refresh tokens from DB during logout:", dbError);
+      }
     }
     
     return {
