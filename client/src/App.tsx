@@ -37,42 +37,42 @@ function Router() {
     );
   }
 
-  // Redirect unauthenticated users away from protected routes
-  if (!user) {
-    const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/reset-password"];
-    if (!publicPaths.includes(location)) {
-      window.location.replace("/");
-      return null;
-    }
+  const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/reset-password", "/verify-email"];
+
+  // Redirect unauthenticated users away from protected routes to /login
+  if (!user && !publicPaths.includes(location)) {
+    window.location.replace("/login");
+    return null;
+  }
+
+  // Redirect authenticated users away from login/signup to dashboard
+  if (user && ["/login", "/signup"].includes(location)) {
+    window.location.replace("/dashboard");
+    return null;
   }
 
   return (
     <Switch>
-      {user ? (
-        <>
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/patients" component={PatientManagement} />
-          <Route path="/appointments" component={AppointmentScheduling} />
-          <Route path="/ehr" component={EHRViewer} />
-          <Route path="/beds" component={BedManagement} />
-          <Route path="/pharmacy" component={PharmacyInventory} />
-          <Route path="/billing" component={Billing} />
-          <Route path="/lab" component={LabManagement} />
-          <Route path="/verify-email" component={VerifyEmail} />
-          <Route path="/staff" component={StaffManagement} />
-          <Route path="/doctors-admin" component={DoctorManagement} />
-          <Route path="/departments" component={DepartmentManagement} />
-          <Route path="/" component={Dashboard} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/login" component={Login} />
-          <Route path="/signup" component={Signup} />
-          <Route path="/forgot-password" component={ForgotPassword} />
-          <Route path="/reset-password" component={ResetPassword} />
-        </>
-      )}
+      <Route path="/" component={user ? Dashboard : Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/verify-email" component={VerifyEmail} />
+      
+      {/* Protected routes */}
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/patients" component={PatientManagement} />
+      <Route path="/appointments" component={AppointmentScheduling} />
+      <Route path="/ehr" component={EHRViewer} />
+      <Route path="/beds" component={BedManagement} />
+      <Route path="/pharmacy" component={PharmacyInventory} />
+      <Route path="/billing" component={Billing} />
+      <Route path="/lab" component={LabManagement} />
+      <Route path="/staff" component={StaffManagement} />
+      <Route path="/doctors-admin" component={DoctorManagement} />
+      <Route path="/departments" component={DepartmentManagement} />
+
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

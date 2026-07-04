@@ -57,9 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         console.error("Failed to parse stored tokens:", e);
         localStorage.removeItem("auth-tokens");
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   // Update user when meQuery data changes
@@ -67,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (meQuery.data) {
       setUser(meQuery.data);
       setError(null);
+      setLoading(false);
     }
   }, [meQuery.data]);
 
@@ -79,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccessToken(null);
       setRefreshToken(null);
       localStorage.removeItem("auth-tokens");
+      setLoading(false);
     }
   }, [meQuery.error]);
 
