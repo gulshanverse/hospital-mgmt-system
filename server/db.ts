@@ -202,6 +202,37 @@ export async function getAllDoctors() {
   return db.select().from(doctors);
 }
 
+export async function searchDoctors(query: string, limit: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select({
+      id: doctors.id,
+      userId: doctors.userId,
+      departmentId: doctors.departmentId,
+      specialty: doctors.specialty,
+      qualification: doctors.qualification,
+      experience: doctors.experience,
+      licenseNumber: doctors.licenseNumber,
+      isAvailable: doctors.isAvailable,
+      name: users.name,
+    })
+    .from(doctors)
+    .innerJoin(users, eq(doctors.userId, users.id))
+    .where(
+      and(
+        eq(doctors.isDeleted, false),
+        or(
+          like(users.name, `%${query}%`),
+          like(doctors.specialty, `%${query}%`),
+          like(doctors.licenseNumber, `%${query}%`)
+        )
+      )
+    )
+    .limit(limit);
+}
+
 // ============================================================================
 // APPOINTMENT MANAGEMENT
 // ============================================================================

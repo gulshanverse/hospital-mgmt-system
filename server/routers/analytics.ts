@@ -220,7 +220,7 @@ export const searchRouter = router({
     .query(async ({ input }) => {
       const results = {
         patients: await db.searchPatients(input.query, 5),
-        doctors: [],
+        doctors: await db.searchDoctors(input.query, 5),
         appointments: [],
       };
 
