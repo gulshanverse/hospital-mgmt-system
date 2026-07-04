@@ -4,7 +4,7 @@ import { router, protectedProcedure, adminProcedure, receptionistProcedure, doct
 import { requirePermission } from "../\_core/rbac";
 import * as db from "../db";
 import { eq, and, desc } from "drizzle-orm";
-import { doctors, departments, patients, users, auditLogs } from "../../drizzle/schema";
+import { doctors, departments, patients, users, auditLogs, uploadedFiles } from "../../drizzle/schema";
 
 // ============================================================================
 // PATIENT MANAGEMENT
@@ -229,6 +229,118 @@ export const patientRouter = router({
       }
 
       return { success: true };
+    }),
+
+  getTimeline: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      const patientId = input.id;
+
+      // Fetch all historical entities
+      const records = await db.getMedicalRecordsByPatient(patientId);
+      const prescriptions = await db.getPrescriptionsByPatient(patientId);
+      const invoices = await db.getInvoicesByPatient(patientId);
+      const appointments = await db.getAppointmentsByPatient(patientId);
+
+      // Map to standard timeline shapes
+      const timelineItems: any[] = [];
+
+      records.forEach((r) => {
+        timelineItems.push({
+          id: `record-${r.id}`,
+          date: r.recordDate,
+          type: "clinical",
+          title: r.title,
+          description: r.content || `Clinical record of type ${r.recordType}`,
+          meta: { recordType: r.recordType, attachmentUrl: r.attachmentUrl }
+        });
+      });
+
+      prescriptions.forEach((p) => {
+        timelineItems.push({
+          id: `prescription-${p.id}`,
+          date: p.prescriptionDate,
+          type: "pharmacy",
+          title: "Medication Prescribed",
+          description: p.notes || "New prescription mapped by attending practitioner.",
+          meta: { status: p.status }
+        });
+      });
+
+      invoices.forEach((i) => {
+        timelineItems.push({
+          id: `invoice-${i.id}`,
+          date: i.invoiceDate,
+          type: "billing",
+          title: `Invoice Generated (${i.invoiceNumber})`,
+          description: `Total amount due: $${i.totalAmount}. Current status: ${i.status}.`,
+          meta: { status: i.status, totalAmount: i.totalAmount }
+        });
+      });
+
+      appointments.forEach((a) => {
+        timelineItems.push({
+          id: `appointment-${a.id}`,
+          date: new Date(a.appointmentDate),
+          type: "appointment",
+          title: "Appointment Scheduled",
+          description: a.reason || `Scheduled slot at ${a.appointmentTime}`,
+          meta: { status: a.status, time: a.appointmentTime }
+        });
+      });
+
+      // Sort descending by date
+      return timelineItems.sort((a, b) => b.date.getTime() - a.date.getTime());
+    }),
+
+  getUploadedFiles: protectedProcedure
+    .input(z.object({ patientId: z.number() }))
+    .query(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      const files = await dbInstance
+        .select()
+        .from(uploadedFiles)
+        .where(
+          and(
+            eq(uploadedFiles.relatedEntityType, "patients"),
+            eq(uploadedFiles.relatedEntityId, input.patientId)
+          )
+        );
+      return files;
+    }),
+
+  saveUploadedFile: protectedProcedure
+    .input(
+      z.object({
+        patientId: z.number(),
+        fileKey: z.string(),
+        fileName: z.string(),
+        fileType: z.string(),
+        fileSize: z.number(),
+        fileUrl: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      const [res] = await dbInstance.insert(uploadedFiles).values({
+        fileKey: input.fileKey,
+        fileName: input.fileName,
+        fileType: input.fileType,
+        fileSize: input.fileSize,
+        uploadedBy: ctx.user.id,
+        relatedEntityType: "patients",
+        relatedEntityId: input.patientId,
+        fileUrl: input.fileUrl || `/uploads/${input.fileName}`,
+      });
+
+      return { success: true, fileId: (res as any).insertId };
     }),
 });
 

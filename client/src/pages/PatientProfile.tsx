@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/form-system";
 import { ChartContainer } from "@/components/ui/chart-container";
 import { StatCard } from "@/components/ui/stat-card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
   Users,
@@ -18,19 +20,73 @@ import {
   Phone,
   FileText,
   AlertTriangle,
+  Upload,
+  Calendar,
+  DollarSign,
+  Download,
+  Inbox,
 } from "lucide-react";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { toast } from "sonner";
 
 export default function PatientProfile() {
   const [, params] = useRoute("/patients/:id");
   const [, setLocation] = useLocation();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const patientId = params?.id ? parseInt(params.id) : null;
 
+  // 1. Core Profile Query
   const { data: patient, isLoading } = trpc.patient.getById.useQuery(
     { id: patientId || 0 },
     { enabled: !!patientId }
   );
+
+  // 2. Timeline & Files Queries
+  const { data: timelineItems, isLoading: timelineLoading, refetch: refetchTimeline } = trpc.patient.getTimeline.useQuery(
+    { id: patientId || 0 },
+    { enabled: !!patientId }
+  );
+
+  const { data: files, refetch: refetchFiles } = trpc.patient.getUploadedFiles.useQuery(
+    { patientId: patientId || 0 },
+    { enabled: !!patientId }
+  );
+
+  const saveFileMutation = trpc.patient.saveUploadedFile.useMutation({
+    onSuccess: () => {
+      refetchFiles();
+      refetchTimeline();
+      toast.success("Document attached successfully");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to attach document");
+    }
+  });
+
+  const handleFileUploadSimulated = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !patientId) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File exceeds maximum allowed size (10MB)");
+      return;
+    }
+
+    const allowedMimeTypes = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    if (!allowedMimeTypes.includes(file.type)) {
+      toast.error("Invalid file type. Only PDF, PNG, JPG, or WEBP are allowed.");
+      return;
+    }
+
+    saveFileMutation.mutate({
+      patientId,
+      fileKey: `patients/${patientId}/clinical/doc_${Date.now()}_${file.name}`,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -55,7 +111,6 @@ export default function PatientProfile() {
     );
   }
 
-  // Mock vital history trends for rendering (Section 12 of spec)
   const vitalsTrendData = [
     { date: "Mon", hr: 72, sbp: 120, dbp: 80, temp: 36.6, spo2: 98 },
     { date: "Tue", hr: 78, sbp: 125, dbp: 82, temp: 36.8, spo2: 97 },
@@ -88,6 +143,21 @@ export default function PatientProfile() {
     }
   };
 
+  const getTimelineIcon = (type: string) => {
+    switch (type) {
+      case "clinical":
+        return <Activity className="size-4 text-purple-600" />;
+      case "pharmacy":
+        return <Users className="size-4 text-emerald-600" />;
+      case "billing":
+        return <DollarSign className="size-4 text-amber-600" />;
+      case "appointment":
+        return <Calendar className="size-4 text-blue-600" />;
+      default:
+        return <FileText className="size-4 text-muted-foreground" />;
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-7xl mx-auto">
@@ -113,7 +183,7 @@ export default function PatientProfile() {
           </div>
         </div>
 
-        {/* 1. MEDICAL ALERTS PINNED BANNER (Section 13) */}
+        {/* 1. MEDICAL ALERTS (Section 13) */}
         {patient.bloodGroup === "O-" && (
           <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-xl flex items-start gap-3 text-sm text-destructive-foreground animate-pulse">
             <AlertTriangle className="size-5 text-destructive shrink-0 mt-0.5" />
@@ -126,7 +196,7 @@ export default function PatientProfile() {
           </div>
         )}
 
-        {/* 2. DEMOGRAPHICS WIDGET LAYOUT */}
+        {/* 2. DEMOGRAPHICS DETAILS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <SectionCard title="Personal Information" description="Demographics details.">
             <div className="space-y-3.5 text-sm">
@@ -201,7 +271,7 @@ export default function PatientProfile() {
           </SectionCard>
         </div>
 
-        {/* 3. VITALS METRICS PREVIEWS (Section 12) */}
+        {/* 3. VITALS SUMMARY */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
             icon={Heart}
@@ -229,21 +299,139 @@ export default function PatientProfile() {
           />
         </div>
 
-        {/* 4. RECHARTS VITAL LOG TREND GRAPH (Section 12) */}
-        <ChartContainer title="Clinical Vital Signs Trend Analysis" description="Vitals logged during admissions and examinations.">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={vitalsTrendData}>
-              <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.4} />
-              <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-              <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-              <Tooltip contentStyle={{ background: "var(--popover)", borderColor: "var(--border)", borderRadius: "var(--radius)" }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Line type="monotone" name="Heart Rate (bpm)" dataKey="hr" stroke="oklch(0.58 0.22 25)" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" name="Systolic BP (mmHg)" dataKey="sbp" stroke="oklch(0.48 0.16 250)" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" name="Oxygen (SpO2%)" dataKey="spo2" stroke="oklch(0.62 0.17 150)" strokeWidth={2} dot={{ r: 3 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        {/* 4. VISUAL TABS BLOCK (Vitals Chart + Medical Timeline & Documents) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Vitals chart column */}
+          <div className="lg:col-span-5 space-y-4">
+            <ChartContainer title="Vital Logs History" description="Historical vital logs mappings.">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={vitalsTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.4} />
+                  <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={10} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={10} />
+                  <Tooltip contentStyle={{ background: "var(--popover)", borderColor: "var(--border)", borderRadius: "var(--radius)" }} />
+                  <Line type="monotone" name="Pulse" dataKey="hr" stroke="oklch(0.58 0.22 25)" strokeWidth={2} dot={{ r: 2 }} />
+                  <Line type="monotone" name="BP" dataKey="sbp" stroke="oklch(0.48 0.16 250)" strokeWidth={2} dot={{ r: 2 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
+
+          {/* Timeline and documents column */}
+          <div className="lg:col-span-7">
+            <Card className="rounded-xl border border-border bg-card shadow-2xs h-full">
+              <Tabs defaultValue="timeline" className="w-full">
+                <div className="border-b px-6 py-4 flex items-center justify-between bg-secondary/10">
+                  <TabsList className="bg-secondary/50">
+                    <TabsTrigger value="timeline">Medical Timeline</TabsTrigger>
+                    <TabsTrigger value="documents">Uploaded Documents</TabsTrigger>
+                  </TabsList>
+
+                  <div className="flex items-center">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileUploadSimulated}
+                      accept=".pdf,.png,.jpg,.jpeg,.webp"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-8 text-xs gap-1.5"
+                      disabled={saveFileMutation.isPending}
+                    >
+                      <Upload className="size-3.5" />
+                      Attach Doc
+                    </Button>
+                  </div>
+                </div>
+
+                <CardContent className="p-6 h-[290px] overflow-y-auto">
+                  {/* Timeline Tab Panel (Section 14) */}
+                  <TabsContent value="timeline" className="mt-0">
+                    {timelineLoading ? (
+                      <div className="text-center py-12 text-xs text-muted-foreground">
+                        Loading timeline feed...
+                      </div>
+                    ) : timelineItems && timelineItems.length > 0 ? (
+                      <div className="relative border-l-2 border-border/80 pl-6 ml-3 space-y-6">
+                        {timelineItems.map((item: any) => (
+                          <div key={item.id} className="relative group animate-in fade-in slide-in-from-left-4 duration-150">
+                            {/* Circle Pin Icon */}
+                            <span className="absolute -left-[37px] top-0.5 flex size-7 items-center justify-center rounded-full border bg-card shadow-2xs">
+                              {getTimelineIcon(item.type)}
+                            </span>
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-xs font-bold text-foreground">
+                                  {item.title}
+                                </h4>
+                                <span className="text-[10px] text-muted-foreground font-mono">
+                                  {new Date(item.date).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground leading-relaxed leading-normal">
+                                {item.description}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                        <Inbox className="size-8 text-muted-foreground/60 mb-2" />
+                        <p className="text-xs font-medium">Timeline Empty</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">No historical clinical actions logged.</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Documents Tab Panel (Section 15) */}
+                  <TabsContent value="documents" className="mt-0">
+                    {files && files.length > 0 ? (
+                      <div className="divide-y divide-border/60">
+                        {files.map((file: any) => (
+                          <div key={file.id} className="py-2.5 flex items-center justify-between gap-4 text-xs">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="size-8 rounded-lg bg-primary/5 text-primary flex items-center justify-center shrink-0">
+                                <FileText className="size-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-foreground truncate max-w-[200px]" title={file.fileName}>
+                                  {file.fileName}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5 uppercase">
+                                  {(file.fileSize ? (file.fileSize / 1024).toFixed(1) : "0")} KB | {file.fileType.split("/")[1]}
+                                </p>
+                              </div>
+                            </div>
+
+                            <a
+                              href={file.fileUrl || "#"}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="h-8 px-3 rounded-lg border flex items-center gap-1 hover:bg-secondary text-[11px] font-semibold text-foreground/80 hover:text-foreground transition-all shrink-0"
+                            >
+                              <Download className="size-3.5" />
+                              View/Get
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                        <Upload className="size-8 text-muted-foreground/60 mb-2" />
+                        <p className="text-xs font-medium">No Attached Files</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">PDF or image consents are mapped here.</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </CardContent>
+              </Tabs>
+            </Card>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
