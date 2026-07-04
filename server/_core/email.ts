@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import SMTPTransport from "nodemailer/lib/smtp-transport";
 import dns from "dns";
 
 // Force Node.js DNS lookup to prioritize IPv4 over IPv6 globally
@@ -11,38 +12,52 @@ const SMTP_USER = process.env.SMTP_USER || "";
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
 const SMTP_FROM = process.env.SMTP_FROM || `"JeevanOS Portal" <${SMTP_USER}>`;
 
-// Create transporter if config is present
+// Create transporter — initialized asynchronously to resolve IPv4 first
 let transporter: nodemailer.Transporter | null = null;
 
-if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
+async function initTransporter(): Promise<void> {
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD) {
+    console.warn("[Email Service] SMTP configuration missing. Falling back to Mock Console Mailer.");
+    return;
+  }
+
+  // Resolve SMTP hostname to an IPv4 address so Nodemailer never attempts IPv6
+  let resolvedHost = SMTP_HOST;
+  try {
+    const ipv4Addresses = await dns.promises.resolve4(SMTP_HOST);
+    if (ipv4Addresses.length > 0) {
+      resolvedHost = ipv4Addresses[0];
+      console.log(`[Email Service] Resolved ${SMTP_HOST} → ${resolvedHost} (IPv4)`);
+    }
+  } catch (err) {
+    console.warn(`[Email Service] dns.resolve4(${SMTP_HOST}) failed, using hostname directly.`);
+  }
+
   transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
+    host: resolvedHost,
     port: SMTP_PORT,
-    secure: SMTP_PORT === 465, // true for 465, false for other ports
+    secure: SMTP_PORT === 465,
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASSWORD,
     },
-    // Force Nodemailer socket connection to use IPv4
     family: 4,
-    // Custom DNS lookup to strictly return IPv4 addresses only
-    lookup: (hostname: string, options: any, callback: any) => {
-      dns.lookup(hostname, { family: 4 }, callback);
-    }
-  } as any);
+    tls: {
+      // Original hostname for TLS certificate validation when host is an IP
+      servername: SMTP_HOST,
+    },
+  } as SMTPTransport.Options);
 
-  transporter.verify()
-    .then(() => {
-      console.log("[Email Service] SMTP Connection verified successfully (forced IPv4).");
-    })
-    .catch((error) => {
-      console.error("[Email Service] SMTP Connection verification failed:", error);
-    });
-} else {
-  console.warn(
-    "[Email Service] SMTP configuration missing. Falling back to Mock Console Mailer."
-  );
+  try {
+    await transporter.verify();
+    console.log("[Email Service] SMTP Connection verified successfully (IPv4).");
+  } catch (error) {
+    console.error("[Email Service] SMTP Connection verification failed:", error);
+  }
 }
+
+// Start async init immediately
+initTransporter();
 
 /**
  * Diagnostic method to verify SMTP transporter connection
