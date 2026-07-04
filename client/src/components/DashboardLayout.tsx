@@ -35,6 +35,7 @@ import {
   Shield,
   Settings,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -58,6 +59,7 @@ const adminMenuItems = [
   { icon: Shield, label: "Staff Management", path: "/staff" },
   { icon: Settings, label: "Doctor Profiles", path: "/doctors-admin" },
   { icon: BookOpen, label: "Departments", path: "/departments" },
+  { icon: Sparkles, label: "Design System", path: "/design-system" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
