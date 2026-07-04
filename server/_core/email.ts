@@ -10,24 +10,72 @@ const SMTP_FROM = process.env.SMTP_FROM || `"JeevanOS Portal" <${SMTP_USER}>`;
 
 // Create transporter if config is present
 let transporter: nodemailer.Transporter | null = null;
+let initializationPromise: Promise<nodemailer.Transporter | null> | null = null;
 
+async function getOrCreateTransporter(): Promise<nodemailer.Transporter | null> {
+  if (transporter) return transporter;
+  if (!initializationPromise) {
+    initializationPromise = (async () => {
+      if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD) {
+        return null;
+      }
+      
+      // Force Node.js DNS lookup to prioritize IPv4 over IPv6 globally
+      dns.setDefaultResultOrder("ipv4first");
+      
+      try {
+        const resolvedIps = await new Promise<string[]>((resolve, reject) => {
+          dns.resolve4(SMTP_HOST, (err, addresses) => {
+            if (err) reject(err);
+            else resolve(addresses);
+          });
+        });
+        
+        const ip = resolvedIps[0];
+        console.log(`[Email Service] Resolved SMTP_HOST ${SMTP_HOST} to IPv4: ${ip}`);
+        
+        transporter = nodemailer.createTransport({
+          host: ip,
+          port: SMTP_PORT,
+          secure: SMTP_PORT === 465, // true for 465, false for other ports
+          auth: {
+            user: SMTP_USER,
+            pass: SMTP_PASSWORD,
+          },
+          tls: {
+            servername: SMTP_HOST,
+          },
+          family: 4,
+          connectionTimeout: 10000,
+        } as any);
+      } catch (err) {
+        console.error("[Email Service] Failed to resolve SMTP host to IPv4, falling back to hostname:", err);
+        transporter = nodemailer.createTransport({
+          host: SMTP_HOST,
+          port: SMTP_PORT,
+          secure: SMTP_PORT === 465, // true for 465, false for other ports
+          auth: {
+            user: SMTP_USER,
+            pass: SMTP_PASSWORD,
+          },
+          family: 4,
+          connectionTimeout: 10000,
+        } as any);
+      }
+      return transporter;
+    })();
+  }
+  return initializationPromise;
+}
+
+// Trigger early connection verification in production/dev
 if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
-  // Force Node.js dns lookup to prioritize IPv4 over IPv6
-  dns.setDefaultResultOrder("ipv4first");
-  
-  transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465, // true for 465, false for other ports
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASSWORD,
-    },
-    // Force Nodemailer socket connection to use IPv4
-    family: 4,
-  } as any);
-
-  transporter.verify()
+  getOrCreateTransporter()
+    .then((t) => {
+      if (t) {
+        return t.verify();
+      }
+    })
     .then(() => {
       console.log("[Email Service] SMTP Connection verified successfully (forced IPv4).");
     })
@@ -44,11 +92,12 @@ if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
  * Diagnostic method to verify SMTP transporter connection
  */
 export async function verifyTransporter(): Promise<{ success: boolean; message: string }> {
-  if (!transporter) {
+  const t = await getOrCreateTransporter();
+  if (!t) {
     return { success: false, message: "Transporter not initialized (SMTP host/user/pass missing in env)" };
   }
   try {
-    await transporter.verify();
+    await t.verify();
     return { success: true, message: "SMTP Connection verified successfully (forced IPv4)." };
   } catch (error: any) {
     return { success: false, message: `SMTP Connection verification failed: ${error.message || error}` };
@@ -63,9 +112,10 @@ export async function sendEmail(
   subject: string,
   html: string
 ): Promise<boolean> {
-  if (transporter) {
+  const t = await getOrCreateTransporter();
+  if (t) {
     try {
-      await transporter.sendMail({
+      await t.sendMail({
         from: SMTP_FROM,
         to,
         subject,
