@@ -11,6 +11,7 @@ const SMTP_FROM = process.env.SMTP_FROM || `"JeevanOS Portal" <${SMTP_USER}>`;
 // Create transporter if config is present
 let transporter: nodemailer.Transporter | null = null;
 let initializationPromise: Promise<nodemailer.Transporter | null> | null = null;
+let resolvedIp: string = "not_resolved";
 
 async function getOrCreateTransporter(): Promise<nodemailer.Transporter | null> {
   if (transporter) return transporter;
@@ -31,11 +32,11 @@ async function getOrCreateTransporter(): Promise<nodemailer.Transporter | null> 
           });
         });
         
-        const ip = resolvedIps[0];
-        console.log(`[Email Service] Resolved SMTP_HOST ${SMTP_HOST} to IPv4: ${ip}`);
+        resolvedIp = resolvedIps[0] || "no_ips_found";
+        console.log(`[Email Service] Resolved SMTP_HOST ${SMTP_HOST} to IPv4: ${resolvedIp}`);
         
         transporter = nodemailer.createTransport({
-          host: ip,
+          host: resolvedIp,
           port: SMTP_PORT,
           secure: SMTP_PORT === 465, // true for 465, false for other ports
           auth: {
@@ -88,16 +89,16 @@ if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
   );
 }
 
-export async function verifyTransporter(): Promise<{ success: boolean; message: string; host: string; port: number; user: string }> {
+export async function verifyTransporter(): Promise<{ success: boolean; message: string; host: string; port: number; user: string; resolvedIp: string }> {
   const t = await getOrCreateTransporter();
   if (!t) {
-    return { success: false, message: "Transporter not initialized (SMTP host/user/pass missing in env)", host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER };
+    return { success: false, message: "Transporter not initialized (SMTP host/user/pass missing in env)", host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER, resolvedIp };
   }
   try {
     await t.verify();
-    return { success: true, message: "SMTP Connection verified successfully (forced IPv4).", host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER };
+    return { success: true, message: "SMTP Connection verified successfully (forced IPv4).", host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER, resolvedIp };
   } catch (error: any) {
-    return { success: false, message: `SMTP Connection verification failed: ${error.message || error}`, host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER };
+    return { success: false, message: `SMTP Connection verification failed: ${error.message || error}`, host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER, resolvedIp };
   }
 }
 
