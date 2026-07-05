@@ -1,0 +1,656 @@
+# Enterprise Engineering Specification: Phase 2C — Doctor Management System (DMS)
+**Document Version:** v1.1  
+**Author:** Chief Product Architect & Principal Software Engineer  
+**Scope:** JEEVANOS Enterprise ERP Core
+
+---
+
+## Section 1: Executive Summary, Vision, & Scope
+
+### 1.1 Executive Summary
+The JeevanOS Doctor Management System (DMS) serves as the core operational module of the hospital enterprise suite. It governs clinician profiles, clinical assignments, credentials verification lifecycle, calendar planners, leave workflows, attendance logs, and integration hooks for appointments, clinical consultations, prescriptions, and performance audits. 
+
+### 1.2 Product Vision
+To establish a premium, Stripe-grade administrative and clinical workflow engine for medical professionals that minimizes overhead, prevents scheduling conflicts, logs structural audits, and exposes standardized APIs for patient care delivery.
+
+### 1.3 Business Goals
+* **Reduce Administrative Leakage:** Minimize operational downtime due to unscheduled clinician leaves or double-booked slots.
+* **Credential Compliance:** Enforce automatic verification and notification triggers prior to medical license expirations.
+* **Unified Integration:** Feed real-time availability states to Patient App appointments, Billing tables, and ward admissions.
+
+### 1.4 Scope
+* Single Source of Truth for Doctor Profiles (intake, qualifications, licenses).
+* Primary and secondary department mapping.
+* Multi-shift availability, holiday, and leave workflow engine.
+* Performance dashboards and operational analytics.
+* Secure digital signatures and prescription favorites templates.
+* Multi-department clinical assignment engine (OPD, IPD, ICU, OT).
+* Attendance tracking and shift exchanges.
+
+### 1.5 Out of Scope
+* Direct payroll calculations (to be handled in the Billing/HR payroll module).
+* Direct video streaming server hosting (telemedicine calls use external WebRTC/Twilio placeholders).
+
+### 1.6 Success Metrics
+| Metric | Baseline | Target (3 Months Post-Launch) |
+| :--- | :--- | :--- |
+| Scheduling conflict incidents | ~4.5% of bookings | < 0.1% |
+| Doctor profile registration time | 45 minutes | < 5 minutes |
+| API Query Latency (availability checks) | 280ms | < 45ms (using Redis/indexes) |
+| License/Credential non-compliance events | 3 incidents/year | 0 incidents |
+
+---
+
+## Section 2: User Personas
+
+* **Hospital Administrator (Admin):** Focuses on compliance, system configurations, audits, and department head declarations.
+* **Department Head (Clinical Lead):** Reviews clinical loads, reviews scheduling adjustments, approves shift swaps, and approves peer leaves.
+* **Doctor (Practitioner):** Reviews upcoming queues, drafts clinical consultation records, signs prescriptions, swaps shifts, and clocks attendance.
+* **Receptionist (Scheduler):** Coordinates bookings, checks real-time slots, and checks queues.
+* **Nurse (Clinical Assistant):** Admits patients to consultation rooms, collects vitals, and references doctor schedules.
+* **HR Manager (Staff Coordinator):** Tracks attendance, processes contracts, checks documents, and archives retired doctors.
+* **Patient:** Searches for specialists, books slots based on active timetables, and downloads signed documents.
+
+---
+
+## Section 3: User Stories
+
+* **US-101 (HR Doctor Registry Intake):** As an HR Manager, I want to record a doctor's licensing numbers, digital signature, and profile photos in a multi-step form, so that the clinician's record is registered and compliant.
+* **US-102 (Department Heads Mapping):** As a Hospital Admin, I want to map a doctor to a primary department and multiple secondary departments with corresponding roles, so that clinician schedules are segmented.
+* **US-103 (Doctor Schedule Configuration):** As a Doctor, I want to set my daily active hours, break times, and weekend rotation choices, so that the patient booking app blocks off non-work hours.
+* **US-104 (Leave Workflow & Coverage):** As a Department Head, I want to receive notifications when a doctor requests leave and view their scheduled appointments, so I can assign coverage before approving.
+* **US-105 (Consultation Intake):** As a Doctor, I want to see a real-time waiting queue, open the active patient record, view emergency medical alerts, and type notes, so that the clinical transaction is logged.
+* **US-106 (Prescription Templates):** As a Doctor, I want to insert favorite medicine templates and apply my encrypted digital signature, so that the pharmacy module immediately receives the order.
+* **US-107 (Performance Metrics Auditing):** As a Department Head, I want to review comparative dashboards on patient volume, average visit duration, patient ratings, and billing billing metrics, to optimize staffing.
+* **US-108 (Shift Exchange):** As a Doctor, I want to request a shift swap with a peer, verify there are no schedule conflicts, and submit it for department head approval to ensure ward coverage.
+* **US-109 (Verification Flow):** As an HR Reviewer, I want to audit a doctor's certificates and transition their status through verification stages, logging reasons if rejected.
+* **US-110 (Attendance Logs):** As a Doctor, I want to clock in and out from my workstation, tracking break durations and late thresholds.
+
+---
+
+## Section 4: Doctor Registry
+
+The registry provides a verified profile of every practitioner.
+
+```mermaid
+graph TD
+    A[Staff Registration] --> B{Duplicate Check}
+    B -- Match Found --> C[Halt & Warn UI]
+    B -- Unique --> D[Insert Table: doctors]
+    D --> E[Create User Account]
+    D --> F[Log Registry Audit Event]
+```
+
+### 4.1 Registry Data Fields
+* **Doctor ID:** Sequential enterprise identifier (e.g. `JOS-DOC-YYYY-XXXXX`).
+* **Medical License Number:** Unique license number string (validated against regex schemas).
+* **National Medical Council (NMC) Registration:** State registration code.
+* **Specialization & Super Specialization:** Select list references (e.g., Cardiology, Electrophysiology).
+* **Qualifications & Degrees:** Certified qualifications array (e.g., MD, DM, FACC).
+* **Years of Experience:** Non-negative integer.
+* **Consultation Fees:** Decimal field with currency tracking.
+* **Photo & Encrypted Digital Signature:** Storage references pointing to the media bucket.
+* **Languages:** Supported languages spoken array.
+* **Emergency Contact Name & Phone:** Contact parameters for emergency escalations.
+* **Employment Type:** `Full-Time`, `Part-Time`, `On-Call`, `Visiting Consultant`.
+* **Registry Status:** `Active`, `Inactive`, `Suspended`, `On-Leave`, `Retired`.
+
+---
+
+## Section 5: Professional Profile & Verification Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Pending_Verification : Submit Credentials
+    Pending_Verification --> Under_Review : Reviewer Assigned
+    Under_Review --> Verified : Approved
+    Under_Review --> Rejected : Rejection Reason
+    Verified --> Suspended : Violation Logged
+    Verified --> License_Expired : Compliance Failure
+    License_Expired --> Pending_Verification : Submit Renewal
+    Rejected --> Draft : Correct Data
+```
+
+### 5.1 Verification States
+* **Draft:** Registry record is being filled out by HR.
+* **Pending Verification:** Documents submitted, awaiting coordinator assignment.
+* **Under Review:** Assigned to an HR Auditor who is verifying registration validity.
+* **Verified:** Verified state. Enables doctor active listing in schedules.
+* **Rejected:** License/certificates invalid. Rejection notes mapped.
+* **Suspended:** Administrative hold due to violations.
+* **License Expired:** Automatically tripped if license validity dates lapse.
+
+---
+
+## Section 6: Department Mapping & Assignments
+
+Clinicians can serve across multiple departments and assignments simultaneously.
+
+* **Primary Department:** The core department where the doctor is primary contracted (e.g. Cardiology). Controls default roster mapping.
+* **Secondary Departments:** Array of secondary departments (e.g. Intensive Care, Emergency).
+* **Assignments Matrix:**
+  * `OPD` (Outpatient Clinic)
+  * `IPD` (Inpatient Wards)
+  * `Emergency` (Trauma/ER)
+  * `ICU` (Critical Care)
+  * `OT` (Operating Theater)
+  * `Telemedicine` (Virtual Consults)
+  * `Home Visit` (Domiciliary Care)
+  * `Ward Round` (Inpatient Audits)
+  * `Outreach Camp` (Community Medicine)
+
+---
+
+## Section 7: Enterprise Calendar & Schedule Planner
+
+Replaces simple rosters with a layout supporting slot-customizations and conflicts checks.
+
+* **Views:** Daily, Weekly, Monthly, and Timeline layout views.
+* **Drag-and-Drop Editor:** Web interface allowing coordinators to click and drag shifts to modify start/end parameters.
+* **Schedule Templates:** Preconfigured shift profiles (e.g., "Night Rota", "Emergency Rotation").
+* **Recurring Schedules:** Roster repetition logic (e.g., "Repeat every Monday and Thursday for 12 weeks").
+* **Conflict Check Engine:** Checks for overlaps across:
+  * Primary and secondary department schedules.
+  * Approved leave dates.
+  * Simultaneously mapped assignments (e.g. doctor cannot be in OT and OPD at the same time).
+
+---
+
+## Section 8: Shift Exchange Workflow
+
+Supports shift swapping requests between doctors.
+
+```mermaid
+sequenceDiagram
+    participant DocA as Doctor A (Requestor)
+    participant DocB as Doctor B (Reciprocator)
+    participant Sys as DMS Engine
+    participant Head as Dept Head
+    
+    DocA->>Sys: Propose Shift Swap with Doc B
+    Sys->>Sys: Run Conflict & Coverage Check
+    Sys->>DocB: Swap Invitation Notification
+    DocB->>Sys: Accept Swap Invitation
+    Sys->>Head: Notify Head of Swap Proposal
+    Head->>Sys: Approve Swap Request
+    Sys->>Sys: Re-assign Roster Slots
+    Sys->>DocA: Swap Completed Alerts
+    Sys->>DocB: Swap Completed Alerts
+```
+
+* **Swap Constraints Checker:** Automatically rejects requests if the proposed swap violates shift rest guidelines or results in overlapping schedules.
+
+---
+
+## Section 9: Attendance & Workforce Tracking
+
+Controls clock-in status mapping to ensure accountability.
+
+* **Clock Actions:** `Clock_In`, `Clock_Out`, `Break_Start`, `Break_End`.
+* **Attendance Flags:** Mapped automatically based on roster configurations:
+  * **Late Arrival:** Clocked in after shift start + grace buffer (e.g. 15 minutes).
+  * **Early Exit:** Clocked out before shift end.
+  * **Half Day:** Mapped if hours clocked represent <50% of shift target.
+  * **Overtime:** Hours clocked beyond scheduled shifts.
+
+---
+
+## Section 10: Advanced Clinical Availability States
+
+Availabilities sync in real-time with schedule bookings and active clinical procedures.
+
+* **States Matrix:**
+  * `Available` — Mapped during shift hours, ready for walk-ins/calls.
+  * `Busy` — Assigned to administrative tasks.
+  * `In Consultation` — Automatically active when a consultation is started in the workspace.
+  * `Surgery` —Mouth-locked when scheduled in OT.
+  * `Emergency` — Dispatched to ER.
+  * `On Leave` — Synced from leave database.
+  * `Training` / `Meeting` — Mapped during conference hours.
+  * `Offline` — Out of shift hours.
+  * `Telemedicine` / `Ward Round` — Linked to specific assignment tasks.
+
+---
+
+## Section 11: Internal Communication Placeholders
+
+Defines abstract socket routing targets for inter-departmental notifications:
+
+* `DOCTOR_NURSE_CHANNEL` — Relays vitals checks and patient call alerts.
+* `DOCTOR_LAB_CHANNEL` — Sends urgent notifications for critical lab panels results.
+* `DOCTOR_PHARMACY_CHANNEL` — Notifies pharmacy of updates/cancellations to prescription orders.
+* `DOCTOR_RECEPTION_CHANNEL` — Signals readiness to admit the next patient in the waiting queue.
+* `DOCTOR_BILLING_CHANNEL` — Automatically alerts billing clerks when consultations wrap up.
+
+---
+
+## Section 12: Enterprise Doctor Dashboard
+
+Renders clinicians' daily operations in a consolidated interface:
+
+* **Queue Panel:** Renders patients waiting, actively seen, and next in line.
+* **Consultation Analytics:** Today's consultation counts, average visit durations, and patient ratings.
+* **Pending Actions Alert:** Counters for pending laboratory reports sign-offs, unsigned prescriptions, and radiology audits.
+
+---
+
+## Section 13: Analytics & Reporting Engine
+
+* **Comparative Metrics:** Aggregates doctor volume metrics, average consultation costs, and patient satisfaction indexes.
+* **Reporting Intervals:** Daily, Weekly, Monthly, Quarterly, and Yearly reporting.
+* **Export Abstractions:** Support for PDF record generation, CSV datasets, Excel spreadsheets, and print styling.
+
+---
+
+## Section 14: Search & Filters
+
+* **Specialist Global Search:** Natural language search mapping name, specialization, languages, or clinic location.
+* **Advanced Filters:** Filter by availability, consultation fee limits, qualifications, and department structures.
+* **Saved Searches:** HR templates (e.g. "On-Call Cardiac Surgeons").
+
+---
+
+## Section 15: Enterprise DataTable
+
+* **Sorting:** Sort by Experience, Consultation Fee, Patient Volumes, or Rating.
+* **Filtering:** Status filters (Active, On-Leave, Suspended) and Department filters.
+* **Sticky Columns:** Doctor ID and Name columns remain sticky on horizontal scrolling.
+* **Bulk Actions:** Batch status updates, CSV/Excel profile listings export, and directory printing layouts.
+
+---
+
+## Section 16: Enterprise Forms
+
+* **Intake Form Stepper:** Form progression tabs: Personal Info -> Qualifications & Licensing -> Shift Rosters -> Digital Signatures.
+* **Autosave Engine:** Serializes inputs to local storage to prevent session data loss on network drops.
+* **Validation Wrapper:** FormValidationSummary mapping all fields (e.g. License regex).
+
+---
+
+## Section 17: Role Based Access Control (RBAC)
+
+The following permission matrix governs all clinician data objects:
+
+| Role | View Profiles | Create Profiles | Update Schedules | Approve Leaves | View Fees/Revenue | Print Signatures |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Super Admin** | Yes | Yes | Yes | Yes | Yes | Yes |
+| **Hospital Admin**| Yes | Yes | Yes | Yes | Yes | No |
+| **Dept Head** | Yes | No | Yes (Dept) | Yes (Dept) | Yes (Dept) | No |
+| **Doctor** | Yes (Self) | No | Yes (Self) | No | Yes (Self) | Yes (Self) |
+| **HR Manager** | Yes | Yes | No | No | No | No |
+| **Receptionist** | Yes | No | No | No | No | No |
+| **Nurse** | Yes | No | No | No | No | No |
+
+---
+
+## Section 18: Audit Trail
+
+Every state modification logs a record in `doctorAuditLogs`.
+
+```json
+{
+  "auditLogId": 984512,
+  "operatorUserId": 45,
+  "operatorRole": "admin",
+  "action": "UPDATE_SHIFT_ROSTER",
+  "targetDoctorId": 12,
+  "timestamp": "2026-07-04T18:04:12Z",
+  "previousValue": { "tuesday": ["09:00-13:00"] },
+  "newValue": { "tuesday": ["09:00-13:00", "14:00-18:00"] },
+  "context": {
+    "ipAddress": "192.168.1.104",
+    "browser": "Chrome 122.0.0",
+    "device": "Windows Desktop",
+    "sessionId": "sess_88495a029c"
+  }
+}
+```
+
+---
+
+## Section 19: Soft Delete & Archive Strategy
+
+* **Soft Delete:** Doctors are never permanently deleted from tables. Setting `isDeleted = true` hides records from active registry searches and scheduler calendars.
+* **Archive Policies:** If a doctor retires or resigns, their status transitions to `Archived`. The login account is deactivated, but clinical records remain for historical billing/patient tracking.
+* **Permanent Deletions:** Restrictive authorization check (Super Admin only) to delete testing or mock database records.
+
+---
+
+## Section 20: Document Management
+
+* **Supported Formats:** PDF, PNG, JPG, and WEBP.
+* **Size Constraint:** Max file size of 10MB per document.
+* **Documents Directory:** Categories for Medical Licenses, Board Certifications, Identity Documents, and Employment Contracts.
+
+---
+
+## Section 21: Media Storage Strategy
+
+* **Storage Interface Class:** Unified `StorageProvider` interface abstraction.
+* **Development Storage:** Local file system uploads directory (`/uploads/doctors/*`).
+* **Production Storage:** S3-compatible cloud object storage integration (Railway Object Storage or Cloudflare R2).
+
+---
+
+## Section 22: Security
+
+* **Signature Encryption:** Digital signatures are AES-256 encrypted at rest in the database.
+* **Data Sanitization:** Strict HTML escaping on text biography inputs.
+* **Rate Limiting:** tRPC availability and search queries are limited to 120 calls/minute per staff session to prevent indexing harvesting.
+
+---
+
+## Section 23: Performance
+
+* ** Roster Memoization:** Memoize calendar slot checks using `useMemo` on the client.
+* **Virtualization:** Virtualize the Doctor list when displaying >100 entries.
+* **Indexed DB Queries:** Index the search parameters (`specialty`, `licenseNumber`, `departmentId`).
+
+---
+
+## Section 24: Accessibility
+
+* **Screen Readers:** Complete ARIA labelling on availability calendars.
+* **Keyboard Roster:** Navigate schedule slots via arrow keys and selection clicks.
+* **Color Contrast:** Keep minimum contrast values of 4.5:1 (WCAG AA standard) for badge markers.
+
+---
+
+## Section 25: Responsive Design
+
+* **Desktop/Laptop (>=1024px):** Grid dashboard with full SOAP note editor panels side-by-side with patient histories.
+* **Tablet (768px - 1023px):** Collapsed sidebars, stacked demographics, scrollable schedule.
+* **Mobile (<768px):** Stepper input lists, full-screen dialog overlay selectors.
+
+---
+
+## Section 26: Folder Structure
+
+```
+c:/hospital-management-system/
+├── client/
+│   └── src/
+│       ├── components/
+│       │   └── enterprise/
+│       │       ├── DoctorIntakeForm.tsx       # Multi-step creation form
+│       │       ├── AvailabilityRoster.tsx     # Calendar schedule configuration
+│       │       └── ConsultationWorkspace.tsx  # SOAP note clinician panel
+│       └── pages/
+│           ├── DoctorManagement.tsx           # DataTable registry dashboard
+│           └── DoctorProfile.tsx              # Public/Internal clinical profile
+├── server/
+│   ├── lib/
+│   │   └── signature-crypto.ts                # AES-256 signature helpers
+│   └── routers/
+│       └── doctor.ts                          # Doctor TRPC endpoint mappings
+└── drizzle/
+    └── schema.ts                              # Drizzle doctors schemas
+```
+
+---
+
+## Section 27: Reusable Component Architecture
+
+* **DoctorCard:** Summarized information panel displaying status badge, specialization, fee, and availability metrics.
+* **RosterCalendarGrid:** Weekly visual timetable builder with drag-to-define break times.
+* **PrescriptionTemplateSelector:** Search and preview medication lists.
+
+---
+
+## Section 28: API Contracts (tRPC Definitions)
+
+```typescript
+import { z } from "zod";
+
+export const doctorRouterDefinition = {
+  create: "receptionistProcedure"
+    .input(z.object({
+      userId: z.number(),
+      departmentId: z.number(),
+      specialty: z.string().min(1),
+      qualification: z.string().min(1),
+      experience: z.number().nonnegative(),
+      licenseNumber: z.string().min(1),
+      profilePhoto: z.string().optional(),
+      consultationFees: z.number().positive(),
+      employmentType: z.enum(["Full-Time", "Part-Time", "On-Call", "Visiting Consultant"]),
+    }))
+    .mutation(),
+
+  updateRoster: "doctorProcedure"
+    .input(z.object({
+      doctorId: z.number(),
+      schedule: z.record(z.array(z.string())),
+    }))
+    .mutation(),
+
+  applyLeave: "doctorProcedure"
+    .input(z.object({
+      doctorId: z.number(),
+      startDate: z.date(),
+      endDate: z.date(),
+      leaveType: z.enum(["Annual", "Sabbatical", "Medical", "Casual"]),
+      reason: z.string().optional(),
+      coveringDoctorId: z.number().optional(),
+    }))
+    .mutation(),
+
+  requestShiftExchange: "doctorProcedure"
+    .input(z.object({
+      requestorDoctorId: z.number(),
+      targetDoctorId: z.number(),
+      sourceRosterSlotId: z.number(),
+      targetRosterSlotId: z.number(),
+      reason: z.string().optional(),
+    }))
+    .mutation(),
+
+  clockAttendance: "doctorProcedure"
+    .input(z.object({
+      doctorId: z.number(),
+      action: z.enum(["Clock_In", "Clock_Out", "Break_Start", "Break_End"]),
+      timestamp: z.date(),
+    }))
+    .mutation(),
+};
+```
+
+---
+
+## Section 29: Database Schema
+
+```typescript
+import {
+  int,
+  mysqlEnum,
+  mysqlTable,
+  text,
+  timestamp,
+  varchar,
+  decimal,
+  boolean,
+  json,
+  foreignKey,
+  index,
+} from "drizzle-orm/mysql-core";
+import { users, departments } from "./schema";
+
+// DOCTORS REGISTRY SCHEMA
+export const doctors = mysqlTable(
+  "doctors",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull().unique(),
+    primaryDepartmentId: int("primaryDepartmentId").notNull(),
+    secondaryDepartmentIds: json("secondaryDepartmentIds"),
+    specialty: varchar("specialty", { length: 150 }).notNull(),
+    superSpecialty: varchar("superSpecialty", { length: 150 }),
+    qualification: text("qualification").notNull(),
+    degrees: json("degrees"),
+    experience: int("experience").notNull(),
+    consultationFees: decimal("consultationFees", { precision: 10, scale: 2 }).notNull(),
+    profilePhoto: varchar("profilePhoto", { length: 500 }),
+    encryptedSignature: text("encryptedSignature"),
+    languagesSpoken: json("languagesSpoken"),
+    emergencyContactName: varchar("emergencyContactName", { length: 255 }),
+    emergencyContactPhone: varchar("emergencyContactPhone", { length: 50 }),
+    employmentType: mysqlEnum("employmentType", [
+      "Full-Time",
+      "Part-Time",
+      "On-Call",
+      "Visiting Consultant",
+    ]).default("Full-Time").notNull(),
+    status: mysqlEnum("status", [
+      "Active",
+      "Inactive",
+      "Suspended",
+      "On-Leave",
+      "Retired",
+    ]).default("Active").notNull(),
+    
+    // Verification & Credentialing Engine (Section 5)
+    verificationStatus: mysqlEnum("verificationStatus", [
+      "Draft",
+      "Pending_Verification",
+      "Under_Review",
+      "Verified",
+      "Rejected",
+      "Suspended",
+      "License_Expired"
+    ]).default("Draft").notNull(),
+    verifiedAt: timestamp("verifiedAt"),
+    verifiedBy: int("verifiedBy"),
+    rejectionReason: text("rejectionReason"),
+    
+    // License Validity Engine (Section 5.2)
+    licenseExpiryDate: timestamp("licenseExpiryDate"),
+    boardCertificationExpiryDate: timestamp("boardCertificationExpiryDate"),
+    nmcRegistrationExpiryDate: timestamp("nmcRegistrationExpiryDate"),
+    
+    isAvailable: boolean("isAvailable").default(true).notNull(),
+    
+    // Soft Delete & Archive fields
+    isDeleted: boolean("isDeleted").default(false).notNull(),
+    deletedAt: timestamp("deletedAt"),
+    deletedBy: int("deletedBy"),
+    archivedAt: timestamp("archivedAt"),
+    
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
+    foreignKey({ columns: [table.primaryDepartmentId], foreignColumns: [departments.id] }),
+    index("idx_doctor_specialty").on(table.specialty),
+    index("idx_doctor_status").on(table.status),
+    index("idx_doctor_isDeleted").on(table.isDeleted),
+  ]
+);
+
+// DOCTOR ATTENDANCE LOGS
+export const doctorAttendance = mysqlTable(
+  "doctorAttendance",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    doctorId: int("doctorId").notNull(),
+    clockIn: timestamp("clockIn").notNull(),
+    clockOut: timestamp("clockOut"),
+    breakStart: timestamp("breakStart"),
+    breakEnd: timestamp("breakEnd"),
+    attendanceStatus: mysqlEnum("attendanceStatus", [
+      "Present",
+      "Late",
+      "Early_Exit",
+      "Half_Day",
+      "Absent",
+    ]).default("Present").notNull(),
+    overtimeMinutes: int("overtimeMinutes").default(0).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({ columns: [table.doctorId], foreignColumns: [doctors.id] }),
+  ]
+);
+
+// SHIFT EXCHANGES TABLE
+export const shiftExchanges = mysqlTable(
+  "shiftExchanges",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    requestorDoctorId: int("requestorDoctorId").notNull(),
+    targetDoctorId: int("targetDoctorId").notNull(),
+    sourceSlotId: int("sourceSlotId").notNull(),
+    targetSlotId: int("targetSlotId").notNull(),
+    status: mysqlEnum("status", ["Pending_Peer", "Pending_HOD", "Approved", "Rejected"]).default("Pending_Peer").notNull(),
+    rejectionReason: text("rejectionReason"),
+    approvedByHODId: int("approvedByHODId"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  }
+);
+```
+
+---
+
+## Section 30: Validation Rules (Zod Schemas)
+
+```typescript
+import { z } from "zod";
+
+export const doctorIntakeValidation = z.object({
+  userId: z.number({ required_error: "User reference ID required" }),
+  primaryDepartmentId: z.number({ required_error: "Primary department is required" }),
+  specialty: z.string().min(2, "Specialization must be at least 2 characters"),
+  qualification: z.string().min(5, "Qualification list required"),
+  experience: z.number().min(0, "Experience years cannot be negative"),
+  consultationFees: z.number().positive("Consultation fee must be greater than 0"),
+  licenseNumber: z.string().regex(/^[A-Z]{2,4}-\d{5,8}$/, "License number format must match e.g. MC-45921"),
+  emergencyContactPhone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Valid E.164 emergency phone number required"),
+});
+```
+
+---
+
+## Section 31: Testing Strategy
+
+### 31.1 Unit Tests
+* **Soundex Check:** Test Soundex string conversions using edge-cases (silent vowels, special character strings, numeric values).
+* **Roster Slot Generator:** Test that roster generator throws scheduling errors for overlapping break periods.
+
+### 31.2 Integration Tests
+* **tRPC Leave Conflicting Auditor:** Mock appointments on date ranges and verify that leave request mutation returns list of conflicts.
+* **RBAC Enforcement:** Test that `receptionistProcedure` throws `TRPCError(UNAUTHORIZED)` when requesting custom revenue analytics.
+
+### 31.3 E2E Tests
+* Complete stepper form flow: input parameters, upload mock certificate, simulate collision block, override and verify new database index insertion.
+
+---
+
+## Section 32: Acceptance Criteria (Definition of Done)
+
+* Standard columns (`isDeleted`, `status`, secondary departments) configured in DB.
+* Complete validation schemas in tRPC routes.
+* Registry page displays clinician listing utilizing the `DataTable`.
+* Print view triggers correct 3.25" x 1" wristbands dimensions without sidebar pollution.
+* All code compiles cleanly via `npm run check` and bundles via `npm run build`.
+
+---
+
+## Section 33: Git & Versioning Strategy
+
+### 33.1 Version Alignment
+The Doctor Management System matches the JeevanOS Design System v1.0 standard and operates on the baseline tag `ui-foundation-before-redesign`.
+
+### 33.2 Rollback Strategy
+If database migrations fail:
+1. Revert schema definitions in Drizzle.
+2. Run database rollback migrations via `npm run db:migrate`.
+3. Reset branch pointers to previous git hashes.
+
+---
+
+## Section 34: Future Integration & AI Placeholders
+
+* **AI Roster Assistant:** Natural language voice commands to block leave days and reassign appointments.
+* **AI SOAP Transcriptionist:** Placeholder endpoints structured to ingest audio bytes streams and output structured diagnostic summaries.
+* **AI Queue Prediction Model:** Predict wait queue durations based on historical doctor consultation durations.

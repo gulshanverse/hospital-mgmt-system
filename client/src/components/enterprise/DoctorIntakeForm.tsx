@@ -22,6 +22,7 @@ export function DoctorIntakeForm({ onSuccess, onCancel }: DoctorIntakeFormProps)
 
   const { data: usersList } = trpc.user.list.useQuery();
   const { data: deptsList } = trpc.department.list.useQuery();
+  const { data: doctorsList } = trpc.doctor.list.useQuery({ includeDeleted: true });
 
   const methods = useForm({
     defaultValues: {
@@ -75,7 +76,7 @@ export function DoctorIntakeForm({ onSuccess, onCancel }: DoctorIntakeFormProps)
   ];
 
   // Filter list of users who are candidates for doctor profiles (e.g. receptionist/staff roles that will upgrade, or select list)
-  const candidateUsers = usersList || [];
+  const candidateUsers = (usersList || []).filter(u => u.role !== "patient" && !doctorsList?.some(d => d.userId === u.id));
   const departments = deptsList || [];
 
   return (

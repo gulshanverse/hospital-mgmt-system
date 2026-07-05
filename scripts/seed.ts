@@ -196,7 +196,9 @@ async function main() {
 
   const doctorIds: number[] = [];
   const doctorUserIds: number[] = [];
-  for (const doc of docNames) {
+  const fees = [150, 200, 175, 100, 250, 180, 300, 275, 225, 120, 160, 190, 280, 320, 140];
+  for (let i = 0; i < docNames.length; i++) {
+    const doc = docNames[i];
     const [uRes] = await db.insert(users).values({
       name: doc.name,
       email: doc.email,
@@ -215,6 +217,10 @@ async function main() {
       qualification: "MD, DM Board Certified",
       experience: Math.floor(5 + Math.random() * 20),
       licenseNumber: doc.license,
+      consultationFees: fees[i].toString(),
+      employmentType: "Full-Time",
+      status: "Active",
+      verificationStatus: "Verified",
       isAvailable: true,
       availabilitySchedule: {
         monday: ["09:00", "17:00"],
@@ -333,13 +339,13 @@ async function main() {
   // ==========================================
   console.log("[Seed] Seeding appointments...");
   const appointmentDates = [
-    { patientId: patientIds[1], doctorId: doctorIds[0], departmentId: cardiologyDeptId, appointmentDate: new Date("2026-07-04"), appointmentTime: "09:30", reason: "Follow-up ECG check", status: "scheduled" as const, createdBy: receptionistUserId },
-    { patientId: patientIds[2], doctorId: doctorIds[1], departmentId: pediatricsDeptId, appointmentDate: new Date("2026-07-04"), appointmentTime: "10:30", reason: "Asthma review", status: "scheduled" as const, createdBy: receptionistUserId },
-    { patientId: patientIds[3], doctorId: doctorIds[2], departmentId: emergencyDeptId, appointmentDate: new Date("2026-07-04"), appointmentTime: "11:00", reason: "Suture removal", status: "scheduled" as const, createdBy: receptionistUserId },
-    { patientId: patientIds[4], doctorId: doctorIds[3], departmentId: generalDeptId, appointmentDate: new Date("2026-07-04"), appointmentTime: "14:00", reason: "Routine wellness visit", status: "scheduled" as const, createdBy: receptionistUserId },
-    { patientId: patientIds[5], doctorId: doctorIds[4], departmentId: neurologyDeptId, appointmentDate: new Date("2026-07-05"), appointmentTime: "09:00", reason: "Migraine consult", status: "scheduled" as const, createdBy: receptionistUserId },
-    { patientId: patientIds[6], doctorId: doctorIds[0], departmentId: cardiologyDeptId, appointmentDate: new Date("2026-07-03"), appointmentTime: "11:30", reason: "Chest tightness check", status: "completed" as const, createdBy: receptionistUserId },
-    { patientId: patientIds[7], doctorId: doctorIds[1], departmentId: pediatricsDeptId, appointmentDate: new Date("2026-07-03"), appointmentTime: "15:00", reason: "Fever evaluation", status: "completed" as const, createdBy: receptionistUserId },
+    { patientId: patientIds[1], doctorId: doctorIds[0], departmentId: cardiologyDeptId, appointmentDate: new Date("2026-07-04"), appointmentTime: "09:30", reason: "Follow-up ECG check", status: "Scheduled" as const, createdBy: receptionistUserId },
+    { patientId: patientIds[2], doctorId: doctorIds[1], departmentId: pediatricsDeptId, appointmentDate: new Date("2026-07-04"), appointmentTime: "10:30", reason: "Asthma review", status: "Scheduled" as const, createdBy: receptionistUserId },
+    { patientId: patientIds[3], doctorId: doctorIds[2], departmentId: emergencyDeptId, appointmentDate: new Date("2026-07-04"), appointmentTime: "11:00", reason: "Suture removal", status: "Scheduled" as const, createdBy: receptionistUserId },
+    { patientId: patientIds[4], doctorId: doctorIds[3], departmentId: generalDeptId, appointmentDate: new Date("2026-07-04"), appointmentTime: "14:00", reason: "Routine wellness visit", status: "Scheduled" as const, createdBy: receptionistUserId },
+    { patientId: patientIds[5], doctorId: doctorIds[4], departmentId: neurologyDeptId, appointmentDate: new Date("2026-07-05"), appointmentTime: "09:00", reason: "Migraine consult", status: "Scheduled" as const, createdBy: receptionistUserId },
+    { patientId: patientIds[6], doctorId: doctorIds[0], departmentId: cardiologyDeptId, appointmentDate: new Date("2026-07-03"), appointmentTime: "11:30", reason: "Chest tightness check", status: "Completed" as const, createdBy: receptionistUserId },
+    { patientId: patientIds[7], doctorId: doctorIds[1], departmentId: pediatricsDeptId, appointmentDate: new Date("2026-07-03"), appointmentTime: "15:00", reason: "Fever evaluation", status: "Completed" as const, createdBy: receptionistUserId },
   ];
 
   const appIds: number[] = [];

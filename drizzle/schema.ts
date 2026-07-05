@@ -391,9 +391,30 @@ export const appointments = mysqlTable(
     appointmentTime: varchar("appointmentTime", { length: 10 }).notNull(), // HH:MM format
     reason: text("reason"),
     notes: text("notes"),
-    status: mysqlEnum("status", ["scheduled", "in_progress", "completed", "cancelled"])
-      .default("scheduled")
+    status: mysqlEnum("status", [
+      "Scheduled",
+      "Confirmed",
+      "Checked-In",
+      "Waiting",
+      "In_Consultation",
+      "Completed",
+      "Cancelled",
+      "No_Show",
+      "Rescheduled"
+    ])
+      .default("Scheduled")
       .notNull(),
+    priority: mysqlEnum("priority", ["Low", "Medium", "High", "Emergency", "VIP"])
+      .default("Medium")
+      .notNull(),
+    appointmentType: mysqlEnum("appointmentType", ["Walk-In", "Pre-Booked", "Telemedicine"])
+      .default("Pre-Booked")
+      .notNull(),
+    queuePosition: int("queuePosition"),
+    checkedInAt: timestamp("checkedInAt"),
+    checkInMethod: varchar("checkInMethod", { length: 50 }),
+    rescheduledFromId: int("rescheduledFromId"),
+    slotDuration: int("slotDuration").default(15).notNull(),
     createdBy: int("createdBy").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -407,6 +428,8 @@ export const appointments = mysqlTable(
     index("idx_doctorId").on(table.doctorId),
     index("idx_appointmentDate").on(table.appointmentDate),
     index("idx_status").on(table.status),
+    index("idx_priority").on(table.priority),
+    index("idx_appointmentType").on(table.appointmentType),
   ]
 );
 

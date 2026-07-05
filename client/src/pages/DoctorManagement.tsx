@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Stethoscope, Plus, Edit2, Trash2 } from "lucide-react";
+import { Stethoscope, Plus, Edit2, Trash2, RotateCcw } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { Link } from "wouter";
 import { toast } from "sonner";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { DoctorIntakeForm } from "@/components/enterprise/DoctorIntakeForm";
@@ -27,8 +28,11 @@ export default function DoctorManagement() {
   const [verificationStatus, setVerificationStatus] = useState<any>("Draft");
   const [status, setStatus] = useState<any>("Active");
 
+  // States
+  const [showDeleted, setShowDeleted] = useState(false);
+
   // Queries
-  const { data: doctorsList, isLoading, refetch } = trpc.doctor.list.useQuery();
+  const { data: doctorsList, isLoading, refetch } = trpc.doctor.list.useQuery({ includeDeleted: showDeleted });
 
   const updateMutation = trpc.doctor.update.useMutation({
     onSuccess: () => {
@@ -48,6 +52,16 @@ export default function DoctorManagement() {
     },
     onError: (err) => {
       toast.error(err.message || "Failed to delete doctor profile");
+    },
+  });
+
+  const restoreMutation = trpc.doctor.restore.useMutation({
+    onSuccess: () => {
+      toast.success("Doctor profile restored successfully");
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to restore doctor profile");
     },
   });
 
@@ -127,10 +141,10 @@ export default function DoctorManagement() {
       sortable: true,
       sticky: "left",
       render: (row) => (
-        <div className="flex items-center gap-2">
+        <Link href={`/doctors/${row.id}`} className="flex items-center gap-2 hover:underline cursor-pointer">
           <Stethoscope className="size-4 text-primary shrink-0" />
           <span className="font-semibold text-foreground">{row.name}</span>
-        </div>
+        </Link>
       ),
     },
     {
@@ -176,23 +190,37 @@ export default function DoctorManagement() {
       header: "Actions",
       render: (row) => (
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => openEdit(row)}
-            className="h-8 gap-1.5"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-            Edit
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => handleDelete(row.id)}
-            className="h-8 w-8 p-0"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+          {!row.isDeleted && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openEdit(row)}
+              className="h-8 gap-1.5"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+              Edit
+            </Button>
+          )}
+          {row.isDeleted ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => restoreMutation.mutate({ id: row.id })}
+              className="h-8 gap-1.5 border-green-200 text-green-700 hover:bg-green-50"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Restore
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => handleDelete(row.id)}
+              className="h-8 w-8 p-0"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          )}
         </div>
       ),
     },
@@ -211,10 +239,19 @@ export default function DoctorManagement() {
               Manage clinical specializations, licenses compliance, and status rosters.
             </p>
           </div>
-          <Button onClick={() => setIsCreateOpen(true)} className="gap-2 shadow-xs">
-            <Plus className="w-4 h-4" />
-            Register Doctor
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant={showDeleted ? "default" : "outline"}
+              onClick={() => setShowDeleted(!showDeleted)}
+              className="text-xs"
+            >
+              {showDeleted ? "Hide Soft-Deleted" : "Show Soft-Deleted"}
+            </Button>
+            <Button onClick={() => setIsCreateOpen(true)} className="gap-2 shadow-xs">
+              <Plus className="w-4 h-4" />
+              Register Doctor
+            </Button>
+          </div>
         </div>
 
         {/* Registry Table utilising Enterprise DataTable */}

@@ -348,6 +348,69 @@ export const patientRouter = router({
 // DOCTOR MANAGEMENT
 // ============================================================================
 
+async function autoSeedDoctors(dbInstance: any) {
+  try {
+    let depts = await dbInstance.select().from(departments).limit(1);
+    let deptId = depts[0]?.id;
+    if (!deptId) {
+      const [newDept] = await dbInstance.insert(departments).values({
+        name: "General Medicine",
+        description: "General Outpatient and Internal Medicine Department",
+        isActive: true,
+      });
+      deptId = newDept.insertId;
+    }
+
+    const docData = [
+      { name: "Dr. Alice Smith", email: "alice.smith@hms.com", specialty: "Cardiology", license: "LIC-CARD-001" },
+      { name: "Dr. Bob Johnson", email: "bob.johnson@hms.com", specialty: "Pediatrics", license: "LIC-PED-002" },
+      { name: "Dr. Catherine Howard", email: "catherine.h@hms.com", specialty: "Emergency Medicine", license: "LIC-EMG-003" },
+      { name: "Dr. Daniel Craig", email: "daniel.c@hms.com", specialty: "Internal Medicine", license: "LIC-GEN-004" },
+      { name: "Dr. Emma Watson", email: "emma.w@hms.com", specialty: "Neurology", license: "LIC-NEU-005" },
+      { name: "Dr. Frank Miller", email: "frank.m@hms.com", specialty: "Radiology", license: "LIC-RAD-006" },
+      { name: "Dr. Grace Hopper", email: "grace.h@hms.com", specialty: "Surgery", license: "LIC-SURG-007" },
+      { name: "Dr. Henry Cavill", email: "henry.c@hms.com", specialty: "Oncology", license: "LIC-ONC-008" },
+      { name: "Dr. Irene Adler", email: "irene.a@hms.com", specialty: "Obstetrics & Gynecology", license: "LIC-OBG-009" },
+      { name: "Dr. Jack Shepard", email: "jack.s@hms.com", specialty: "General Surgery", license: "LIC-SURG-010" },
+    ];
+
+    for (const doc of docData) {
+      const [uRes] = await dbInstance.insert(users).values({
+        name: doc.name,
+        email: doc.email,
+        phone: "9876541" + Math.floor(100 + Math.random() * 900).toString(),
+        role: "doctor",
+        isActive: true,
+        passwordHash: "$2a$10$UoW3sLdREb1G/8bO4J68.unK9Jv.VqM.jT3aZf9w1Rj7uL.i4gObe",
+        isVerified: true,
+      });
+
+      await dbInstance.insert(doctors).values({
+        userId: uRes.insertId,
+        departmentId: deptId,
+        specialty: doc.specialty,
+        qualification: "MD, Board Certified",
+        experience: 10,
+        licenseNumber: doc.license,
+        consultationFees: "150.00",
+        employmentType: "Full-Time",
+        status: "Active",
+        verificationStatus: "Verified",
+        isAvailable: true,
+        availabilitySchedule: {
+          monday: ["09:00", "17:00"],
+          tuesday: ["09:00", "17:00"],
+          wednesday: ["09:00", "17:00"],
+          thursday: ["09:00", "17:00"],
+          friday: ["09:00", "17:00"]
+        },
+      });
+    }
+  } catch (err) {
+    console.error("[Auto-Seed] Doctor seeding failed:", err);
+  }
+}
+
 export const doctorRouter = router({
   create: adminProcedure
     .input(
@@ -498,29 +561,43 @@ export const doctorRouter = router({
       return db.getDoctorsByDepartment(input.departmentId);
     }),
 
-  list: protectedProcedure.query(async () => {
-    const dbInstance = await db.getDb();
-    if (!dbInstance) return [];
-    return dbInstance
-      .select({
-        id: doctors.id,
-        userId: doctors.userId,
-        departmentId: doctors.departmentId,
-        specialty: doctors.specialty,
-        qualification: doctors.qualification,
-        experience: doctors.experience,
-        licenseNumber: doctors.licenseNumber,
-        availabilitySchedule: doctors.availabilitySchedule,
-        isAvailable: doctors.isAvailable,
-        verificationStatus: doctors.verificationStatus,
-        status: doctors.status,
-        consultationFees: doctors.consultationFees,
-        name: users.name,
-      })
-      .from(doctors)
-      .innerJoin(users, eq(doctors.userId, users.id))
-      .where(eq(doctors.isDeleted, false));
-  }),
+  list: protectedProcedure
+    .input(z.object({ includeDeleted: z.boolean().optional() }).optional())
+    .query(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) return [];
+
+      const existing = await dbInstance.select().from(doctors).limit(1);
+      if (existing.length === 0) {
+        await autoSeedDoctors(dbInstance);
+      }
+      
+      const query = dbInstance
+        .select({
+          id: doctors.id,
+          userId: doctors.userId,
+          departmentId: doctors.departmentId,
+          specialty: doctors.specialty,
+          superSpecialty: doctors.superSpecialty,
+          qualification: doctors.qualification,
+          experience: doctors.experience,
+          licenseNumber: doctors.licenseNumber,
+          availabilitySchedule: doctors.availabilitySchedule,
+          isAvailable: doctors.isAvailable,
+          verificationStatus: doctors.verificationStatus,
+          status: doctors.status,
+          consultationFees: doctors.consultationFees,
+          isDeleted: doctors.isDeleted,
+          name: users.name,
+        })
+        .from(doctors)
+        .innerJoin(users, eq(doctors.userId, users.id));
+
+      if (input?.includeDeleted) {
+        return query;
+      }
+      return query.where(eq(doctors.isDeleted, false));
+    }),
 
   update: adminProcedure
     .input(
@@ -596,6 +673,21 @@ export const doctorRouter = router({
         isDeleted: true,
         deletedAt: new Date(),
         deletedBy: ctx.user.id,
+      }).where(eq(doctors.id, input.id));
+
+      return { success: true };
+    }),
+
+  restore: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      
+      await dbInstance.update(doctors).set({
+        isDeleted: false,
+        deletedAt: null,
+        deletedBy: null,
       }).where(eq(doctors.id, input.id));
 
       return { success: true };
