@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
+import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 import { CommandPalette } from "./ui/command-palette";
 import { NotificationCenter } from "./ui/notification-center";
@@ -83,7 +83,7 @@ export default function DashboardLayout({
   }, [sidebarWidth]);
 
   if (loading) {
-    return <DashboardLayoutSkeleton />
+    return <DashboardLayoutSkeleton />;
   }
 
   if (!user) {
@@ -95,7 +95,8 @@ export default function DashboardLayout({
               Sign in to continue
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Access to this dashboard requires authentication. Continue to launch the login flow.
+              Access to this dashboard requires authentication. Continue to
+              launch the login flow.
             </p>
           </div>
           <Button
@@ -142,7 +143,11 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location) || (location === "/" ? menuItems.find(item => item.path === "/dashboard") : undefined);
+  const activeMenuItem =
+    menuItems.find(item => item.path === location) ||
+    (location === "/"
+      ? menuItems.find(item => item.path === "/dashboard")
+      : undefined);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -211,7 +216,9 @@ function DashboardLayoutContent({
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
               {menuItems.map(item => {
-                const isActive = location === item.path || (location === "/" && item.path === "/dashboard");
+                const isActive =
+                  location === item.path ||
+                  (location === "/" && item.path === "/dashboard");
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
@@ -263,7 +270,8 @@ function DashboardLayoutContent({
                 <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <Avatar className="h-9 w-9 border shrink-0">
                     <AvatarFallback className="text-xs font-medium">
-                      {user?.fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                      {user?.fullName?.charAt(0).toUpperCase() ||
+                        user?.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
@@ -278,7 +286,7 @@ function DashboardLayoutContent({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
-                  onSelect={async (e) => {
+                  onSelect={async e => {
                     e.preventDefault();
                     await logout();
                   }}
@@ -344,7 +352,7 @@ function DashboardLayoutContent({
         </header>
 
         <main className="flex-1 p-6 overflow-y-auto">{children}</main>
-        
+
         {/* Mount command palette */}
         <CommandPalette />
       </SidebarInset>
