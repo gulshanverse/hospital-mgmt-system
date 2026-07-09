@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
@@ -30,7 +36,7 @@ export default function ResetPassword() {
         setLocation("/login");
       }, 3000);
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to reset password");
     },
   });
@@ -66,7 +72,8 @@ export default function ResetPassword() {
             <div className="space-y-4 text-center">
               <p className="text-green-600 font-medium">Password Updated!</p>
               <p className="text-gray-600 text-sm">
-                Your password has been successfully reset. You will be redirected to the login page shortly.
+                Your password has been successfully reset. You will be
+                redirected to the login page shortly.
               </p>
               <Button onClick={() => setLocation("/login")} className="w-full">
                 Go to Login
@@ -81,7 +88,7 @@ export default function ResetPassword() {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   required
                 />
               </div>
@@ -92,7 +99,7 @@ export default function ResetPassword() {
                   type="password"
                   placeholder="••••••••"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={e => setConfirmPassword(e.target.value)}
                   required
                 />
               </div>

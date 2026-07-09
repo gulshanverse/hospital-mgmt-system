@@ -49,7 +49,7 @@ export const users = mysqlTable(
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
     lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
   },
-  (table) => [
+  table => [
     index("idx_email").on(table.email),
     index("idx_role").on(table.role),
     index("idx_isActive").on(table.isActive),
@@ -74,7 +74,7 @@ export const departments = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [index("idx_isActive").on(table.isActive)]
+  table => [index("idx_isActive").on(table.isActive)]
 );
 
 export type Department = typeof departments.$inferSelect;
@@ -93,7 +93,9 @@ export const doctors = mysqlTable(
     degrees: json("degrees"), // Array of strings e.g. ["MD", "DM"]
     experience: int("experience"), // years
     licenseNumber: varchar("licenseNumber", { length: 50 }).unique(),
-    consultationFees: decimal("consultationFees", { precision: 10, scale: 2 }).default("50.00").notNull(),
+    consultationFees: decimal("consultationFees", { precision: 10, scale: 2 })
+      .default("50.00")
+      .notNull(),
     profilePhoto: varchar("profilePhoto", { length: 500 }),
     encryptedSignature: text("encryptedSignature"),
     languagesSpoken: json("languagesSpoken"),
@@ -104,15 +106,19 @@ export const doctors = mysqlTable(
       "Part-Time",
       "On-Call",
       "Visiting Consultant",
-    ]).default("Full-Time").notNull(),
+    ])
+      .default("Full-Time")
+      .notNull(),
     status: mysqlEnum("status", [
       "Active",
       "Inactive",
       "Suspended",
       "On-Leave",
       "Retired",
-    ]).default("Active").notNull(),
-    
+    ])
+      .default("Active")
+      .notNull(),
+
     // Verification & Credentialing Engine (Section 5)
     verificationStatus: mysqlEnum("verificationStatus", [
       "Draft",
@@ -121,12 +127,14 @@ export const doctors = mysqlTable(
       "Verified",
       "Rejected",
       "Suspended",
-      "License_Expired"
-    ]).default("Draft").notNull(),
+      "License_Expired",
+    ])
+      .default("Draft")
+      .notNull(),
     verifiedAt: timestamp("verifiedAt"),
     verifiedBy: int("verifiedBy"),
     rejectionReason: text("rejectionReason"),
-    
+
     // License Validity Engine
     licenseExpiryDate: timestamp("licenseExpiryDate"),
     boardCertificationExpiryDate: timestamp("boardCertificationExpiryDate"),
@@ -135,19 +143,22 @@ export const doctors = mysqlTable(
     availabilitySchedule: json("availabilitySchedule"), // JSON: { monday: [9-17], tuesday: [9-17], ... }
     settings: json("settings"), // JSON storing consultation, telemedicine, notification settings
     isAvailable: boolean("isAvailable").default(true).notNull(),
-    
+
     // Soft Delete & Archive fields
     isDeleted: boolean("isDeleted").default(false).notNull(),
     deletedAt: timestamp("deletedAt"),
     deletedBy: int("deletedBy"),
     archivedAt: timestamp("archivedAt"),
-    
+
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
-    foreignKey({ columns: [table.departmentId], foreignColumns: [departments.id] }),
+    foreignKey({
+      columns: [table.departmentId],
+      foreignColumns: [departments.id],
+    }),
     index("idx_departmentId").on(table.departmentId),
     index("idx_isAvailable").on(table.isAvailable),
     index("idx_doctor_specialty").on(table.specialty),
@@ -167,15 +178,22 @@ export const doctorLeaves = mysqlTable(
     doctorId: int("doctorId").notNull(),
     startDate: timestamp("startDate").notNull(),
     endDate: timestamp("endDate").notNull(),
-    leaveType: mysqlEnum("leaveType", ["Annual", "Sabbatical", "Medical", "Casual"]).notNull(),
+    leaveType: mysqlEnum("leaveType", [
+      "Annual",
+      "Sabbatical",
+      "Medical",
+      "Casual",
+    ]).notNull(),
     reason: text("reason"),
     coveringDoctorId: int("coveringDoctorId"),
-    status: mysqlEnum("status", ["Pending", "Approved", "Rejected"]).default("Pending").notNull(),
+    status: mysqlEnum("status", ["Pending", "Approved", "Rejected"])
+      .default("Pending")
+      .notNull(),
     reviewedBy: int("reviewedBy"),
     reviewedAt: timestamp("reviewedAt"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.doctorId], foreignColumns: [doctors.id] }),
     index("idx_leave_dates").on(table.startDate, table.endDate),
   ]
@@ -200,11 +218,13 @@ export const doctorAttendance = mysqlTable(
       "Early_Exit",
       "Half_Day",
       "Absent",
-    ]).default("Present").notNull(),
+    ])
+      .default("Present")
+      .notNull(),
     overtimeMinutes: int("overtimeMinutes").default(0).notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.doctorId], foreignColumns: [doctors.id] }),
   ]
 );
@@ -221,14 +241,27 @@ export const shiftExchanges = mysqlTable(
     targetDoctorId: int("targetDoctorId").notNull(),
     sourceSlotId: int("sourceSlotId").notNull(),
     targetSlotId: int("targetSlotId").notNull(),
-    status: mysqlEnum("status", ["Pending_Peer", "Pending_HOD", "Approved", "Rejected"]).default("Pending_Peer").notNull(),
+    status: mysqlEnum("status", [
+      "Pending_Peer",
+      "Pending_HOD",
+      "Approved",
+      "Rejected",
+    ])
+      .default("Pending_Peer")
+      .notNull(),
     rejectionReason: text("rejectionReason"),
     approvedByHODId: int("approvedByHODId"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
-    foreignKey({ columns: [table.requestorDoctorId], foreignColumns: [doctors.id] }),
-    foreignKey({ columns: [table.targetDoctorId], foreignColumns: [doctors.id] }),
+  table => [
+    foreignKey({
+      columns: [table.requestorDoctorId],
+      foreignColumns: [doctors.id],
+    }),
+    foreignKey({
+      columns: [table.targetDoctorId],
+      foreignColumns: [doctors.id],
+    }),
   ]
 );
 
@@ -236,25 +269,20 @@ export type ShiftExchange = typeof shiftExchanges.$inferSelect;
 export type InsertShiftExchange = typeof shiftExchanges.$inferInsert;
 
 // IMMUTABLE AUDIT LOG
-export const doctorAuditLogs = mysqlTable(
-  "doctorAuditLogs",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    operatorId: int("operatorId").notNull(),
-    action: varchar("action", { length: 100 }).notNull(),
-    targetDoctorId: int("targetDoctorId").notNull(),
-    previousValue: json("previousValue"),
-    newValue: json("newValue"),
-    ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
-    userAgent: varchar("userAgent", { length: 255 }).notNull(),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-  }
-);
+export const doctorAuditLogs = mysqlTable("doctorAuditLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  operatorId: int("operatorId").notNull(),
+  action: varchar("action", { length: 100 }).notNull(),
+  targetDoctorId: int("targetDoctorId").notNull(),
+  previousValue: json("previousValue"),
+  newValue: json("newValue"),
+  ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
+  userAgent: varchar("userAgent", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
 
 export type DoctorAuditLog = typeof doctorAuditLogs.$inferSelect;
 export type InsertDoctorAuditLog = typeof doctorAuditLogs.$inferInsert;
-
-
 
 export const staff = mysqlTable(
   "staff",
@@ -268,9 +296,12 @@ export const staff = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
-    foreignKey({ columns: [table.departmentId], foreignColumns: [departments.id] }),
+    foreignKey({
+      columns: [table.departmentId],
+      foreignColumns: [departments.id],
+    }),
     index("idx_departmentId").on(table.departmentId),
     index("idx_isActive").on(table.isActive),
   ]
@@ -336,7 +367,7 @@ export const patients = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     uniqueIndex("idx_patientCode").on(table.patientCode),
     index("idx_phone").on(table.phone),
     index("idx_email").on(table.email),
@@ -366,7 +397,7 @@ export const patientAuditLogs = mysqlTable(
     sessionId: varchar("sessionId", { length: 100 }).notNull(),
     changeReason: text("changeReason"),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
     index("idx_audit_patient").on(table.patientUhid),
     index("idx_audit_user").on(table.userId),
@@ -400,14 +431,24 @@ export const appointments = mysqlTable(
       "Completed",
       "Cancelled",
       "No_Show",
-      "Rescheduled"
+      "Rescheduled",
     ])
       .default("Scheduled")
       .notNull(),
-    priority: mysqlEnum("priority", ["Low", "Medium", "High", "Emergency", "VIP"])
+    priority: mysqlEnum("priority", [
+      "Low",
+      "Medium",
+      "High",
+      "Emergency",
+      "VIP",
+    ])
       .default("Medium")
       .notNull(),
-    appointmentType: mysqlEnum("appointmentType", ["Walk-In", "Pre-Booked", "Telemedicine"])
+    appointmentType: mysqlEnum("appointmentType", [
+      "Walk-In",
+      "Pre-Booked",
+      "Telemedicine",
+    ])
       .default("Pre-Booked")
       .notNull(),
     queuePosition: int("queuePosition"),
@@ -419,10 +460,13 @@ export const appointments = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.patientId], foreignColumns: [patients.id] }),
     foreignKey({ columns: [table.doctorId], foreignColumns: [doctors.id] }),
-    foreignKey({ columns: [table.departmentId], foreignColumns: [departments.id] }),
+    foreignKey({
+      columns: [table.departmentId],
+      foreignColumns: [departments.id],
+    }),
     foreignKey({ columns: [table.createdBy], foreignColumns: [users.id] }),
     index("idx_patientId").on(table.patientId),
     index("idx_doctorId").on(table.doctorId),
@@ -445,12 +489,17 @@ export const wards = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     name: varchar("name", { length: 100 }).notNull().unique(),
-    type: mysqlEnum("type", ["general", "icu", "pediatric", "maternity"]).notNull(),
+    type: mysqlEnum("type", [
+      "general",
+      "icu",
+      "pediatric",
+      "maternity",
+    ]).notNull(),
     totalBeds: int("totalBeds").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [index("idx_type").on(table.type)]
+  table => [index("idx_type").on(table.type)]
 );
 
 export type Ward = typeof wards.$inferSelect;
@@ -463,13 +512,18 @@ export const beds = mysqlTable(
     bedCode: varchar("bedCode", { length: 20 }).notNull().unique(),
     wardId: int("wardId").notNull(),
     roomNumber: varchar("roomNumber", { length: 20 }),
-    status: mysqlEnum("status", ["available", "occupied", "cleaning", "maintenance"])
+    status: mysqlEnum("status", [
+      "available",
+      "occupied",
+      "cleaning",
+      "maintenance",
+    ])
       .default("available")
       .notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.wardId], foreignColumns: [wards.id] }),
     uniqueIndex("idx_bedCode").on(table.bedCode),
     index("idx_wardId").on(table.wardId),
@@ -492,14 +546,19 @@ export const admissions = mysqlTable(
     dischargeDate: datetime("dischargeDate"),
     reason: text("reason"),
     notes: text("notes"),
-    status: mysqlEnum("status", ["active", "discharged"]).default("active").notNull(),
+    status: mysqlEnum("status", ["active", "discharged"])
+      .default("active")
+      .notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.patientId], foreignColumns: [patients.id] }),
     foreignKey({ columns: [table.bedId], foreignColumns: [beds.id] }),
-    foreignKey({ columns: [table.departmentId], foreignColumns: [departments.id] }),
+    foreignKey({
+      columns: [table.departmentId],
+      foreignColumns: [departments.id],
+    }),
     foreignKey({ columns: [table.admittedBy], foreignColumns: [users.id] }),
     index("idx_patientId").on(table.patientId),
     index("idx_bedId").on(table.bedId),
@@ -536,7 +595,7 @@ export const medicalRecords = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.patientId], foreignColumns: [patients.id] }),
     foreignKey({ columns: [table.createdBy], foreignColumns: [users.id] }),
     index("idx_patientId").on(table.patientId),
@@ -561,15 +620,23 @@ export const prescriptions = mysqlTable(
     medicalRecordId: int("medicalRecordId"),
     prescribedBy: int("prescribedBy").notNull(),
     prescriptionDate: datetime("prescriptionDate").notNull(),
-    status: mysqlEnum("status", ["active", "completed", "cancelled"]).default("active").notNull(),
+    status: mysqlEnum("status", ["active", "completed", "cancelled"])
+      .default("active")
+      .notNull(),
     notes: text("notes"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.patientId], foreignColumns: [patients.id] }),
-    foreignKey({ columns: [table.appointmentId], foreignColumns: [appointments.id] }),
-    foreignKey({ columns: [table.medicalRecordId], foreignColumns: [medicalRecords.id] }),
+    foreignKey({
+      columns: [table.appointmentId],
+      foreignColumns: [appointments.id],
+    }),
+    foreignKey({
+      columns: [table.medicalRecordId],
+      foreignColumns: [medicalRecords.id],
+    }),
     foreignKey({ columns: [table.prescribedBy], foreignColumns: [doctors.id] }),
     index("idx_patientId").on(table.patientId),
     index("idx_status").on(table.status),
@@ -591,8 +658,11 @@ export const prescriptionItems = mysqlTable(
     instructions: text("instructions"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
-    foreignKey({ columns: [table.prescriptionId], foreignColumns: [prescriptions.id] }),
+  table => [
+    foreignKey({
+      columns: [table.prescriptionId],
+      foreignColumns: [prescriptions.id],
+    }),
     index("idx_prescriptionId").on(table.prescriptionId),
   ]
 );
@@ -623,16 +693,24 @@ export const labOrders = mysqlTable(
     assignedTo: int("assignedTo"), // Lab Technician
     orderDate: datetime("orderDate").notNull(),
     expectedDate: datetime("expectedDate"),
-    status: mysqlEnum("status", ["pending", "in_progress", "completed", "cancelled"])
+    status: mysqlEnum("status", [
+      "pending",
+      "in_progress",
+      "completed",
+      "cancelled",
+    ])
       .default("pending")
       .notNull(),
     notes: text("notes"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.patientId], foreignColumns: [patients.id] }),
-    foreignKey({ columns: [table.appointmentId], foreignColumns: [appointments.id] }),
+    foreignKey({
+      columns: [table.appointmentId],
+      foreignColumns: [appointments.id],
+    }),
     foreignKey({ columns: [table.orderedBy], foreignColumns: [users.id] }),
     foreignKey({ columns: [table.assignedTo], foreignColumns: [users.id] }),
     uniqueIndex("idx_orderCode").on(table.orderCode),
@@ -655,12 +733,14 @@ export const labReports = mysqlTable(
     reportUrl: varchar("reportUrl", { length: 500 }),
     reportPdfUrl: varchar("reportPdfUrl", { length: 500 }),
     normalRange: text("normalRange"), // JSON: reference values
-    status: mysqlEnum("status", ["pending", "completed", "reviewed"]).default("pending").notNull(),
+    status: mysqlEnum("status", ["pending", "completed", "reviewed"])
+      .default("pending")
+      .notNull(),
     reviewedBy: int("reviewedBy"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.labOrderId], foreignColumns: [labOrders.id] }),
     foreignKey({ columns: [table.patientId], foreignColumns: [patients.id] }),
     foreignKey({ columns: [table.reviewedBy], foreignColumns: [users.id] }),
@@ -690,13 +770,18 @@ export const pharmacyInventory = mysqlTable(
     reorderLevel: int("reorderLevel").notNull(),
     expiryDate: date("expiryDate"),
     storageLocation: varchar("storageLocation", { length: 100 }),
-    status: mysqlEnum("status", ["available", "low_stock", "expired", "discontinued"])
+    status: mysqlEnum("status", [
+      "available",
+      "low_stock",
+      "expired",
+      "discontinued",
+    ])
       .default("available")
       .notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     uniqueIndex("idx_drugCode").on(table.drugCode),
     index("idx_category").on(table.category),
     index("idx_status").on(table.status),
@@ -719,9 +804,15 @@ export const pharmacyDispensing = mysqlTable(
     notes: text("notes"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
-    foreignKey({ columns: [table.prescriptionItemId], foreignColumns: [prescriptionItems.id] }),
-    foreignKey({ columns: [table.inventoryId], foreignColumns: [pharmacyInventory.id] }),
+  table => [
+    foreignKey({
+      columns: [table.prescriptionItemId],
+      foreignColumns: [prescriptionItems.id],
+    }),
+    foreignKey({
+      columns: [table.inventoryId],
+      foreignColumns: [pharmacyInventory.id],
+    }),
     foreignKey({ columns: [table.dispensedBy], foreignColumns: [users.id] }),
     index("idx_inventoryId").on(table.inventoryId),
     index("idx_dispensedDate").on(table.dispensedDate),
@@ -746,18 +837,28 @@ export const invoices = mysqlTable(
     invoiceDate: datetime("invoiceDate").notNull(),
     dueDate: date("dueDate"),
     totalAmount: decimal("totalAmount", { precision: 12, scale: 2 }).notNull(),
-    paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default("0").notNull(),
-    status: mysqlEnum("status", ["paid", "pending", "overdue"]).default("pending").notNull(),
+    paidAmount: decimal("paidAmount", { precision: 12, scale: 2 })
+      .default("0")
+      .notNull(),
+    status: mysqlEnum("status", ["paid", "pending", "overdue"])
+      .default("pending")
+      .notNull(),
     invoicePdfUrl: varchar("invoicePdfUrl", { length: 500 }),
     notes: text("notes"),
     createdBy: int("createdBy").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.patientId], foreignColumns: [patients.id] }),
-    foreignKey({ columns: [table.admissionId], foreignColumns: [admissions.id] }),
-    foreignKey({ columns: [table.appointmentId], foreignColumns: [appointments.id] }),
+    foreignKey({
+      columns: [table.admissionId],
+      foreignColumns: [admissions.id],
+    }),
+    foreignKey({
+      columns: [table.appointmentId],
+      foreignColumns: [appointments.id],
+    }),
     foreignKey({ columns: [table.createdBy], foreignColumns: [users.id] }),
     uniqueIndex("idx_invoiceNumber").on(table.invoiceNumber),
     index("idx_patientId").on(table.patientId),
@@ -787,7 +888,7 @@ export const invoiceItems = mysqlTable(
     totalPrice: decimal("totalPrice", { precision: 12, scale: 2 }).notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.invoiceId], foreignColumns: [invoices.id] }),
     index("idx_invoiceId").on(table.invoiceId),
   ]
@@ -822,7 +923,7 @@ export const notifications = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     readAt: timestamp("readAt"),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
     index("idx_userId").on(table.userId),
     index("idx_isRead").on(table.isRead),
@@ -846,7 +947,7 @@ export const auditLogs = mysqlTable(
     userAgent: text("userAgent"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
     index("idx_userId").on(table.userId),
     index("idx_entityType").on(table.entityType),
@@ -875,9 +976,12 @@ export const uploadedFiles = mysqlTable(
     fileUrl: varchar("fileUrl", { length: 500 }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.uploadedBy], foreignColumns: [users.id] }),
-    index("idx_relatedEntity").on(table.relatedEntityType, table.relatedEntityId),
+    index("idx_relatedEntity").on(
+      table.relatedEntityType,
+      table.relatedEntityId
+    ),
     index("idx_uploadedBy").on(table.uploadedBy),
   ]
 );
@@ -898,7 +1002,7 @@ export const refreshTokens = mysqlTable(
     expiresAt: datetime("expiresAt").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [
+  table => [
     foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
     index("idx_userId").on(table.userId),
     index("idx_expiresAt").on(table.expiresAt),

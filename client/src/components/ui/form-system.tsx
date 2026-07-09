@@ -1,7 +1,13 @@
 import * as React from "react";
 import { AlertCircle, CheckCircle, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useFormContext } from "react-hook-form";
 
 // 1. Form Section Card
@@ -11,12 +17,27 @@ interface SectionCardProps extends React.ComponentProps<typeof Card> {
   children: React.ReactNode;
 }
 
-export function SectionCard({ title, description, children, className, ...props }: SectionCardProps) {
+export function SectionCard({
+  title,
+  description,
+  children,
+  className,
+  ...props
+}: SectionCardProps) {
   return (
-    <Card className={cn("overflow-hidden border-border/80", className)} {...props}>
+    <Card
+      className={cn("overflow-hidden border-border/80", className)}
+      {...props}
+    >
       <CardHeader className="bg-secondary/20 border-b pb-4 px-6">
-        <CardTitle className="text-base font-bold tracking-tight text-foreground">{title}</CardTitle>
-        {description && <CardDescription className="text-xs mt-1 text-muted-foreground">{description}</CardDescription>}
+        <CardTitle className="text-base font-bold tracking-tight text-foreground">
+          {title}
+        </CardTitle>
+        {description && (
+          <CardDescription className="text-xs mt-1 text-muted-foreground">
+            {description}
+          </CardDescription>
+        )}
       </CardHeader>
       <CardContent className="p-6">{children}</CardContent>
     </Card>
@@ -25,12 +46,18 @@ export function SectionCard({ title, description, children, className, ...props 
 
 // 2. Form Required Field Indicator
 export function RequiredIndicator() {
-  return <span className="text-destructive font-bold ml-0.5" aria-hidden="true">*</span>;
+  return (
+    <span className="text-destructive font-bold ml-0.5" aria-hidden="true">
+      *
+    </span>
+  );
 }
 
 // 3. Validation Summary
 export function FormValidationSummary() {
-  const { formState: { errors } } = useFormContext();
+  const {
+    formState: { errors },
+  } = useFormContext();
   const errorKeys = Object.keys(errors);
 
   if (errorKeys.length === 0) return null;
@@ -39,11 +66,15 @@ export function FormValidationSummary() {
     <div className="flex gap-3 p-4 border border-destructive/20 bg-destructive/5 rounded-xl text-destructive text-sm animate-in fade-in slide-in-from-top-1 mb-6">
       <AlertCircle className="h-5 w-5 shrink-0 text-destructive mt-0.5" />
       <div className="space-y-1">
-        <h4 className="font-semibold leading-none">Please resolve the following errors:</h4>
+        <h4 className="font-semibold leading-none">
+          Please resolve the following errors:
+        </h4>
         <ul className="list-disc pl-4 space-y-0.5 text-xs text-destructive/80 mt-2">
-          {errorKeys.map((key) => {
+          {errorKeys.map(key => {
             const error = errors[key];
-            const message = error?.message ? String(error.message) : `Invalid field: ${key}`;
+            const message = error?.message
+              ? String(error.message)
+              : `Invalid field: ${key}`;
             return <li key={key}>{message}</li>;
           })}
         </ul>
@@ -65,7 +96,11 @@ interface FormStepperProps {
   className?: string;
 }
 
-export function FormStepper({ steps, currentStepIndex, className }: FormStepperProps) {
+export function FormStepper({
+  steps,
+  currentStepIndex,
+  className,
+}: FormStepperProps) {
   return (
     <div className={cn("w-full overflow-x-auto pb-4", className)}>
       <div className="flex items-center justify-between min-w-[600px] px-2">
@@ -80,9 +115,13 @@ export function FormStepper({ steps, currentStepIndex, className }: FormStepperP
                 <div
                   className={cn(
                     "flex size-9 items-center justify-center rounded-full border text-sm font-semibold transition-all duration-150 shadow-2xs",
-                    isCompleted && "bg-primary border-primary text-primary-foreground",
-                    isActive && "border-primary text-primary ring-2 ring-primary/20 bg-background",
-                    !isActive && !isCompleted && "border-border bg-background text-muted-foreground"
+                    isCompleted &&
+                      "bg-primary border-primary text-primary-foreground",
+                    isActive &&
+                      "border-primary text-primary ring-2 ring-primary/20 bg-background",
+                    !isActive &&
+                      !isCompleted &&
+                      "border-border bg-background text-muted-foreground"
                   )}
                 >
                   {isCompleted ? (
@@ -95,7 +134,11 @@ export function FormStepper({ steps, currentStepIndex, className }: FormStepperP
                   <span
                     className={cn(
                       "text-sm font-bold tracking-tight",
-                      isActive ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"
+                      isActive
+                        ? "text-primary"
+                        : isCompleted
+                          ? "text-foreground"
+                          : "text-muted-foreground"
                     )}
                   >
                     {step.title}
@@ -126,7 +169,10 @@ export function FormStepper({ steps, currentStepIndex, className }: FormStepperP
 }
 
 // 5. Unsaved Changes Detection Hook
-export function useUnsavedChanges(isDirty: boolean, message = "You have unsaved changes. Are you sure you want to leave?") {
+export function useUnsavedChanges(
+  isDirty: boolean,
+  message = "You have unsaved changes. Are you sure you want to leave?"
+) {
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {

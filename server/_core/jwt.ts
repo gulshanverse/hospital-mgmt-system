@@ -43,7 +43,9 @@ const getRefreshTokenExpiry = (): number => {
 const parseExpiry = (expiry: string): number => {
   const match = expiry.match(/^(\d+)([smhd])$/);
   if (!match) {
-    throw new Error(`Invalid expiry format: ${expiry}. Use format like "15m", "1h", "7d"`);
+    throw new Error(
+      `Invalid expiry format: ${expiry}. Use format like "15m", "1h", "7d"`
+    );
   }
 
   const value = parseInt(match[1], 10);
@@ -117,7 +119,9 @@ export async function verifyRefreshToken(token: string): Promise<JWTPayload> {
 /**
  * Extract token from Authorization header
  */
-export function extractTokenFromHeader(authHeader: string | undefined): string | null {
+export function extractTokenFromHeader(
+  authHeader: string | undefined
+): string | null {
   if (!authHeader) return null;
   if (!authHeader.startsWith("Bearer ")) return null;
   return authHeader.slice(7);
@@ -126,7 +130,10 @@ export function extractTokenFromHeader(authHeader: string | undefined): string |
 /**
  * Sign a general payload using the access secret
  */
-export async function signGeneralToken(payload: Record<string, any>, expiry: string): Promise<string> {
+export async function signGeneralToken(
+  payload: Record<string, any>,
+  expiry: string
+): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const expirySec = parseExpiry(expiry);
   return await new SignJWT(payload)
@@ -139,7 +146,9 @@ export async function signGeneralToken(payload: Record<string, any>, expiry: str
 /**
  * Verify a general token using the access secret
  */
-export async function verifyGeneralToken(token: string): Promise<Record<string, any>> {
+export async function verifyGeneralToken(
+  token: string
+): Promise<Record<string, any>> {
   const { payload } = await jwtVerify(token, getAccessSecret(), {
     algorithms: ["HS256"],
   });

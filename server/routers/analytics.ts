@@ -61,7 +61,10 @@ export const analyticsRouter = router({
     const allInvoices = await dbInstance.select().from(invoices);
     const totalRevenue = allInvoices
       .filter((inv: any) => inv.status === "paid")
-      .reduce((sum: number, inv: any) => sum + parseFloat(inv.totalAmount || 0), 0);
+      .reduce(
+        (sum: number, inv: any) => sum + parseFloat(inv.totalAmount || 0),
+        0
+      );
 
     return {
       totalPatients: totalPatients.length,

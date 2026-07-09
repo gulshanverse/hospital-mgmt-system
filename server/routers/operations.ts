@@ -1,9 +1,23 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure, adminProcedure, nurseProcedure, pharmacistProcedure } from "../_core/trpc";
+import {
+  router,
+  protectedProcedure,
+  adminProcedure,
+  nurseProcedure,
+  pharmacistProcedure,
+} from "../_core/trpc";
 import * as db from "../db";
 import { eq, desc, sql } from "drizzle-orm";
-import { beds, admissions, pharmacyInventory, invoices, invoiceItems, wards, patients } from "../../drizzle/schema";
+import {
+  beds,
+  admissions,
+  pharmacyInventory,
+  invoices,
+  invoiceItems,
+  wards,
+  patients,
+} from "../../drizzle/schema";
 
 // ============================================================================
 // BED MANAGEMENT
@@ -76,7 +90,10 @@ export const bedRouter = router({
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
-      await dbInstance.update(beds).set({ status: input.status }).where(eq(beds.id, input.bedId));
+      await dbInstance
+        .update(beds)
+        .set({ status: input.status })
+        .where(eq(beds.id, input.bedId));
       return { success: true };
     }),
 });
@@ -115,7 +132,10 @@ export const admissionRouter = router({
       });
 
       // Update bed status to occupied
-      await dbInstance.update(beds).set({ status: "occupied" }).where(eq(beds.id, input.bedId));
+      await dbInstance
+        .update(beds)
+        .set({ status: "occupied" })
+        .where(eq(beds.id, input.bedId));
 
       // Update patient status to admitted
       await db.updatePatient(input.patientId, { status: "Admitted" });
@@ -124,7 +144,12 @@ export const admissionRouter = router({
     }),
 
   discharge: nurseProcedure
-    .input(z.object({ admissionId: z.number(), dischargeSummary: z.string().optional() }))
+    .input(
+      z.object({
+        admissionId: z.number(),
+        dischargeSummary: z.string().optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
 
@@ -139,7 +164,10 @@ export const admissionRouter = router({
         .limit(1);
 
       if (!admission) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Admission not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Admission not found",
+        });
       }
 
       // Update admission to discharged (store discharge summary in notes)
@@ -193,7 +221,9 @@ export const pharmacyRouter = router({
       z.object({
         inventoryId: z.number(),
         quantity: z.number(),
-        status: z.enum(["available", "low_stock", "expired", "discontinued"]).optional(),
+        status: z
+          .enum(["available", "low_stock", "expired", "discontinued"])
+          .optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -261,7 +291,13 @@ export const billingRouter = router({
         appointmentId: z.number().optional(),
         items: z.array(
           z.object({
-            itemType: z.enum(["consultation", "procedure", "medication", "room_charge", "lab_charge"]),
+            itemType: z.enum([
+              "consultation",
+              "procedure",
+              "medication",
+              "room_charge",
+              "lab_charge",
+            ]),
             description: z.string(),
             quantity: z.number().default(1),
             unitPrice: z.number(),
@@ -277,7 +313,10 @@ export const billingRouter = router({
       if (!dbInstance) throw new Error("Database not available");
 
       const invoiceNumber = `INV-${Date.now()}`;
-      const totalAmount = input.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+      const totalAmount = input.items.reduce(
+        (sum, item) => sum + item.quantity * item.unitPrice,
+        0
+      );
 
       const [invoice] = await db.createInvoice({
         invoiceNumber,
@@ -366,7 +405,11 @@ export const billingRouter = router({
     .input(z.object({ invoiceId: z.number() }))
     .query(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
 
       const invoice = await dbInstance
         .select({
@@ -394,7 +437,10 @@ export const billingRouter = router({
         .limit(1);
 
       if (invoice.length === 0) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invoice not found",
+        });
       }
 
       const items = await dbInstance
@@ -425,7 +471,10 @@ export const billingRouter = router({
         updateData.paidAmount = input.paidAmount.toString();
       }
 
-      await dbInstance.update(invoices).set(updateData).where(eq(invoices.id, input.invoiceId));
+      await dbInstance
+        .update(invoices)
+        .set(updateData)
+        .where(eq(invoices.id, input.invoiceId));
 
       return { success: true };
     }),

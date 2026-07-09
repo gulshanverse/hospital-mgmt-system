@@ -22,7 +22,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 export interface ColumnDef<T> {
   key: string;
@@ -65,18 +70,24 @@ export function DataTable<T extends Record<string, any>>({
 }: DataTableProps<T>) {
   // Search & Filter State
   const [globalSearch, setGlobalSearch] = React.useState("");
-  const [columnSearch, setColumnSearch] = React.useState<Record<string, string>>({});
-  const [selectedFilters, setSelectedFilters] = React.useState<Record<string, string>>({});
-  const [visibleColumns, setVisibleColumns] = React.useState<Record<string, boolean>>(() =>
-    columns.reduce((acc, col) => ({ ...acc, [col.key]: true }), {})
-  );
+  const [columnSearch, setColumnSearch] = React.useState<
+    Record<string, string>
+  >({});
+  const [selectedFilters, setSelectedFilters] = React.useState<
+    Record<string, string>
+  >({});
+  const [visibleColumns, setVisibleColumns] = React.useState<
+    Record<string, boolean>
+  >(() => columns.reduce((acc, col) => ({ ...acc, [col.key]: true }), {}));
 
   // Sorting State
   const [sortKey, setSortKey] = React.useState<string | null>(null);
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc");
 
   // Selection State
-  const [selectedRows, setSelectedRows] = React.useState<Record<number, boolean>>({});
+  const [selectedRows, setSelectedRows] = React.useState<
+    Record<number, boolean>
+  >({});
 
   // Pagination State
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -90,7 +101,7 @@ export function DataTable<T extends Record<string, any>>({
 
   // Toggle Column Visibility
   const toggleColumnVisibility = (key: string) => {
-    setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+    setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   // Sorting Trigger
@@ -109,18 +120,19 @@ export function DataTable<T extends Record<string, any>>({
 
   // CSV Export Utility
   const handleExportCSV = () => {
-    const activeCols = columns.filter((col) => visibleColumns[col.key]);
-    const headers = activeCols.map((col) => col.header).join(",");
-    const rows = filteredData.map((row) =>
+    const activeCols = columns.filter(col => visibleColumns[col.key]);
+    const headers = activeCols.map(col => col.header).join(",");
+    const rows = filteredData.map(row =>
       activeCols
-        .map((col) => {
+        .map(col => {
           const val = row[col.key];
           return `"${String(val ?? "").replace(/"/g, '""')}"`;
         })
         .join(",")
     );
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    const csvContent =
+      "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -133,12 +145,14 @@ export function DataTable<T extends Record<string, any>>({
   // Filtering Logic
   const filteredData = React.useMemo(() => {
     return data
-      .filter((row) => {
+      .filter(row => {
         // Global Search
         if (globalSearch) {
           const searchLower = globalSearch.toLowerCase();
-          const match = Object.values(row).some((val) =>
-            String(val ?? "").toLowerCase().includes(searchLower)
+          const match = Object.values(row).some(val =>
+            String(val ?? "")
+              .toLowerCase()
+              .includes(searchLower)
           );
           if (!match) return false;
         }
@@ -172,7 +186,9 @@ export function DataTable<T extends Record<string, any>>({
 
         const aStr = String(aVal ?? "").toLowerCase();
         const bStr = String(bVal ?? "").toLowerCase();
-        return sortOrder === "asc" ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+        return sortOrder === "asc"
+          ? aStr.localeCompare(bStr)
+          : bStr.localeCompare(aStr);
       });
   }, [data, globalSearch, columnSearch, selectedFilters, sortKey, sortOrder]);
 
@@ -196,13 +212,13 @@ export function DataTable<T extends Record<string, any>>({
   };
 
   const handleSelectRow = (idx: number, checked: boolean) => {
-    setSelectedRows((prev) => ({ ...prev, [idx]: checked }));
+    setSelectedRows(prev => ({ ...prev, [idx]: checked }));
   };
 
   const getSelectedObjects = () => {
     return Object.keys(selectedRows)
-      .filter((k) => selectedRows[Number(k)])
-      .map((k) => paginatedData[Number(k)]);
+      .filter(k => selectedRows[Number(k)])
+      .map(k => paginatedData[Number(k)]);
   };
 
   const isAllSelected =
@@ -222,26 +238,34 @@ export function DataTable<T extends Record<string, any>>({
           <Input
             placeholder="Global search records..."
             value={globalSearch}
-            onChange={(e) => setGlobalSearch(e.target.value)}
+            onChange={e => setGlobalSearch(e.target.value)}
             className="pl-9"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Custom Filters */}
-          {customFilters.map((f) => (
-            <div key={f.key} className="flex items-center gap-1.5 border border-border/80 rounded-lg px-2 py-1 bg-background text-xs shadow-2xs">
+          {customFilters.map(f => (
+            <div
+              key={f.key}
+              className="flex items-center gap-1.5 border border-border/80 rounded-lg px-2 py-1 bg-background text-xs shadow-2xs"
+            >
               <Filter className="h-3 w-3 text-muted-foreground" />
-              <span className="font-medium text-muted-foreground">{f.label}:</span>
+              <span className="font-medium text-muted-foreground">
+                {f.label}:
+              </span>
               <select
                 value={selectedFilters[f.key] || ""}
-                onChange={(e) =>
-                  setSelectedFilters((prev) => ({ ...prev, [f.key]: e.target.value }))
+                onChange={e =>
+                  setSelectedFilters(prev => ({
+                    ...prev,
+                    [f.key]: e.target.value,
+                  }))
                 }
                 className="bg-transparent border-0 font-medium outline-hidden pr-2 text-foreground focus:ring-0 focus:outline-hidden cursor-pointer"
               >
                 <option value="">All</option>
-                {f.options.map((opt) => (
+                {f.options.map(opt => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -265,7 +289,7 @@ export function DataTable<T extends Record<string, any>>({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              {columns.map((col) => (
+              {columns.map(col => (
                 <DropdownMenuCheckboxItem
                   key={col.key}
                   checked={visibleColumns[col.key]}
@@ -304,37 +328,50 @@ export function DataTable<T extends Record<string, any>>({
       <div className="rounded-xl border bg-card shadow-xs overflow-hidden">
         <div className="w-full overflow-x-auto relative">
           <table className="w-full caption-bottom text-sm border-collapse">
-            <thead className={cn(stickyHeader && "sticky top-0 bg-card z-10 border-b shadow-2xs")}>
+            <thead
+              className={cn(
+                stickyHeader && "sticky top-0 bg-card z-10 border-b shadow-2xs"
+              )}
+            >
               <tr className="border-b transition-colors hover:bg-transparent">
                 {/* Bulk Select Checkbox Header */}
                 <th className="h-11 px-4 text-left align-middle font-medium w-12">
                   <Checkbox
                     checked={isAllSelected}
-                    onCheckedChange={(checked) => handleSelectAll(checked === true)}
+                    onCheckedChange={checked =>
+                      handleSelectAll(checked === true)
+                    }
                     aria-label="Select all rows"
                   />
                 </th>
                 {columns
-                  .filter((col) => visibleColumns[col.key])
-                  .map((col) => (
+                  .filter(col => visibleColumns[col.key])
+                  .map(col => (
                     <th
                       key={col.key}
                       onClick={() => col.sortable && handleSort(col.key)}
                       className={cn(
                         "h-11 px-4 text-left align-middle font-bold text-xs uppercase tracking-wider text-muted-foreground whitespace-nowrap select-none",
-                        col.sortable && "cursor-pointer hover:bg-secondary/40 hover:text-foreground",
-                        col.sticky === "left" && "sticky left-0 bg-card z-20 border-r",
-                        col.sticky === "right" && "sticky right-0 bg-card z-20 border-l"
+                        col.sortable &&
+                          "cursor-pointer hover:bg-secondary/40 hover:text-foreground",
+                        col.sticky === "left" &&
+                          "sticky left-0 bg-card z-20 border-r",
+                        col.sticky === "right" &&
+                          "sticky right-0 bg-card z-20 border-l"
                       )}
                     >
                       <div className="flex items-center gap-1">
                         {col.header}
-                        {col.sortable && sortKey === col.key && sortOrder === "asc" && (
-                          <ChevronUp className="h-3.5 w-3.5 text-primary" />
-                        )}
-                        {col.sortable && sortKey === col.key && sortOrder === "desc" && (
-                          <ChevronDown className="h-3.5 w-3.5 text-primary" />
-                        )}
+                        {col.sortable &&
+                          sortKey === col.key &&
+                          sortOrder === "asc" && (
+                            <ChevronUp className="h-3.5 w-3.5 text-primary" />
+                          )}
+                        {col.sortable &&
+                          sortKey === col.key &&
+                          sortOrder === "desc" && (
+                            <ChevronDown className="h-3.5 w-3.5 text-primary" />
+                          )}
                         {col.sortable && sortKey !== col.key && (
                           <ChevronsUpDown className="h-3.5 w-3.5 opacity-40 group-hover:opacity-100" />
                         )}
@@ -352,7 +389,7 @@ export function DataTable<T extends Record<string, any>>({
                       <Skeleton className="h-4 w-4 rounded-xs" />
                     </td>
                     {columns
-                      .filter((col) => visibleColumns[col.key])
+                      .filter(col => visibleColumns[col.key])
                       .map((_, cIdx) => (
                         <td key={cIdx} className="p-4">
                           <Skeleton className="h-4 w-28" />
@@ -363,12 +400,16 @@ export function DataTable<T extends Record<string, any>>({
               ) : paginatedData.length === 0 ? (
                 // Empty State Row
                 <tr>
-                  <td colSpan={columns.length + 1} className="h-72 text-center p-8">
+                  <td
+                    colSpan={columns.length + 1}
+                    className="h-72 text-center p-8"
+                  >
                     <Empty>
                       <EmptyHeader>
                         <EmptyTitle>No records found</EmptyTitle>
                         <EmptyDescription>
-                          Try adjusting your filters or search keywords to locate details.
+                          Try adjusting your filters or search keywords to
+                          locate details.
                         </EmptyDescription>
                       </EmptyHeader>
                     </Empty>
@@ -387,13 +428,15 @@ export function DataTable<T extends Record<string, any>>({
                     <td className="p-4 align-middle w-12">
                       <Checkbox
                         checked={!!selectedRows[rowIdx]}
-                        onCheckedChange={(checked) => handleSelectRow(rowIdx, checked === true)}
+                        onCheckedChange={checked =>
+                          handleSelectRow(rowIdx, checked === true)
+                        }
                         aria-label={`Select row ${rowIdx}`}
                       />
                     </td>
                     {columns
-                      .filter((col) => visibleColumns[col.key])
-                      .map((col) => {
+                      .filter(col => visibleColumns[col.key])
+                      .map(col => {
                         const cellVal = row[col.key];
                         return (
                           <td
@@ -406,7 +449,9 @@ export function DataTable<T extends Record<string, any>>({
                                 "sticky right-0 bg-background hover:bg-secondary/30 z-10 border-l"
                             )}
                           >
-                            {col.render ? col.render(row) : String(cellVal ?? "-")}
+                            {col.render
+                              ? col.render(row)
+                              : String(cellVal ?? "-")}
                           </td>
                         );
                       })}
@@ -423,21 +468,23 @@ export function DataTable<T extends Record<string, any>>({
             <span>Rows per page:</span>
             <select
               value={pageSize}
-              onChange={(e) => {
+              onChange={e => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
               className="bg-transparent border-0 font-medium py-0.5 text-foreground outline-hidden focus:ring-0 focus:outline-hidden cursor-pointer"
             >
-              {[5, 10, 20, 50].map((size) => (
+              {[5, 10, 20, 50].map(size => (
                 <option key={size} value={size}>
                   {size}
                 </option>
               ))}
             </select>
             <span className="ml-4">
-              Showing {filteredData.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
-              {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} records
+              Showing{" "}
+              {filteredData.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}{" "}
+              to {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
+              {filteredData.length} records
             </span>
           </div>
 
@@ -445,7 +492,7 @@ export function DataTable<T extends Record<string, any>>({
             <Button
               variant="outline"
               size="icon-sm"
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -456,7 +503,7 @@ export function DataTable<T extends Record<string, any>>({
             <Button
               variant="outline"
               size="icon-sm"
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages || totalPages === 0}
             >
               <ChevronRight className="h-4 w-4" />

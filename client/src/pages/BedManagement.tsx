@@ -3,7 +3,12 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Grid3x3, Plus } from "lucide-react";
@@ -12,7 +17,8 @@ import { toast } from "sonner";
 
 export default function BedManagement() {
   const { data: allBeds, refetch: refetchBeds } = trpc.bed.list.useQuery();
-  const { data: bedOccupancy, refetch: refetchOccupancy } = trpc.analytics.getBedOccupancy.useQuery();
+  const { data: bedOccupancy, refetch: refetchOccupancy } =
+    trpc.analytics.getBedOccupancy.useQuery();
 
   // Queries for Admission Form
   const { data: patientsList } = trpc.patient.list.useQuery();
@@ -31,7 +37,9 @@ export default function BedManagement() {
   // Edit Bed Status States
   const [selectedBed, setSelectedBed] = useState<any>(null);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [bedStatus, setBedStatus] = useState<"available" | "occupied" | "cleaning" | "maintenance">("available");
+  const [bedStatus, setBedStatus] = useState<
+    "available" | "occupied" | "cleaning" | "maintenance"
+  >("available");
 
   const openStatusEdit = (bed: any) => {
     setSelectedBed(bed);
@@ -52,7 +60,7 @@ export default function BedManagement() {
       refetchBeds();
       refetchOccupancy();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to admit patient");
     },
   });
@@ -84,7 +92,7 @@ export default function BedManagement() {
       refetchBeds();
       refetchOccupancy();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to update bed status");
     },
   });
@@ -98,10 +106,13 @@ export default function BedManagement() {
   };
 
   const filteredPatients = patientSearch
-    ? patientsList?.filter((p: any) =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
-        p.phone?.includes(patientSearch) ||
-        p.patientCode?.toLowerCase().includes(patientSearch.toLowerCase())
+    ? patientsList?.filter(
+        (p: any) =>
+          `${p.firstName} ${p.lastName}`
+            .toLowerCase()
+            .includes(patientSearch.toLowerCase()) ||
+          p.phone?.includes(patientSearch) ||
+          p.patientCode?.toLowerCase().includes(patientSearch.toLowerCase())
       ) || []
     : [];
 
@@ -141,7 +152,9 @@ export default function BedManagement() {
             {Object.entries(bedOccupancy).map(([status, count]) => (
               <Card key={status} className="p-6 text-center">
                 <p className="text-3xl font-bold">{count}</p>
-                <p className="text-sm text-gray-600 capitalize mt-2">{status}</p>
+                <p className="text-sm text-gray-600 capitalize mt-2">
+                  {status}
+                </p>
               </Card>
             ))}
           </div>
@@ -152,7 +165,9 @@ export default function BedManagement() {
             <TabsTrigger value="all">All Beds</TabsTrigger>
             <TabsTrigger value="available">Available</TabsTrigger>
             <TabsTrigger value="occupied">Occupied</TabsTrigger>
-            <TabsTrigger value="maintenance">Maintenance & Cleaning</TabsTrigger>
+            <TabsTrigger value="maintenance">
+              Maintenance & Cleaning
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
@@ -185,7 +200,9 @@ export default function BedManagement() {
           <TabsContent value="available" className="mt-6">
             <Card className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {allBeds && allBeds.filter((b: any) => b.status === "available").length > 0 ? (
+                {allBeds &&
+                allBeds.filter((b: any) => b.status === "available").length >
+                  0 ? (
                   allBeds
                     .filter((b: any) => b.status === "available")
                     .map((bed: any) => (
@@ -211,7 +228,9 @@ export default function BedManagement() {
           <TabsContent value="occupied" className="mt-6">
             <Card className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {allBeds && allBeds.filter((b: any) => b.status === "occupied").length > 0 ? (
+                {allBeds &&
+                allBeds.filter((b: any) => b.status === "occupied").length >
+                  0 ? (
                   allBeds
                     .filter((b: any) => b.status === "occupied")
                     .map((bed: any) => (
@@ -237,9 +256,14 @@ export default function BedManagement() {
           <TabsContent value="maintenance" className="mt-6">
             <Card className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {allBeds && allBeds.filter((b: any) => ["maintenance", "cleaning"].includes(b.status)).length > 0 ? (
+                {allBeds &&
+                allBeds.filter((b: any) =>
+                  ["maintenance", "cleaning"].includes(b.status)
+                ).length > 0 ? (
                   allBeds
-                    .filter((b: any) => ["maintenance", "cleaning"].includes(b.status))
+                    .filter((b: any) =>
+                      ["maintenance", "cleaning"].includes(b.status)
+                    )
                     .map((bed: any) => (
                       <div
                         key={bed.id}
@@ -271,11 +295,11 @@ export default function BedManagement() {
           <DialogHeader>
             <DialogTitle>Admit Patient to Bed</DialogTitle>
           </DialogHeader>
-          {(!patientsList || patientsList.length === 0) ? (
+          {!patientsList || patientsList.length === 0 ? (
             <div className="p-4 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-lg text-sm text-center">
               No registered patients found. Please add a patient first.
             </div>
-          ) : (!availableBeds || availableBeds.length === 0) ? (
+          ) : !availableBeds || availableBeds.length === 0 ? (
             <div className="p-4 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-lg text-sm text-center">
               No available beds found. Please clean or discharge a bed first.
             </div>
@@ -283,7 +307,9 @@ export default function BedManagement() {
             <div className="space-y-4">
               {/* Patient Autocomplete */}
               <div className="space-y-1 relative">
-                <label className="text-xs text-gray-500 font-semibold px-1">Patient</label>
+                <label className="text-xs text-gray-500 font-semibold px-1">
+                  Patient
+                </label>
                 {selectedPatient ? (
                   <div className="flex items-center justify-between p-2.5 border rounded-lg bg-blue-50 border-blue-200">
                     <div>
@@ -291,7 +317,10 @@ export default function BedManagement() {
                         {selectedPatient.firstName} {selectedPatient.lastName}
                       </p>
                       <p className="text-xs text-blue-700">
-                        {selectedPatient.patientCode} {selectedPatient.phone ? `• ${selectedPatient.phone}` : ""}
+                        {selectedPatient.patientCode}{" "}
+                        {selectedPatient.phone
+                          ? `• ${selectedPatient.phone}`
+                          : ""}
                       </p>
                     </div>
                     <Button
@@ -312,7 +341,7 @@ export default function BedManagement() {
                     <Input
                       placeholder="Search patient by name, code or phone..."
                       value={patientSearch}
-                      onChange={(e) => setPatientSearch(e.target.value)}
+                      onChange={e => setPatientSearch(e.target.value)}
                     />
                     {patientSearch && filteredPatients.length > 0 && (
                       <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground border rounded-md shadow-lg max-h-40 overflow-y-auto divide-y divide-border">
@@ -326,7 +355,9 @@ export default function BedManagement() {
                               setPatientSearch("");
                             }}
                           >
-                            <div className="font-semibold">{p.firstName} {p.lastName}</div>
+                            <div className="font-semibold">
+                              {p.firstName} {p.lastName}
+                            </div>
                             <div className="text-xs text-muted-foreground">
                               {p.patientCode} {p.phone ? `• ${p.phone}` : ""}
                             </div>
@@ -345,10 +376,12 @@ export default function BedManagement() {
 
               {/* Bed Selection */}
               <div className="space-y-1">
-                <label className="text-xs text-gray-500 font-semibold px-1">Select Available Bed</label>
+                <label className="text-xs text-gray-500 font-semibold px-1">
+                  Select Available Bed
+                </label>
                 <select
                   value={selectedBedId}
-                  onChange={(e) => setSelectedBedId(e.target.value)}
+                  onChange={e => setSelectedBedId(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background"
                 >
                   <option value="">Select a Bed</option>
@@ -362,10 +395,12 @@ export default function BedManagement() {
 
               {/* Department Selection */}
               <div className="space-y-1">
-                <label className="text-xs text-gray-500 font-semibold px-1">Department</label>
+                <label className="text-xs text-gray-500 font-semibold px-1">
+                  Department
+                </label>
                 <select
                   value={selectedDepartmentId}
-                  onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                  onChange={e => setSelectedDepartmentId(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background"
                 >
                   <option value="">Select a Department</option>
@@ -378,25 +413,33 @@ export default function BedManagement() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-500 font-semibold px-1">Reason for Admission</label>
+                <label className="text-xs text-gray-500 font-semibold px-1">
+                  Reason for Admission
+                </label>
                 <Input
                   placeholder="e.g. Surgery recovery, observation"
                   value={admissionReason}
-                  onChange={(e) => setAdmissionReason(e.target.value)}
+                  onChange={e => setAdmissionReason(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-500 font-semibold px-1">Notes</label>
+                <label className="text-xs text-gray-500 font-semibold px-1">
+                  Notes
+                </label>
                 <textarea
                   placeholder="Additional observations, notes..."
                   value={admissionNotes}
-                  onChange={(e) => setAdmissionNotes(e.target.value)}
+                  onChange={e => setAdmissionNotes(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background min-h-[80px]"
                 />
               </div>
 
-              <Button onClick={handleAdmit} disabled={admitMutation.isPending} className="w-full">
+              <Button
+                onClick={handleAdmit}
+                disabled={admitMutation.isPending}
+                className="w-full"
+              >
                 {admitMutation.isPending ? "Admitting..." : "Admit Patient"}
               </Button>
             </div>
@@ -413,13 +456,22 @@ export default function BedManagement() {
           {selectedBed && (
             <div className="space-y-4">
               <div className="p-3 border rounded-lg bg-gray-50 text-sm">
-                <p><strong>Bed Number:</strong> {selectedBed.bedNumber}</p>
-                <p><strong>Ward:</strong> {selectedBed.wardName || "Ward"}</p>
-                <p><strong>Current Status:</strong> <span className="capitalize">{selectedBed.status}</span></p>
+                <p>
+                  <strong>Bed Number:</strong> {selectedBed.bedNumber}
+                </p>
+                <p>
+                  <strong>Ward:</strong> {selectedBed.wardName || "Ward"}
+                </p>
+                <p>
+                  <strong>Current Status:</strong>{" "}
+                  <span className="capitalize">{selectedBed.status}</span>
+                </p>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-500 font-semibold px-1">Update Status To</label>
+                <label className="text-xs text-gray-500 font-semibold px-1">
+                  Update Status To
+                </label>
                 <select
                   value={bedStatus}
                   onChange={(e: any) => setBedStatus(e.target.value)}
@@ -432,7 +484,11 @@ export default function BedManagement() {
                 </select>
               </div>
 
-              <Button onClick={handleStatusUpdate} disabled={statusMutation.isPending} className="w-full">
+              <Button
+                onClick={handleStatusUpdate}
+                disabled={statusMutation.isPending}
+                className="w-full"
+              >
                 {statusMutation.isPending ? "Updating..." : "Update Status"}
               </Button>
             </div>

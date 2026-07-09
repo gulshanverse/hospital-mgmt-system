@@ -32,8 +32,8 @@ export async function createContext(
 
         // Load user from database
         const dbUser = await authDb.findUserById(payload.userId);
-        
-        // Verify if the user has any active refresh tokens. 
+
+        // Verify if the user has any active refresh tokens.
         // If not, it means they have logged out (global logout).
         const db = await getDb();
         const activeTokens = await db!
@@ -46,7 +46,7 @@ export async function createContext(
             )
           )
           .limit(1);
-        
+
         if (dbUser && dbUser.isActive && activeTokens.length > 0) {
           user = dbUser;
         }

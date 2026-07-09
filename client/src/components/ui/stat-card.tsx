@@ -37,7 +37,12 @@ export function StatCard({
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </p>
-        <div className={cn("p-2 rounded-lg bg-secondary/50 group-hover:bg-secondary transition-colors duration-150", iconColor)}>
+        <div
+          className={cn(
+            "p-2 rounded-lg bg-secondary/50 group-hover:bg-secondary transition-colors duration-150",
+            iconColor
+          )}
+        >
           <Icon className="size-5 shrink-0" />
         </div>
       </div>

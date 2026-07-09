@@ -3,7 +3,13 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Stethoscope, Plus, Edit2, Trash2, RotateCcw } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -32,7 +38,11 @@ export default function DoctorManagement() {
   const [showDeleted, setShowDeleted] = useState(false);
 
   // Queries
-  const { data: doctorsList, isLoading, refetch } = trpc.doctor.list.useQuery({ includeDeleted: showDeleted });
+  const {
+    data: doctorsList,
+    isLoading,
+    refetch,
+  } = trpc.doctor.list.useQuery({ includeDeleted: showDeleted });
 
   const updateMutation = trpc.doctor.update.useMutation({
     onSuccess: () => {
@@ -40,7 +50,7 @@ export default function DoctorManagement() {
       setIsEditOpen(false);
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to update doctor profile");
     },
   });
@@ -50,7 +60,7 @@ export default function DoctorManagement() {
       toast.success("Doctor profile soft-deleted successfully");
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to delete doctor profile");
     },
   });
@@ -60,7 +70,7 @@ export default function DoctorManagement() {
       toast.success("Doctor profile restored successfully");
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to restore doctor profile");
     },
   });
@@ -71,7 +81,9 @@ export default function DoctorManagement() {
     setSuperSpecialty(doc.superSpecialty || "");
     setQualification(doc.qualification || "");
     setExperience(doc.experience ? doc.experience.toString() : "");
-    setConsultationFees(doc.consultationFees ? parseFloat(doc.consultationFees).toString() : "50");
+    setConsultationFees(
+      doc.consultationFees ? parseFloat(doc.consultationFees).toString() : "50"
+    );
     setLicenseNumber(doc.licenseNumber || "");
     setIsAvailable(doc.isAvailable);
     setVerificationStatus(doc.verificationStatus);
@@ -89,7 +101,9 @@ export default function DoctorManagement() {
       superSpecialty: superSpecialty || undefined,
       qualification: qualification || undefined,
       experience: experience ? parseInt(experience) : undefined,
-      consultationFees: consultationFees ? parseFloat(consultationFees) : undefined,
+      consultationFees: consultationFees
+        ? parseFloat(consultationFees)
+        : undefined,
       licenseNumber: licenseNumber || undefined,
       isAvailable,
       verificationStatus,
@@ -98,7 +112,11 @@ export default function DoctorManagement() {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to soft-delete this doctor registry profile?")) {
+    if (
+      window.confirm(
+        "Are you sure you want to soft-delete this doctor registry profile?"
+      )
+    ) {
       deleteMutation.mutate({ id });
     }
   };
@@ -140,8 +158,11 @@ export default function DoctorManagement() {
       header: "Clinician",
       sortable: true,
       sticky: "left",
-      render: (row) => (
-        <Link href={`/doctors/${row.id}`} className="flex items-center gap-2 hover:underline cursor-pointer">
+      render: row => (
+        <Link
+          href={`/doctors/${row.id}`}
+          className="flex items-center gap-2 hover:underline cursor-pointer"
+        >
           <Stethoscope className="size-4 text-primary shrink-0" />
           <span className="font-semibold text-foreground">{row.name}</span>
         </Link>
@@ -151,11 +172,13 @@ export default function DoctorManagement() {
       key: "specialty",
       header: "Specialization",
       sortable: true,
-      render: (row) => (
+      render: row => (
         <div className="space-y-0.5">
           <p className="text-xs font-semibold">{row.specialty}</p>
           {row.superSpecialty && (
-            <p className="text-[10px] text-muted-foreground">{row.superSpecialty}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {row.superSpecialty}
+            </p>
           )}
         </div>
       ),
@@ -165,12 +188,13 @@ export default function DoctorManagement() {
       key: "consultationFees",
       header: "Fees",
       sortable: true,
-      render: (row) => `$${row.consultationFees ? parseFloat(row.consultationFees).toFixed(2) : "0.00"}`,
+      render: row =>
+        `$${row.consultationFees ? parseFloat(row.consultationFees).toFixed(2) : "0.00"}`,
     },
     {
       key: "status",
       header: "Status",
-      render: (row) => (
+      render: row => (
         <Badge variant="outline" className={getStatusColor(row.status)}>
           {row.status}
         </Badge>
@@ -179,8 +203,11 @@ export default function DoctorManagement() {
     {
       key: "verificationStatus",
       header: "Credentials",
-      render: (row) => (
-        <Badge variant="outline" className={getVerificationStatusColor(row.verificationStatus)}>
+      render: row => (
+        <Badge
+          variant="outline"
+          className={getVerificationStatusColor(row.verificationStatus)}
+        >
           {row.verificationStatus.replace("_", " ")}
         </Badge>
       ),
@@ -188,7 +215,7 @@ export default function DoctorManagement() {
     {
       key: "actions",
       header: "Actions",
-      render: (row) => (
+      render: row => (
         <div className="flex gap-2">
           {!row.isDeleted && (
             <Button
@@ -236,7 +263,8 @@ export default function DoctorManagement() {
               Doctor Registry
             </h1>
             <p className="text-sm text-muted-foreground mt-1.5">
-              Manage clinical specializations, licenses compliance, and status rosters.
+              Manage clinical specializations, licenses compliance, and status
+              rosters.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -247,7 +275,10 @@ export default function DoctorManagement() {
             >
               {showDeleted ? "Hide Soft-Deleted" : "Show Soft-Deleted"}
             </Button>
-            <Button onClick={() => setIsCreateOpen(true)} className="gap-2 shadow-xs">
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              className="gap-2 shadow-xs"
+            >
               <Plus className="w-4 h-4" />
               Register Doctor
             </Button>
@@ -264,9 +295,13 @@ export default function DoctorManagement() {
             bulkActions={[
               {
                 label: "Batch Delete Selected",
-                action: (rows) => {
-                  if (window.confirm(`Are you sure you want to soft-delete ${rows.length} clinician records?`)) {
-                    rows.forEach((row) => deleteMutation.mutate({ id: row.id }));
+                action: rows => {
+                  if (
+                    window.confirm(
+                      `Are you sure you want to soft-delete ${rows.length} clinician records?`
+                    )
+                  ) {
+                    rows.forEach(row => deleteMutation.mutate({ id: row.id }));
                   }
                 },
                 variant: "destructive",
@@ -289,7 +324,10 @@ export default function DoctorManagement() {
                 label: "Verification Status",
                 options: [
                   { label: "Draft", value: "Draft" },
-                  { label: "Pending Verification", value: "Pending_Verification" },
+                  {
+                    label: "Pending Verification",
+                    value: "Pending_Verification",
+                  },
                   { label: "Under Review", value: "Under_Review" },
                   { label: "Verified", value: "Verified" },
                   { label: "Rejected", value: "Rejected" },
@@ -326,52 +364,90 @@ export default function DoctorManagement() {
           <DialogHeader>
             <DialogTitle>Edit Clinician Registry Record</DialogTitle>
             <DialogDescription>
-              Modify qualifications, consultation fees, or verification lifecycle status.
+              Modify qualifications, consultation fees, or verification
+              lifecycle status.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Specialty</label>
-                <Input value={specialty} onChange={(e) => setSpecialty(e.target.value)} required />
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Specialty
+                </label>
+                <Input
+                  value={specialty}
+                  onChange={e => setSpecialty(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Super Specialty</label>
-                <Input value={superSpecialty} onChange={(e) => setSuperSpecialty(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground font-semibold">Qualifications</label>
-              <Input value={qualification} onChange={(e) => setQualification(e.target.value)} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Experience (Years)</label>
-                <Input type="number" value={experience} onChange={(e) => setExperience(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Consultation Fee ($)</label>
-                <Input type="number" value={consultationFees} onChange={(e) => setConsultationFees(e.target.value)} />
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Super Specialty
+                </label>
+                <Input
+                  value={superSpecialty}
+                  onChange={e => setSuperSpecialty(e.target.value)}
+                />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground font-semibold">License Number</label>
-              <Input value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} />
+              <label className="text-xs text-muted-foreground font-semibold">
+                Qualifications
+              </label>
+              <Input
+                value={qualification}
+                onChange={e => setQualification(e.target.value)}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Verification Lifecycle</label>
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Experience (Years)
+                </label>
+                <Input
+                  type="number"
+                  value={experience}
+                  onChange={e => setExperience(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Consultation Fee ($)
+                </label>
+                <Input
+                  type="number"
+                  value={consultationFees}
+                  onChange={e => setConsultationFees(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground font-semibold">
+                License Number
+              </label>
+              <Input
+                value={licenseNumber}
+                onChange={e => setLicenseNumber(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Verification Lifecycle
+                </label>
                 <select
                   value={verificationStatus}
                   onChange={(e: any) => setVerificationStatus(e.target.value)}
                   className="w-full h-9 border rounded-lg px-3 py-1 text-sm bg-background"
                 >
                   <option value="Draft">Draft</option>
-                  <option value="Pending_Verification">Pending Verification</option>
+                  <option value="Pending_Verification">
+                    Pending Verification
+                  </option>
                   <option value="Under_Review">Under Review</option>
                   <option value="Verified">Verified</option>
                   <option value="Rejected">Rejected</option>
@@ -381,7 +457,9 @@ export default function DoctorManagement() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Roster Status</label>
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Roster Status
+                </label>
                 <select
                   value={status}
                   onChange={(e: any) => setStatus(e.target.value)}
@@ -401,18 +479,30 @@ export default function DoctorManagement() {
                 type="checkbox"
                 id="edit-avail"
                 checked={isAvailable}
-                onChange={(e) => setIsAvailable(e.target.checked)}
+                onChange={e => setIsAvailable(e.target.checked)}
               />
-              <label htmlFor="edit-avail" className="text-xs font-semibold cursor-pointer">
+              <label
+                htmlFor="edit-avail"
+                className="text-xs font-semibold cursor-pointer"
+              >
                 Clinician is available for patient bookings
               </label>
             </div>
 
             <div className="flex gap-2 pt-3 border-t">
-              <Button variant="outline" type="button" className="flex-1" onClick={() => setIsEditOpen(false)}>
+              <Button
+                variant="outline"
+                type="button"
+                className="flex-1"
+                onClick={() => setIsEditOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={updateMutation.isPending} className="flex-1">
+              <Button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="flex-1"
+              >
                 {updateMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>

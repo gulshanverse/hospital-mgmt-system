@@ -33,7 +33,7 @@ export function CommandPalette() {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((open) => !open);
+        setOpen(open => !open);
       }
     };
 
@@ -53,24 +53,32 @@ export function CommandPalette() {
       <CommandInput placeholder="Type a command or search JeevanOS..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
-        
+
         <CommandGroup heading="General Navigation">
-          <CommandItem onSelect={() => runCommand(() => setLocation("/dashboard"))}>
+          <CommandItem
+            onSelect={() => runCommand(() => setLocation("/dashboard"))}
+          >
             <LayoutDashboard className="mr-2 h-4 w-4" />
             <span>Go to Dashboard</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setLocation("/design-system"))}>
+          <CommandItem
+            onSelect={() => runCommand(() => setLocation("/design-system"))}
+          >
             <Sparkles className="mr-2 h-4 w-4" />
             <span>Go to Design System Showcase</span>
           </CommandItem>
         </CommandGroup>
 
         <CommandGroup heading="Hospital Core Modules">
-          <CommandItem onSelect={() => runCommand(() => setLocation("/patients"))}>
+          <CommandItem
+            onSelect={() => runCommand(() => setLocation("/patients"))}
+          >
             <Users className="mr-2 h-4 w-4" />
             <span>Search & Manage Patients</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setLocation("/appointments"))}>
+          <CommandItem
+            onSelect={() => runCommand(() => setLocation("/appointments"))}
+          >
             <Calendar className="mr-2 h-4 w-4" />
             <span>View Appointment Scheduling</span>
           </CommandItem>
@@ -82,11 +90,15 @@ export function CommandPalette() {
             <Bed className="mr-2 h-4 w-4" />
             <span>Bed Management Panel</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setLocation("/pharmacy"))}>
+          <CommandItem
+            onSelect={() => runCommand(() => setLocation("/pharmacy"))}
+          >
             <Pill className="mr-2 h-4 w-4" />
             <span>Pharmacy Inventory Check</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setLocation("/billing"))}>
+          <CommandItem
+            onSelect={() => runCommand(() => setLocation("/billing"))}
+          >
             <DollarSign className="mr-2 h-4 w-4" />
             <span>Billing & Invoice Panel</span>
           </CommandItem>
@@ -101,11 +113,15 @@ export function CommandPalette() {
             <Shield className="mr-2 h-4 w-4" />
             <span>Manage Staff Records</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setLocation("/doctors-admin"))}>
+          <CommandItem
+            onSelect={() => runCommand(() => setLocation("/doctors-admin"))}
+          >
             <Settings className="mr-2 h-4 w-4" />
             <span>Doctor Directory Settings</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setLocation("/departments"))}>
+          <CommandItem
+            onSelect={() => runCommand(() => setLocation("/departments"))}
+          >
             <BookOpen className="mr-2 h-4 w-4" />
             <span>Departments List</span>
           </CommandItem>

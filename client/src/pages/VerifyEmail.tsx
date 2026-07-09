@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
@@ -12,7 +18,7 @@ import { ShieldCheck, Mail } from "lucide-react";
 export default function VerifyEmail() {
   const [location, setLocation] = useLocation();
   const { user, refresh } = useAuthContext();
-  
+
   const [token, setToken] = useState("");
   const [code, setCode] = useState("");
   const [isSent, setIsSent] = useState(false);
@@ -27,7 +33,7 @@ export default function VerifyEmail() {
         setToken(data.token);
       }
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to send code");
     },
   });
@@ -35,7 +41,7 @@ export default function VerifyEmail() {
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setInterval(() => {
-      setCooldown((prev) => prev - 1);
+      setCooldown(prev => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
   }, [cooldown]);
@@ -48,7 +54,7 @@ export default function VerifyEmail() {
         setLocation("/");
       }, 2000);
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Invalid or expired verification code");
     },
   });
@@ -73,7 +79,9 @@ export default function VerifyEmail() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <p className="text-muted-foreground">Please sign in to verify your email.</p>
+        <p className="text-muted-foreground">
+          Please sign in to verify your email.
+        </p>
       </div>
     );
   }
@@ -87,7 +95,8 @@ export default function VerifyEmail() {
           </div>
           <CardTitle className="text-2xl">Verify Your Email</CardTitle>
           <CardDescription>
-            Account: <span className="font-semibold text-gray-800">{user.email}</span>
+            Account:{" "}
+            <span className="font-semibold text-gray-800">{user.email}</span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -96,7 +105,9 @@ export default function VerifyEmail() {
               <div className="mx-auto my-2 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <p className="text-green-600 font-semibold">Your email is already verified!</p>
+              <p className="text-green-600 font-semibold">
+                Your email is already verified!
+              </p>
               <Button onClick={() => setLocation("/")} className="w-full">
                 Go to Dashboard
               </Button>
@@ -104,14 +115,17 @@ export default function VerifyEmail() {
           ) : !isSent ? (
             <div className="space-y-4 text-center">
               <p className="text-sm text-gray-600">
-                Verify your email to unlock all features of CareFlow HMS. We will send a 6-digit OTP code.
+                Verify your email to unlock all features of CareFlow HMS. We
+                will send a 6-digit OTP code.
               </p>
               <Button
                 onClick={handleSendCode}
                 className="w-full"
                 disabled={sendOtpMutation.isPending}
               >
-                {sendOtpMutation.isPending ? "Sending code..." : "Send Verification Code"}
+                {sendOtpMutation.isPending
+                  ? "Sending code..."
+                  : "Send Verification Code"}
               </Button>
             </div>
           ) : (
@@ -127,11 +141,11 @@ export default function VerifyEmail() {
                   placeholder="000000"
                   className="text-center tracking-widest text-lg font-semibold"
                   value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
                   required
                 />
               </div>
-              
+
               <Button
                 type="submit"
                 className="w-full"
@@ -147,7 +161,9 @@ export default function VerifyEmail() {
                   disabled={sendOtpMutation.isPending || cooldown > 0}
                   className="text-xs text-indigo-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {cooldown > 0 ? `Resend Code in ${cooldown}s` : "Resend Verification Code"}
+                  {cooldown > 0
+                    ? `Resend Code in ${cooldown}s`
+                    : "Resend Verification Code"}
                 </button>
               </div>
             </form>

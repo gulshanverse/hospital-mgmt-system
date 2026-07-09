@@ -27,6 +27,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import { useAuthContext } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 
 function Router() {
   const { user, loading } = useAuthContext();
@@ -40,7 +41,14 @@ function Router() {
     );
   }
 
-  const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/reset-password", "/verify-email"];
+  const publicPaths = [
+    "/",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-email",
+  ];
 
   // Redirect unauthenticated users away from protected routes to /login
   if (!user && !publicPaths.includes(location)) {
@@ -62,7 +70,7 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/verify-email" component={VerifyEmail} />
-      
+
       {/* Protected routes */}
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/patients" component={PatientManagement} />
@@ -94,6 +102,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <Analytics />
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>

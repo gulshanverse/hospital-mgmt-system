@@ -1,6 +1,6 @@
 /**
  * Client Constants (Phase 1)
- * 
+ *
  * Removed Manus OAuth constants.
  * JWT-based authentication will be implemented in Phase 2.
  */

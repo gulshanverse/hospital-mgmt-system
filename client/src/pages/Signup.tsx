@@ -2,7 +2,13 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -43,7 +49,10 @@ export default function Signup() {
     const messages = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
     setPasswordStrength({
       score,
-      message: errors.length > 0 ? `Missing: ${errors.join(", ")}` : messages[score - 1] || "Very Weak",
+      message:
+        errors.length > 0
+          ? `Missing: ${errors.join(", ")}`
+          : messages[score - 1] || "Very Weak",
     });
   };
 
@@ -84,14 +93,18 @@ export default function Signup() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Sign up for Hospital Management System</CardDescription>
+          <CardDescription>
+            Sign up for Hospital Management System
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {(error || localError) && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error?.message || localError}</AlertDescription>
+                <AlertDescription>
+                  {error?.message || localError}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -104,7 +117,7 @@ export default function Signup() {
                 type="text"
                 placeholder="Enter your full name"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={e => setFullName(e.target.value)}
                 disabled={loading}
                 required
               />
@@ -119,7 +132,7 @@ export default function Signup() {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 disabled={loading}
                 required
               />
@@ -134,7 +147,7 @@ export default function Signup() {
                 type="tel"
                 placeholder="Enter your phone number"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={e => setPhone(e.target.value)}
                 disabled={loading}
               />
             </div>
@@ -170,7 +183,9 @@ export default function Signup() {
                         }`}
                       />
                     </div>
-                    <span className="text-muted-foreground">{passwordStrength.message}</span>
+                    <span className="text-muted-foreground">
+                      {passwordStrength.message}
+                    </span>
                   </div>
                 </div>
               )}
@@ -185,7 +200,7 @@ export default function Signup() {
                 type="password"
                 placeholder="Confirm your password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={e => setConfirmPassword(e.target.value)}
                 disabled={loading}
                 required
               />
@@ -209,7 +224,9 @@ export default function Signup() {
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">Already have an account? </span>
+              <span className="text-muted-foreground">
+                Already have an account?{" "}
+              </span>
               <button
                 type="button"
                 onClick={() => navigate("/login")}

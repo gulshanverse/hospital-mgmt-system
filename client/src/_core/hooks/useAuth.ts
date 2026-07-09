@@ -41,18 +41,18 @@ export function useAuth(options?: UseAuthOptions) {
       try {
         sessionStorage.removeItem("manus-cookie");
       } catch {}
-      
+
       // Clear localStorage tokens
       localStorage.removeItem("auth-tokens");
       localStorage.removeItem("manus-runtime-user-info");
-      
+
       // Clear tRPC cache
       utils.auth.me.setData(undefined, undefined);
       await utils.auth.me.invalidate();
-      
+
       // Invalidate all queries to ensure clean state
       await utils.invalidate();
-      
+
       // Redirect to login page
       if (typeof window !== "undefined") {
         window.location.href = redirectPath;
@@ -86,7 +86,7 @@ export function useAuth(options?: UseAuthOptions) {
     if (typeof window === "undefined") return;
     if (window.location.pathname === redirectPath) return;
 
-    window.location.href = redirectPath
+    window.location.href = redirectPath;
   }, [
     redirectOnUnauthenticated,
     redirectPath,

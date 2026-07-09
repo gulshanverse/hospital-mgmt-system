@@ -10,13 +10,13 @@ const queryClient = new QueryClient();
 
 /**
  * Error Handling for Unauthorized Requests
- * 
+ *
  * When a 401 Unauthorized error occurs, clear auth tokens and redirect to login.
  */
 const handleUnauthorizedError = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-  
+
   // Check if this is an authorization error
   if (error.data?.code === "UNAUTHORIZED") {
     console.warn("[Auth] Unauthorized:", error.message);
@@ -24,7 +24,13 @@ const handleUnauthorizedError = (error: unknown) => {
     localStorage.removeItem("auth-tokens");
     localStorage.removeItem("manus-runtime-user-info");
     // Redirect to login only if not on a public path
-    const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/reset-password"];
+    const publicPaths = [
+      "/",
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/reset-password",
+    ];
     if (!publicPaths.includes(window.location.pathname)) {
       window.location.href = "/login";
     }
@@ -84,34 +90,45 @@ const trpcClient = trpc.createClient({
         });
 
         // Catch 401 Unauthorized and attempt token refresh
-        if (response.status === 401 && !String(input).includes("auth.refresh")) {
+        if (
+          response.status === 401 &&
+          !String(input).includes("auth.refresh")
+        ) {
           const stored = localStorage.getItem("auth-tokens");
           if (stored) {
             try {
               const { refreshToken } = JSON.parse(stored);
               if (refreshToken) {
-                const refreshResponse = await globalThis.fetch(`${getBaseUrl()}/api/trpc/auth.refresh`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    "0": {
-                      refreshToken,
+                const refreshResponse = await globalThis.fetch(
+                  `${getBaseUrl()}/api/trpc/auth.refresh`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
                     },
-                  }),
-                });
+                    body: JSON.stringify({
+                      "0": {
+                        refreshToken,
+                      },
+                    }),
+                  }
+                );
 
                 if (refreshResponse.ok) {
                   const data = await refreshResponse.json();
-                  const resultData = data[0]?.result?.data ?? data?.result?.data;
+                  const resultData =
+                    data[0]?.result?.data ?? data?.result?.data;
                   if (resultData?.success && resultData?.tokens) {
-                    localStorage.setItem("auth-tokens", JSON.stringify(resultData.tokens));
-                    
+                    localStorage.setItem(
+                      "auth-tokens",
+                      JSON.stringify(resultData.tokens)
+                    );
+
                     // Re-try the original request with new Authorization header
                     const newHeaders = { ...(init?.headers ?? {}) } as any;
-                    newHeaders["Authorization"] = `Bearer ${resultData.tokens.accessToken}`;
-                    
+                    newHeaders["Authorization"] =
+                      `Bearer ${resultData.tokens.accessToken}`;
+
                     response = await globalThis.fetch(input, {
                       ...(init ?? {}),
                       headers: newHeaders,
