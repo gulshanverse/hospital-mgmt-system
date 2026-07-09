@@ -1,18 +1,18 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
-import { 
-  Stethoscope, 
-  ArrowRight, 
-  FileText, 
-  Calendar, 
-  Bed, 
-  Pill, 
-  Microscope, 
-  DollarSign, 
-  Activity, 
-  ShieldCheck, 
-  Clock 
+import {
+  Stethoscope,
+  ArrowRight,
+  FileText,
+  Calendar,
+  Bed,
+  Pill,
+  Microscope,
+  DollarSign,
+  Activity,
+  ShieldCheck,
+  Clock,
 } from "lucide-react";
 
 export default function Home() {
@@ -26,37 +26,43 @@ export default function Home() {
     {
       icon: FileText,
       title: "Electronic Health Records (EHR)",
-      description: "Secure, consolidated digital medical records capturing full patient history, vitals, prescriptions, and clinical notes.",
+      description:
+        "Secure, consolidated digital medical records capturing full patient history, vitals, prescriptions, and clinical notes.",
       color: "text-blue-600 bg-blue-50 border-blue-100",
     },
     {
       icon: Calendar,
       title: "Appointment Scheduling",
-      description: "Intelligent scheduling system coordinating doctor availabilities, patient appointments, and automated status tracking.",
+      description:
+        "Intelligent scheduling system coordinating doctor availabilities, patient appointments, and automated status tracking.",
       color: "text-emerald-600 bg-emerald-50 border-emerald-100",
     },
     {
       icon: Bed,
       title: "Bed & Ward Management",
-      description: "Real-time tracking of ward capacity and bed occupancy. Seamless patient admission and bed transfer workflows.",
+      description:
+        "Real-time tracking of ward capacity and bed occupancy. Seamless patient admission and bed transfer workflows.",
       color: "text-amber-600 bg-amber-50 border-amber-100",
     },
     {
       icon: Pill,
       title: "Pharmacy Inventory & Dispensing",
-      description: "Comprehensive stock tracking for medications, automatic low-stock alerts, and safe prescription dispensing logs.",
+      description:
+        "Comprehensive stock tracking for medications, automatic low-stock alerts, and safe prescription dispensing logs.",
       color: "text-indigo-600 bg-indigo-50 border-indigo-100",
     },
     {
       icon: Microscope,
       title: "Lab Order Processing",
-      description: "Digital lab requests, specimen tracking, and direct integration of structured test results and PDF uploads to EHR.",
+      description:
+        "Digital lab requests, specimen tracking, and direct integration of structured test results and PDF uploads to EHR.",
       color: "text-violet-600 bg-violet-50 border-violet-100",
     },
     {
       icon: DollarSign,
       title: "Billing & Invoicing",
-      description: "Itemized billing for treatments, automated invoice generation, payment status management, and financial summaries.",
+      description:
+        "Itemized billing for treatments, automated invoice generation, payment status management, and financial summaries.",
       color: "text-rose-600 bg-rose-50 border-rose-100",
     },
   ];
@@ -76,14 +82,14 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             {user ? (
-              <Button 
-                onClick={() => window.location.href = "/dashboard"} 
+              <Button
+                onClick={() => (window.location.href = "/dashboard")}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm"
               >
                 Go to Dashboard
               </Button>
             ) : (
-              <Button 
+              <Button
                 onClick={handleSignIn}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm font-medium"
               >
@@ -99,7 +105,8 @@ export default function Home() {
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-60" />
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold uppercase tracking-wider mb-6 animate-fade-in">
-            <Activity className="w-3.5 h-3.5 animate-pulse" /> Enterprise Health Management
+            <Activity className="w-3.5 h-3.5 animate-pulse" /> Enterprise Health
+            Management
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto leading-[1.15] mb-6">
             Modern Healthcare Management,{" "}
@@ -108,18 +115,20 @@ export default function Home() {
             </span>
           </h1>
           <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-8">
-            An intuitive, all-in-one hospital information platform designed to streamline clinical workflows, patient engagement, and operational analytics.
+            An intuitive, all-in-one hospital information platform designed to
+            streamline clinical workflows, patient engagement, and operational
+            analytics.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button 
-              onClick={handleSignIn} 
-              size="lg" 
+            <Button
+              onClick={handleSignIn}
+              size="lg"
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-6 text-base font-semibold rounded-xl shadow-lg shadow-indigo-100 group transition-all duration-300"
             >
               Access HMS Portal
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <a 
+            <a
               href="#modules"
               className="text-slate-600 hover:text-slate-900 font-semibold text-sm transition-colors py-2 px-4"
             >
@@ -137,8 +146,12 @@ export default function Home() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-800 mb-1">HIPAA & GDPR Ready</h4>
-              <p className="text-sm text-slate-500">Industry standard safety and encryption protocol protection.</p>
+              <h4 className="font-bold text-slate-800 mb-1">
+                HIPAA & GDPR Ready
+              </h4>
+              <p className="text-sm text-slate-500">
+                Industry standard safety and encryption protocol protection.
+              </p>
             </div>
           </div>
           <div className="flex flex-col md:flex-row items-center md:items-start gap-4 p-4">
@@ -146,8 +159,12 @@ export default function Home() {
               <Activity className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-800 mb-1">99.9% System Uptime</h4>
-              <p className="text-sm text-slate-500">Engineered with robust fail-safes for round-the-clock clinics.</p>
+              <h4 className="font-bold text-slate-800 mb-1">
+                99.9% System Uptime
+              </h4>
+              <p className="text-sm text-slate-500">
+                Engineered with robust fail-safes for round-the-clock clinics.
+              </p>
             </div>
           </div>
           <div className="flex flex-col md:flex-row items-center md:items-start gap-4 p-4">
@@ -155,21 +172,30 @@ export default function Home() {
               <Clock className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-800 mb-1">Real-Time Syncing</h4>
-              <p className="text-sm text-slate-500">Instantly synchronize records, orders, and stats across departments.</p>
+              <h4 className="font-bold text-slate-800 mb-1">
+                Real-Time Syncing
+              </h4>
+              <p className="text-sm text-slate-500">
+                Instantly synchronize records, orders, and stats across
+                departments.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Modules Section */}
-      <section id="modules" className="py-20 lg:py-24 max-w-7xl mx-auto px-6 w-full flex-1">
+      <section
+        id="modules"
+        className="py-20 lg:py-24 max-w-7xl mx-auto px-6 w-full flex-1"
+      >
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-4">
             Fully Integrated Clinical Modules
           </h2>
           <p className="text-slate-600">
-            CareFlow unifies administrative management with healthcare delivery, offering medical personnel real-time data flow without friction.
+            CareFlow unifies administrative management with healthcare delivery,
+            offering medical personnel real-time data flow without friction.
           </p>
         </div>
 
@@ -177,11 +203,13 @@ export default function Home() {
           {modules.map((mod, index) => {
             const IconComponent = mod.icon;
             return (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col group"
               >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border mb-6 ${mod.color}`}>
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center border mb-6 ${mod.color}`}
+                >
                   <IconComponent className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-indigo-600 transition-colors">
@@ -191,7 +219,10 @@ export default function Home() {
                   {mod.description}
                 </p>
                 <div className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
-                  Integrated <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">✓</span>
+                  Integrated{" "}
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+                    ✓
+                  </span>
                 </div>
               </div>
             );
@@ -207,11 +238,12 @@ export default function Home() {
             Empower Your Medical Team Today
           </h2>
           <p className="text-indigo-200 max-w-xl mx-auto mb-8 text-base">
-            Log in to manage appointments, access EHR details, verify inventories, and issue billing invoices.
+            Log in to manage appointments, access EHR details, verify
+            inventories, and issue billing invoices.
           </p>
-          <Button 
-            onClick={handleSignIn} 
-            size="lg" 
+          <Button
+            onClick={handleSignIn}
+            size="lg"
             className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-8 py-5 rounded-xl shadow-lg shadow-emerald-950/20"
           >
             Access Portal
@@ -229,7 +261,8 @@ export default function Home() {
             <span className="text-white font-bold">CareFlow HMS</span>
           </div>
           <p className="text-sm">
-            &copy; {new Date().getFullYear()} CareFlow Hospital Management System. All rights reserved.
+            &copy; {new Date().getFullYear()} CareFlow Hospital Management
+            System. All rights reserved.
           </p>
         </div>
       </footer>

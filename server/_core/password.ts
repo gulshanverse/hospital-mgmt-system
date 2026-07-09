@@ -16,12 +16,12 @@ const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || "10", 10);
 export function hashPassword(password: string): string {
   // Generate a random salt
   const salt = crypto.randomBytes(16).toString("hex");
-  
+
   // Hash password with salt using PBKDF2
   const hash = crypto
     .pbkdf2Sync(password, salt, 100000, 64, "sha512")
     .toString("hex");
-  
+
   // Return salt + hash
   return `${salt}:${hash}`;
 }
@@ -32,15 +32,15 @@ export function hashPassword(password: string): string {
 export function verifyPassword(password: string, hash: string): boolean {
   try {
     const [salt, originalHash] = hash.split(":");
-    
+
     if (!salt || !originalHash) {
       return false;
     }
-    
+
     const computedHash = crypto
       .pbkdf2Sync(password, salt, 100000, 64, "sha512")
       .toString("hex");
-    
+
     return computedHash === originalHash;
   } catch (error) {
     console.error("Password verification error:", error);

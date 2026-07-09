@@ -4,14 +4,28 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, FileText, Pill, Microscope, Stethoscope } from "lucide-react";
+import {
+  Search,
+  Plus,
+  FileText,
+  Pill,
+  Microscope,
+  Stethoscope,
+} from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 export default function EHRViewer() {
-  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: searchResults } = trpc.patient.search.useQuery(
@@ -23,9 +37,12 @@ export default function EHRViewer() {
     enabled: searchQuery.trim().length === 0,
   });
 
-  const displayPatients = searchQuery.trim().length > 0 ? searchResults : allPatients;
+  const displayPatients =
+    searchQuery.trim().length > 0 ? searchResults : allPatients;
 
-  const selectedPatient = displayPatients?.find((p: any) => p.id === selectedPatientId) || (allPatients?.find((p: any) => p.id === selectedPatientId));
+  const selectedPatient =
+    displayPatients?.find((p: any) => p.id === selectedPatientId) ||
+    allPatients?.find((p: any) => p.id === selectedPatientId);
 
   const { data: records, refetch } = trpc.ehr.getByPatient.useQuery(
     { patientId: selectedPatientId || 0 },
@@ -34,7 +51,9 @@ export default function EHRViewer() {
 
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
   const [recordTitle, setRecordTitle] = useState("");
-  const [recordType, setRecordType] = useState<"diagnosis" | "prescription" | "lab_result" | "doctor_note" | "attachment">("diagnosis");
+  const [recordType, setRecordType] = useState<
+    "diagnosis" | "prescription" | "lab_result" | "doctor_note" | "attachment"
+  >("diagnosis");
   const [recordContent, setRecordContent] = useState("");
 
   const addRecordMutation = trpc.ehr.create.useMutation({
@@ -45,7 +64,7 @@ export default function EHRViewer() {
       setRecordContent("");
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to add medical record");
     },
   });
@@ -111,12 +130,14 @@ export default function EHRViewer() {
                 <Input
                   placeholder="Search patient..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
               <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Patients List</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Patients List
+                </p>
                 <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
                   {displayPatients && displayPatients.length > 0 ? (
                     displayPatients.map((patient: any) => (
@@ -129,12 +150,18 @@ export default function EHRViewer() {
                             : "hover:bg-gray-50 border-gray-100"
                         }`}
                       >
-                        <span className="truncate">{patient.firstName} {patient.lastName}</span>
-                        <span className="text-xs font-mono text-gray-500">{patient.patientCode}</span>
+                        <span className="truncate">
+                          {patient.firstName} {patient.lastName}
+                        </span>
+                        <span className="text-xs font-mono text-gray-500">
+                          {patient.patientCode}
+                        </span>
                       </button>
                     ))
                   ) : (
-                    <p className="text-xs text-gray-500 text-center py-4">No patients found</p>
+                    <p className="text-xs text-gray-500 text-center py-4">
+                      No patients found
+                    </p>
                   )}
                 </div>
               </div>
@@ -148,9 +175,15 @@ export default function EHRViewer() {
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold">
-                      Medical Records Timeline — {selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : `Patient #${selectedPatientId}`}
+                      Medical Records Timeline —{" "}
+                      {selectedPatient
+                        ? `${selectedPatient.firstName} ${selectedPatient.lastName}`
+                        : `Patient #${selectedPatientId}`}
                     </h2>
-                    <Button onClick={() => setIsAddRecordOpen(true)} className="gap-2">
+                    <Button
+                      onClick={() => setIsAddRecordOpen(true)}
+                      className="gap-2"
+                    >
                       <Plus className="w-4 h-4" />
                       Add Record
                     </Button>
@@ -159,20 +192,37 @@ export default function EHRViewer() {
                   {records && records.length > 0 ? (
                     <div className="space-y-4">
                       {records.map((record: any) => (
-                        <Card key={record.id} className="p-4 border-l-4 border-l-blue-500">
+                        <Card
+                          key={record.id}
+                          className="p-4 border-l-4 border-l-blue-500"
+                        >
                           <div className="flex items-start gap-4">
-                            <div className="mt-1">{getRecordIcon(record.recordType)}</div>
+                            <div className="mt-1">
+                              {getRecordIcon(record.recordType)}
+                            </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold">{record.title}</h3>
-                                <Badge className={getRecordColor(record.recordType)}>
+                                <h3 className="font-semibold">
+                                  {record.title}
+                                </h3>
+                                <Badge
+                                  className={getRecordColor(record.recordType)}
+                                >
                                   {record.recordType}
                                 </Badge>
                               </div>
-                              <p className="text-sm text-gray-600 mb-2">{record.content}</p>
+                              <p className="text-sm text-gray-600 mb-2">
+                                {record.content}
+                              </p>
                               <div className="flex items-center justify-between text-xs text-gray-500">
-                                <span>By: {record.createdByName || "System"}</span>
-                                <span>{new Date(record.recordDate).toLocaleDateString()}</span>
+                                <span>
+                                  By: {record.createdByName || "System"}
+                                </span>
+                                <span>
+                                  {new Date(
+                                    record.recordDate
+                                  ).toLocaleDateString()}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -189,7 +239,9 @@ export default function EHRViewer() {
             ) : (
               <Card className="p-12 text-center">
                 <Stethoscope className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-500">Select a patient to view their medical records</p>
+                <p className="text-gray-500">
+                  Select a patient to view their medical records
+                </p>
               </Card>
             )}
           </div>
@@ -203,15 +255,19 @@ export default function EHRViewer() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Title</label>
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Title
+              </label>
               <Input
                 placeholder="e.g. Chronic Hypertension Follow-up, Lab results review"
                 value={recordTitle}
-                onChange={(e) => setRecordTitle(e.target.value)}
+                onChange={e => setRecordTitle(e.target.value)}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Record Type</label>
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Record Type
+              </label>
               <select
                 value={recordType}
                 onChange={(e: any) => setRecordType(e.target.value)}
@@ -225,15 +281,21 @@ export default function EHRViewer() {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Content</label>
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Content
+              </label>
               <textarea
                 placeholder="Record details, notes, clinical observations..."
                 value={recordContent}
-                onChange={(e) => setRecordContent(e.target.value)}
+                onChange={e => setRecordContent(e.target.value)}
                 className="w-full border rounded px-3 py-2 text-sm bg-background min-h-[100px]"
               />
             </div>
-            <Button onClick={handleAddRecord} disabled={addRecordMutation.isPending} className="w-full">
+            <Button
+              onClick={handleAddRecord}
+              disabled={addRecordMutation.isPending}
+              className="w-full"
+            >
               {addRecordMutation.isPending ? "Adding..." : "Add Record"}
             </Button>
           </div>

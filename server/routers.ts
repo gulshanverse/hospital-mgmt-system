@@ -2,9 +2,23 @@ import { COOKIE_NAME } from "@shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { router } from "./_core/trpc";
 import { authRouter } from "./routers/auth";
-import { patientRouter, doctorRouter, departmentRouter } from "./routers/management";
-import { appointmentRouter, ehrRouter, prescriptionRouter, labRouter } from "./routers/clinical";
-import { bedRouter, admissionRouter, pharmacyRouter, billingRouter } from "./routers/operations";
+import {
+  patientRouter,
+  doctorRouter,
+  departmentRouter,
+} from "./routers/management";
+import {
+  appointmentRouter,
+  ehrRouter,
+  prescriptionRouter,
+  labRouter,
+} from "./routers/clinical";
+import {
+  bedRouter,
+  admissionRouter,
+  pharmacyRouter,
+  billingRouter,
+} from "./routers/operations";
 import { analyticsRouter, searchRouter } from "./routers/analytics";
 import { userRouter } from "./routers/user";
 

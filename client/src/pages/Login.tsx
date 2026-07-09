@@ -2,7 +2,13 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
@@ -43,7 +49,9 @@ export default function Login() {
             {(error || localError) && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error?.message || localError}</AlertDescription>
+                <AlertDescription>
+                  {error?.message || localError}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -56,7 +64,7 @@ export default function Login() {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 disabled={loading}
                 required
               />
@@ -71,7 +79,7 @@ export default function Login() {
                 type="password"
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 disabled={loading}
                 required
               />
@@ -89,7 +97,9 @@ export default function Login() {
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">Don't have an account? </span>
+              <span className="text-muted-foreground">
+                Don't have an account?{" "}
+              </span>
               <button
                 type="button"
                 onClick={() => navigate("/signup")}
@@ -101,7 +111,9 @@ export default function Login() {
           </form>
 
           <div className="mt-6 pt-6 border-t">
-            <p className="text-xs text-muted-foreground text-center mb-3">Demo Credentials</p>
+            <p className="text-xs text-muted-foreground text-center mb-3">
+              Demo Credentials
+            </p>
             <div className="space-y-2 text-xs">
               <div className="bg-muted p-2 rounded">
                 <p className="font-mono">Email: admin@hospital.local</p>

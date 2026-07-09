@@ -13,7 +13,9 @@ setInterval(() => {
   const now = Date.now();
   store.forEach((record, key) => {
     // Keep only timestamps within the last 1 hour
-    const filtered = record.timestamps.filter((ts: number) => now - ts < 3600000);
+    const filtered = record.timestamps.filter(
+      (ts: number) => now - ts < 3600000
+    );
     if (filtered.length === 0) {
       store.delete(key);
     } else {
@@ -43,7 +45,7 @@ export function checkRateLimit(
   }
 
   // Filter timestamps within the current window
-  record.timestamps = record.timestamps.filter((ts) => now - ts < windowMs);
+  record.timestamps = record.timestamps.filter(ts => now - ts < windowMs);
 
   if (record.timestamps.length >= maxRequests) {
     const oldestInWindow = record.timestamps[0];

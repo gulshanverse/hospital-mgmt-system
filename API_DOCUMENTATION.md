@@ -19,7 +19,9 @@ All responses use tRPC's standard format:
 ```json
 {
   "result": {
-    "data": { /* response data */ }
+    "data": {
+      /* response data */
+    }
   }
 }
 ```
@@ -40,9 +42,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Patient Management
 
 ### Create Patient
+
 **Endpoint:** `POST /api/trpc/patient.create`
 
 **Request:**
+
 ```json
 {
   "firstName": "John",
@@ -58,6 +62,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -69,12 +74,15 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Get Patient
+
 **Endpoint:** `GET /api/trpc/patient.getById`
 
 **Query Parameters:**
+
 - `id` (number) - Patient ID
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -89,9 +97,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Search Patients
+
 **Endpoint:** `POST /api/trpc/patient.search`
 
 **Request:**
+
 ```json
 {
   "query": "John",
@@ -100,6 +110,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -113,13 +124,16 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### List Patients
+
 **Endpoint:** `GET /api/trpc/patient.list`
 
 **Query Parameters:**
+
 - `page` (number, optional) - Page number (default: 1)
 - `limit` (number, optional) - Items per page (default: 20)
 
 **Response:**
+
 ```json
 [
   {
@@ -132,9 +146,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Update Patient
+
 **Endpoint:** `PUT /api/trpc/patient.update`
 
 **Request:**
+
 ```json
 {
   "id": 1,
@@ -144,6 +160,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -155,9 +172,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Appointment Management
 
 ### Create Appointment
+
 **Endpoint:** `POST /api/trpc/appointment.create`
 
 **Request:**
+
 ```json
 {
   "patientId": 1,
@@ -170,6 +189,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -182,12 +202,15 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Get Appointments by Date
+
 **Endpoint:** `GET /api/trpc/appointment.getByDate`
 
 **Query Parameters:**
+
 - `date` (string) - Date in YYYY-MM-DD format
 
 **Response:**
+
 ```json
 [
   {
@@ -203,12 +226,15 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Get Patient Appointments
+
 **Endpoint:** `GET /api/trpc/appointment.getByPatient`
 
 **Query Parameters:**
+
 - `patientId` (number) - Patient ID
 
 **Response:**
+
 ```json
 [
   {
@@ -222,9 +248,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Update Appointment
+
 **Endpoint:** `PUT /api/trpc/appointment.update`
 
 **Request:**
+
 ```json
 {
   "id": 1,
@@ -233,6 +261,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -243,9 +272,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Electronic Health Records
 
 ### Create Medical Record
+
 **Endpoint:** `POST /api/trpc/ehr.create`
 
 **Request:**
+
 ```json
 {
   "patientId": 1,
@@ -257,6 +288,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -268,12 +300,15 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Get Patient Medical Records
+
 **Endpoint:** `GET /api/trpc/ehr.getByPatient`
 
 **Query Parameters:**
+
 - `patientId` (number) - Patient ID
 
 **Response:**
+
 ```json
 [
   {
@@ -290,9 +325,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Prescription Management
 
 ### Create Prescription
+
 **Endpoint:** `POST /api/trpc/prescription.create`
 
 **Request:**
+
 ```json
 {
   "patientId": 1,
@@ -310,6 +347,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -327,9 +365,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Laboratory Management
 
 ### Create Lab Order
+
 **Endpoint:** `POST /api/trpc/lab.createOrder`
 
 **Request:**
+
 ```json
 {
   "patientId": 1,
@@ -339,6 +379,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -351,9 +392,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Assign Lab Order
+
 **Endpoint:** `PUT /api/trpc/lab.assignOrder`
 
 **Request:**
+
 ```json
 {
   "orderId": 1,
@@ -362,6 +405,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -371,9 +415,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Upload Lab Report
+
 **Endpoint:** `POST /api/trpc/lab.uploadReport`
 
 **Request:**
+
 ```json
 {
   "labOrderId": 1,
@@ -383,6 +429,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -395,9 +442,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Bed Management
 
 ### Get Available Beds
+
 **Endpoint:** `GET /api/trpc/bed.getAvailable`
 
 **Response:**
+
 ```json
 [
   {
@@ -410,12 +459,15 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Get Beds by Ward
+
 **Endpoint:** `GET /api/trpc/bed.getByWard`
 
 **Query Parameters:**
+
 - `wardId` (number) - Ward ID
 
 **Response:**
+
 ```json
 [
   {
@@ -427,9 +479,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Update Bed Status
+
 **Endpoint:** `PUT /api/trpc/bed.updateStatus`
 
 **Request:**
+
 ```json
 {
   "bedId": 1,
@@ -438,6 +492,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -448,9 +503,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Pharmacy Inventory
 
 ### Get Inventory
+
 **Endpoint:** `GET /api/trpc/pharmacy.getInventory`
 
 **Response:**
+
 ```json
 [
   {
@@ -458,16 +515,18 @@ Errors are returned with appropriate HTTP status codes and error messages:
     "drugCode": "DRUG-001",
     "drugName": "Aspirin",
     "quantity": 100,
-    "unitPrice": 5.00,
+    "unitPrice": 5.0,
     "status": "available"
   }
 ]
 ```
 
 ### Get Low Stock Items
+
 **Endpoint:** `GET /api/trpc/pharmacy.getLowStock`
 
 **Response:**
+
 ```json
 [
   {
@@ -480,9 +539,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Update Stock
+
 **Endpoint:** `PUT /api/trpc/pharmacy.updateStock`
 
 **Request:**
+
 ```json
 {
   "medicineId": 1,
@@ -491,6 +552,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -501,9 +563,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Billing
 
 ### Create Invoice
+
 **Endpoint:** `POST /api/trpc/billing.createInvoice`
 
 **Request:**
+
 ```json
 {
   "patientId": 1,
@@ -521,6 +585,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -532,9 +597,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Get Pending Invoices
+
 **Endpoint:** `GET /api/trpc/billing.getPending`
 
 **Response:**
+
 ```json
 [
   {
@@ -551,9 +618,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Analytics
 
 ### Get Dashboard KPIs
+
 **Endpoint:** `GET /api/trpc/analytics.getDashboardKPIs`
 
 **Response:**
+
 ```json
 {
   "totalPatients": 500,
@@ -568,9 +637,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Get Weekly Admissions
+
 **Endpoint:** `GET /api/trpc/analytics.getWeeklyAdmissions`
 
 **Response:**
+
 ```json
 [
   { "day": "Monday", "count": 10 },
@@ -580,9 +651,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 ### Get Monthly Revenue
+
 **Endpoint:** `GET /api/trpc/analytics.getMonthlyRevenue`
 
 **Response:**
+
 ```json
 [
   { "month": "January", "revenue": 45000 },
@@ -593,9 +666,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Search
 
 ### Global Search
+
 **Endpoint:** `POST /api/trpc/search.global`
 
 **Request:**
+
 ```json
 {
   "query": "John",
@@ -604,14 +679,11 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ```
 
 **Response:**
+
 ```json
 {
-  "patients": [
-    { "id": 1, "name": "John Doe", "type": "patient" }
-  ],
-  "doctors": [
-    { "id": 1, "name": "Dr. John Smith", "type": "doctor" }
-  ],
+  "patients": [{ "id": 1, "name": "John Doe", "type": "patient" }],
+  "doctors": [{ "id": 1, "name": "Dr. John Smith", "type": "doctor" }],
   "appointments": []
 }
 ```
@@ -619,6 +691,7 @@ Errors are returned with appropriate HTTP status codes and error messages:
 ## Rate Limiting
 
 API endpoints are rate-limited to prevent abuse:
+
 - 100 requests per minute per user
 - 1000 requests per hour per user
 
@@ -637,14 +710,14 @@ List endpoints support pagination:
 
 ## Error Codes
 
-| Code | Description |
-|------|-------------|
-| UNAUTHORIZED | User not authenticated |
-| FORBIDDEN | User lacks required permissions |
-| NOT_FOUND | Resource not found |
-| BAD_REQUEST | Invalid request parameters |
-| CONFLICT | Resource already exists |
-| INTERNAL_SERVER_ERROR | Server error |
+| Code                  | Description                     |
+| --------------------- | ------------------------------- |
+| UNAUTHORIZED          | User not authenticated          |
+| FORBIDDEN             | User lacks required permissions |
+| NOT_FOUND             | Resource not found              |
+| BAD_REQUEST           | Invalid request parameters      |
+| CONFLICT              | Resource already exists         |
+| INTERNAL_SERVER_ERROR | Server error                    |
 
 ## Examples
 
@@ -665,18 +738,18 @@ curl -X POST http://localhost:3000/api/trpc/patient.create \
 ### JavaScript/Fetch Example
 
 ```javascript
-const response = await fetch('http://localhost:3000/api/trpc/patient.create', {
-  method: 'POST',
+const response = await fetch("http://localhost:3000/api/trpc/patient.create", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
-  credentials: 'include', // Include cookies
+  credentials: "include", // Include cookies
   body: JSON.stringify({
-    firstName: 'John',
-    lastName: 'Doe',
-    phone: '555-1234',
-    email: 'john@example.com'
-  })
+    firstName: "John",
+    lastName: "Doe",
+    phone: "555-1234",
+    email: "john@example.com",
+  }),
 });
 
 const data = await response.json();
@@ -686,19 +759,20 @@ console.log(data);
 ### TypeScript/tRPC Client Example
 
 ```typescript
-import { trpc } from '@/lib/trpc';
+import { trpc } from "@/lib/trpc";
 
 const newPatient = await trpc.patient.create.mutate({
-  firstName: 'John',
-  lastName: 'Doe',
-  phone: '555-1234',
-  email: 'john@example.com'
+  firstName: "John",
+  lastName: "Doe",
+  phone: "555-1234",
+  email: "john@example.com",
 });
 ```
 
 ## Support
 
 For API issues or questions, refer to:
+
 - [README.md](./README.md)
 - [Deployment Guide](./DEPLOYMENT.md)
 - [Architecture Documentation](./docs/ARCHITECTURE.md)

@@ -27,7 +27,16 @@ import {
   Inbox,
   Printer,
 } from "lucide-react";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import {
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import { toast } from "sonner";
 
 export default function PatientProfile() {
@@ -43,15 +52,17 @@ export default function PatientProfile() {
       resourceType: "Patient",
       id: patient.id.toString(),
       identifier: [
-        { system: "http://jeevanos.org/uhid", value: patient.patientCode }
+        { system: "http://jeevanos.org/uhid", value: patient.patientCode },
       ],
       active: !patient.isDeleted,
       name: [
-        { use: "official", family: patient.lastName, given: [patient.firstName] }
+        {
+          use: "official",
+          family: patient.lastName,
+          given: [patient.firstName],
+        },
       ],
-      telecom: [
-        { system: "phone", value: patient.phone, use: "home" }
-      ],
+      telecom: [{ system: "phone", value: patient.phone, use: "home" }],
       gender: patient.gender,
       birthDate: new Date(patient.dateOfBirth).toISOString().split("T")[0],
       address: [
@@ -60,11 +71,13 @@ export default function PatientProfile() {
           line: [patient.address || ""],
           city: patient.city || undefined,
           state: patient.state || undefined,
-          postalCode: patient.zipCode || undefined
-        }
-      ]
+          postalCode: patient.zipCode || undefined,
+        },
+      ],
     };
-    const blob = new Blob([JSON.stringify(fhir, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(fhir, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -87,15 +100,20 @@ export default function PatientProfile() {
   );
 
   // 2. Timeline & Files Queries
-  const { data: timelineItems, isLoading: timelineLoading, refetch: refetchTimeline } = trpc.patient.getTimeline.useQuery(
+  const {
+    data: timelineItems,
+    isLoading: timelineLoading,
+    refetch: refetchTimeline,
+  } = trpc.patient.getTimeline.useQuery(
     { id: patientId || 0 },
     { enabled: !!patientId }
   );
 
-  const { data: files, refetch: refetchFiles } = trpc.patient.getUploadedFiles.useQuery(
-    { patientId: patientId || 0 },
-    { enabled: !!patientId }
-  );
+  const { data: files, refetch: refetchFiles } =
+    trpc.patient.getUploadedFiles.useQuery(
+      { patientId: patientId || 0 },
+      { enabled: !!patientId }
+    );
 
   const saveFileMutation = trpc.patient.saveUploadedFile.useMutation({
     onSuccess: () => {
@@ -103,12 +121,14 @@ export default function PatientProfile() {
       refetchTimeline();
       toast.success("Document attached successfully");
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to attach document");
-    }
+    },
   });
 
-  const handleFileUploadSimulated = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUploadSimulated = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file || !patientId) return;
 
@@ -117,9 +137,16 @@ export default function PatientProfile() {
       return;
     }
 
-    const allowedMimeTypes = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    const allowedMimeTypes = [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+    ];
     if (!allowedMimeTypes.includes(file.type)) {
-      toast.error("Invalid file type. Only PDF, PNG, JPG, or WEBP are allowed.");
+      toast.error(
+        "Invalid file type. Only PDF, PNG, JPG, or WEBP are allowed."
+      );
       return;
     }
 
@@ -147,7 +174,11 @@ export default function PatientProfile() {
       <DashboardLayout>
         <div className="text-center py-12">
           <p className="text-destructive font-bold">Patient Not Found</p>
-          <Button variant="outline" className="mt-4" onClick={() => setLocation("/patients")}>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => setLocation("/patients")}
+          >
             <ArrowLeft className="size-4 mr-2" /> Back to Registry
           </Button>
         </div>
@@ -208,7 +239,12 @@ export default function PatientProfile() {
         {/* Back Link Header */}
         <div className="flex items-center justify-between border-b pb-4">
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={() => setLocation("/patients")} className="h-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation("/patients")}
+              className="h-8"
+            >
               <ArrowLeft className="size-4 mr-1.5" /> Back
             </Button>
             <div>
@@ -216,20 +252,45 @@ export default function PatientProfile() {
                 <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
                   {patient.firstName} {patient.lastName}
                 </h1>
-                <Badge variant="outline" className={getStatusColor(patient.status)}>
+                <Badge
+                  variant="outline"
+                  className={getStatusColor(patient.status)}
+                >
                   {patient.status}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                UHID: <span className="font-mono font-bold text-foreground">{patient.patientCode}</span> | Gender: <span className="capitalize text-foreground">{patient.gender}</span> | Age: <span className="text-foreground">{new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()}</span>
+                UHID:{" "}
+                <span className="font-mono font-bold text-foreground">
+                  {patient.patientCode}
+                </span>{" "}
+                | Gender:{" "}
+                <span className="capitalize text-foreground">
+                  {patient.gender}
+                </span>{" "}
+                | Age:{" "}
+                <span className="text-foreground">
+                  {new Date().getFullYear() -
+                    new Date(patient.dateOfBirth).getFullYear()}
+                </span>
               </p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportFHIR} className="h-8 text-xs gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportFHIR}
+              className="h-8 text-xs gap-1.5"
+            >
               <Download className="size-3.5" /> Export FHIR
             </Button>
-            <Button variant="outline" size="sm" onClick={handlePrintWristband} className="h-8 text-xs gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrintWristband}
+              className="h-8 text-xs gap-1.5"
+            >
               <Printer className="size-3.5" /> Print Wristband
             </Button>
           </div>
@@ -240,9 +301,13 @@ export default function PatientProfile() {
           <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-xl flex items-start gap-3 text-sm text-destructive-foreground animate-pulse">
             <AlertTriangle className="size-5 text-destructive shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Critical Medical Alert: Rare Blood Group (O Negative)</p>
+              <p className="font-bold">
+                Critical Medical Alert: Rare Blood Group (O Negative)
+              </p>
               <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                Patient has O- blood group. Universal donor protocols apply. Cross-match and check inventory buffers prior to major operations.
+                Patient has O- blood group. Universal donor protocols apply.
+                Cross-match and check inventory buffers prior to major
+                operations.
               </p>
             </div>
           </div>
@@ -250,11 +315,16 @@ export default function PatientProfile() {
 
         {/* 2. DEMOGRAPHICS DETAILS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SectionCard title="Personal Information" description="Demographics details.">
+          <SectionCard
+            title="Personal Information"
+            description="Demographics details."
+          >
             <div className="space-y-3.5 text-sm">
               <div className="flex justify-between border-b pb-1.5">
                 <span className="text-muted-foreground">Date of Birth</span>
-                <span className="font-semibold">{new Date(patient.dateOfBirth).toLocaleDateString()}</span>
+                <span className="font-semibold">
+                  {new Date(patient.dateOfBirth).toLocaleDateString()}
+                </span>
               </div>
               <div className="flex justify-between border-b pb-1.5">
                 <span className="text-muted-foreground">Contact Phone</span>
@@ -262,22 +332,32 @@ export default function PatientProfile() {
               </div>
               <div className="flex justify-between border-b pb-1.5">
                 <span className="text-muted-foreground">Email Address</span>
-                <span className="font-semibold truncate max-w-[150px]">{patient.email || "N/A"}</span>
+                <span className="font-semibold truncate max-w-[150px]">
+                  {patient.email || "N/A"}
+                </span>
               </div>
               <div className="flex justify-between border-b pb-1.5">
                 <span className="text-muted-foreground">Blood Type</span>
-                <span className="font-bold text-destructive">{patient.bloodGroup || "Unknown"}</span>
+                <span className="font-bold text-destructive">
+                  {patient.bloodGroup || "Unknown"}
+                </span>
               </div>
               <div>
-                <span className="text-muted-foreground block text-xs mb-1">Mailing Address</span>
+                <span className="text-muted-foreground block text-xs mb-1">
+                  Mailing Address
+                </span>
                 <span className="font-medium text-foreground/95 block leading-normal">
-                  {patient.address || ""}, {patient.city || ""}, {patient.state || ""} {patient.zipCode || ""}
+                  {patient.address || ""}, {patient.city || ""},{" "}
+                  {patient.state || ""} {patient.zipCode || ""}
                 </span>
               </div>
             </div>
           </SectionCard>
 
-          <SectionCard title="Insurance Coverage" description="Active policy parameters.">
+          <SectionCard
+            title="Insurance Coverage"
+            description="Active policy parameters."
+          >
             <div className="space-y-3.5 text-sm">
               <div className="flex justify-between border-b pb-1.5">
                 <span className="text-muted-foreground">Provider</span>
@@ -288,18 +368,25 @@ export default function PatientProfile() {
               </div>
               <div className="flex justify-between border-b pb-1.5">
                 <span className="text-muted-foreground">Policy Number</span>
-                <span className="font-mono font-semibold">{patient.insuranceNumber || "N/A"}</span>
+                <span className="font-mono font-semibold">
+                  {patient.insuranceNumber || "N/A"}
+                </span>
               </div>
               <div className="flex justify-between border-b pb-1.5">
                 <span className="text-muted-foreground">Status</span>
-                <Badge variant={patient.insuranceNumber ? "default" : "outline"}>
+                <Badge
+                  variant={patient.insuranceNumber ? "default" : "outline"}
+                >
                   {patient.insuranceNumber ? "Active Coverage" : "Self Pay"}
                 </Badge>
               </div>
             </div>
           </SectionCard>
 
-          <SectionCard title="Emergency Contact" description="Primary relatives contacts.">
+          <SectionCard
+            title="Emergency Contact"
+            description="Primary relatives contacts."
+          >
             <div className="space-y-3.5 text-sm">
               <div className="flex justify-between border-b pb-1.5">
                 <span className="text-muted-foreground">Contact Name</span>
@@ -355,15 +442,42 @@ export default function PatientProfile() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Vitals chart column */}
           <div className="lg:col-span-5 space-y-4">
-            <ChartContainer title="Vital Logs History" description="Historical vital logs mappings.">
+            <ChartContainer
+              title="Vital Logs History"
+              description="Historical vital logs mappings."
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={vitalsTrendData}>
                   <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.4} />
-                  <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={10} />
+                  <XAxis
+                    dataKey="date"
+                    stroke="var(--muted-foreground)"
+                    fontSize={10}
+                  />
                   <YAxis stroke="var(--muted-foreground)" fontSize={10} />
-                  <Tooltip contentStyle={{ background: "var(--popover)", borderColor: "var(--border)", borderRadius: "var(--radius)" }} />
-                  <Line type="monotone" name="Pulse" dataKey="hr" stroke="oklch(0.58 0.22 25)" strokeWidth={2} dot={{ r: 2 }} />
-                  <Line type="monotone" name="BP" dataKey="sbp" stroke="oklch(0.48 0.16 250)" strokeWidth={2} dot={{ r: 2 }} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--popover)",
+                      borderColor: "var(--border)",
+                      borderRadius: "var(--radius)",
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    name="Pulse"
+                    dataKey="hr"
+                    stroke="oklch(0.58 0.22 25)"
+                    strokeWidth={2}
+                    dot={{ r: 2 }}
+                  />
+                  <Line
+                    type="monotone"
+                    name="BP"
+                    dataKey="sbp"
+                    stroke="oklch(0.48 0.16 250)"
+                    strokeWidth={2}
+                    dot={{ r: 2 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -376,7 +490,9 @@ export default function PatientProfile() {
                 <div className="border-b px-6 py-4 flex items-center justify-between bg-secondary/10">
                   <TabsList className="bg-secondary/50">
                     <TabsTrigger value="timeline">Medical Timeline</TabsTrigger>
-                    <TabsTrigger value="documents">Uploaded Documents</TabsTrigger>
+                    <TabsTrigger value="documents">
+                      Uploaded Documents
+                    </TabsTrigger>
                   </TabsList>
 
                   <div className="flex items-center">
@@ -409,7 +525,10 @@ export default function PatientProfile() {
                     ) : timelineItems && timelineItems.length > 0 ? (
                       <div className="relative border-l-2 border-border/80 pl-6 ml-3 space-y-6">
                         {timelineItems.map((item: any) => (
-                          <div key={item.id} className="relative group animate-in fade-in slide-in-from-left-4 duration-150">
+                          <div
+                            key={item.id}
+                            className="relative group animate-in fade-in slide-in-from-left-4 duration-150"
+                          >
                             {/* Circle Pin Icon */}
                             <span className="absolute -left-[37px] top-0.5 flex size-7 items-center justify-center rounded-full border bg-card shadow-2xs">
                               {getTimelineIcon(item.type)}
@@ -434,7 +553,9 @@ export default function PatientProfile() {
                       <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                         <Inbox className="size-8 text-muted-foreground/60 mb-2" />
                         <p className="text-xs font-medium">Timeline Empty</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">No historical clinical actions logged.</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          No historical clinical actions logged.
+                        </p>
                       </div>
                     )}
                   </TabsContent>
@@ -444,17 +565,26 @@ export default function PatientProfile() {
                     {files && files.length > 0 ? (
                       <div className="divide-y divide-border/60">
                         {files.map((file: any) => (
-                          <div key={file.id} className="py-2.5 flex items-center justify-between gap-4 text-xs">
+                          <div
+                            key={file.id}
+                            className="py-2.5 flex items-center justify-between gap-4 text-xs"
+                          >
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className="size-8 rounded-lg bg-primary/5 text-primary flex items-center justify-center shrink-0">
                                 <FileText className="size-4" />
                               </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-foreground truncate max-w-[200px]" title={file.fileName}>
+                                <p
+                                  className="font-semibold text-foreground truncate max-w-[200px]"
+                                  title={file.fileName}
+                                >
                                   {file.fileName}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground mt-0.5 uppercase">
-                                  {(file.fileSize ? (file.fileSize / 1024).toFixed(1) : "0")} KB | {file.fileType.split("/")[1]}
+                                  {file.fileSize
+                                    ? (file.fileSize / 1024).toFixed(1)
+                                    : "0"}{" "}
+                                  KB | {file.fileType.split("/")[1]}
                                 </p>
                               </div>
                             </div>
@@ -475,7 +605,9 @@ export default function PatientProfile() {
                       <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                         <Upload className="size-8 text-muted-foreground/60 mb-2" />
                         <p className="text-xs font-medium">No Attached Files</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">PDF or image consents are mapped here.</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          PDF or image consents are mapped here.
+                        </p>
                       </div>
                     )}
                   </TabsContent>
@@ -485,7 +617,10 @@ export default function PatientProfile() {
           </div>
         </div>
         {/* Hidden Print Wristband Area */}
-        <div id="wristband-print-area" className="hidden print:block font-mono text-[9px] p-2 w-[3.25in] h-[1in] border border-black rounded-sm absolute left-0 top-0 bg-white text-black">
+        <div
+          id="wristband-print-area"
+          className="hidden print:block font-mono text-[9px] p-2 w-[3.25in] h-[1in] border border-black rounded-sm absolute left-0 top-0 bg-white text-black"
+        >
           <div className="flex justify-between items-start h-full">
             <div>
               <p className="font-extrabold text-[11px] uppercase leading-none mb-1">
@@ -493,11 +628,20 @@ export default function PatientProfile() {
               </p>
               <p>DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}</p>
               <p>UHID: {patient.patientCode}</p>
-              <p className="mt-1 font-bold">BLOOD TYPE: {patient.bloodGroup || "Unknown"}</p>
+              <p className="mt-1 font-bold">
+                BLOOD TYPE: {patient.bloodGroup || "Unknown"}
+              </p>
             </div>
             <div className="text-right flex flex-col justify-between h-full items-end">
-              <Badge variant="outline" className="text-[7px] px-1 py-0 border-black text-black uppercase">{patient.gender}</Badge>
-              <p className="text-[6px] text-gray-500 font-sans">JeevanOS EPMS</p>
+              <Badge
+                variant="outline"
+                className="text-[7px] px-1 py-0 border-black text-black uppercase"
+              >
+                {patient.gender}
+              </Badge>
+              <p className="text-[6px] text-gray-500 font-sans">
+                JeevanOS EPMS
+              </p>
             </div>
           </div>
         </div>

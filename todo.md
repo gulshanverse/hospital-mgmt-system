@@ -1,12 +1,14 @@
 # Hospital Management System (HMS) — Project TODO
 
 ## Phase 1: Scaffold, Design System, and Database Schema
+
 - [x] Design system and color palette implementation
 - [x] Global styling and Tailwind configuration
 - [x] Database schema design (all 20+ tables)
 - [x] Drizzle ORM migrations
 
 ## Phase 2: Authentication, Authorization, and RBAC
+
 - [x] Role enum extension (Admin, Doctor, Nurse, Receptionist, Pharmacist, Lab Technician)
 - [x] Permission system implementation
 - [x] Protected procedures for role-based access
@@ -14,6 +16,7 @@
 - [x] Demo account seeding
 
 ## Phase 3: Core Management Modules
+
 - [x] Department management (CRUD)
 - [x] Patient management (registration, search, CRUD, filtering, sorting)
 - [x] Doctor management (profiles, specialties, availability)
@@ -21,6 +24,7 @@
 - [x] Patient list UI with pagination and filters
 
 ## Phase 4: Clinical Modules
+
 - [x] Appointment management (create, edit, cancel, reschedule)
 - [x] Calendar views (day, week, month, list)
 - [x] Electronic Health Records (EHR) module
@@ -29,6 +33,7 @@
 - [ ] Lab report PDF generation
 
 ## Phase 5: Operational Modules
+
 - [x] Bed management (ward, ICU, general beds)
 - [x] Admission and discharge workflows
 - [x] Pharmacy inventory management
@@ -37,6 +42,7 @@
 - [ ] Invoice PDF export
 
 ## Phase 6: Analytics Dashboard and System Features
+
 - [x] Analytics dashboard with KPI cards
 - [x] Charts (admissions, revenue, appointments, department performance, bed occupancy)
 - [x] Global search functionality (patients, doctors, appointments, invoices, prescriptions)
@@ -44,6 +50,7 @@
 - [ ] Audit logging system
 
 ## Phase 7: Finalization
+
 - [x] Seed data generation (50 patients, 15 doctors, 25 staff, 100 appointments, etc.)
 - [x] Backend API testing (Vitest with 15+ test suites)
 - [ ] Frontend component testing (Vitest)
@@ -56,6 +63,7 @@
 ## Completed Features
 
 ### Backend Infrastructure
+
 - [x] Complete database schema with 22 tables
 - [x] Role-based access control (RBAC) system with 6 roles
 - [x] tRPC routers for all major modules
@@ -63,6 +71,7 @@
 - [x] Role-specific middleware and procedures
 
 ### API Routers Implemented
+
 - [x] Patient Management Router (create, read, update, search, list)
 - [x] Doctor Management Router (create, read, update, list, by department)
 - [x] Department Management Router (create, read, update, list)
@@ -78,6 +87,7 @@
 - [x] Search Router (global patient search)
 
 ### Frontend Components
+
 - [x] Dashboard with KPI cards
 - [x] Revenue chart (monthly trend)
 - [x] Admissions chart (weekly)
@@ -88,6 +98,7 @@
 - [x] Authentication-based routing
 
 ### Authorization & Security
+
 - [x] Role-based permission matrix
 - [x] API-level RBAC enforcement
 - [x] Protected procedures for each role
@@ -97,6 +108,7 @@
 ## Remaining Work
 
 ### Frontend UI Pages
+
 - [x] Patient Management UI (list, create, edit, view)
 - [ ] Doctor Management UI
 - [x] Appointment Scheduling UI with calendar
@@ -110,6 +122,7 @@
 - [ ] Department Management UI
 
 ### Additional Features
+
 - [ ] PDF export for lab reports
 - [ ] PDF export for invoices
 - [ ] File upload for EHR attachments
@@ -121,6 +134,7 @@
 - [ ] Audit logging UI
 
 ### Testing & Documentation
+
 - [ ] Unit tests for all routers
 - [ ] Integration tests for workflows
 - [ ] API documentation
@@ -131,6 +145,7 @@
 ## Architecture Summary
 
 ### Technology Stack
+
 - **Frontend**: React 19, Tailwind CSS 4, TypeScript
 - **Backend**: Node.js, Express, tRPC 11
 - **Database**: MySQL with Drizzle ORM
@@ -140,6 +155,7 @@
 - **Serialization**: SuperJSON
 
 ### Database Tables (22 total)
+
 1. users - User accounts with 6 roles
 2. patients - Patient demographics and contact info
 3. doctors - Doctor profiles and specialties
@@ -164,6 +180,7 @@
 22. refreshTokens - Session management
 
 ### API Endpoints Structure
+
 - `/api/trpc/patient.*` - Patient operations
 - `/api/trpc/doctor.*` - Doctor operations
 - `/api/trpc/department.*` - Department operations

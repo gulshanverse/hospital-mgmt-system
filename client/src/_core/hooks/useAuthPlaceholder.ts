@@ -12,7 +12,8 @@ type UseAuthOptions = {
  * JWT authentication will be implemented in Phase 2.
  */
 export function useAuthPlaceholder(options?: UseAuthOptions) {
-  const { redirectOnUnauthenticated = false, redirectPath = "/login" } = options ?? {};
+  const { redirectOnUnauthenticated = false, redirectPath = "/login" } =
+    options ?? {};
   const utils = trpc.useUtils();
 
   const meQuery = trpc.auth.me.useQuery(undefined, {

@@ -1,10 +1,27 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure, adminProcedure, receptionistProcedure, doctorProcedure } from "../\_core/trpc";
+import {
+  router,
+  protectedProcedure,
+  adminProcedure,
+  receptionistProcedure,
+  doctorProcedure,
+} from "../\_core/trpc";
 import { requirePermission } from "../\_core/rbac";
 import * as db from "../db";
 import { eq, and, desc, or } from "drizzle-orm";
-import { doctors, departments, patients, users, auditLogs, uploadedFiles, doctorLeaves, doctorAttendance, shiftExchanges, doctorAuditLogs } from "../../drizzle/schema";
+import {
+  doctors,
+  departments,
+  patients,
+  users,
+  auditLogs,
+  uploadedFiles,
+  doctorLeaves,
+  doctorAttendance,
+  shiftExchanges,
+  doctorAuditLogs,
+} from "../../drizzle/schema";
 
 // ============================================================================
 // PATIENT MANAGEMENT
@@ -26,7 +43,10 @@ export const patientRouter = router({
         city: z.string().optional(),
         state: z.string().optional(),
         zipCode: z.string().optional(),
-        bloodGroup: z.enum(["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]).optional().or(z.literal("")),
+        bloodGroup: z
+          .enum(["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"])
+          .optional()
+          .or(z.literal("")),
         emergencyContactName: z.string().optional(),
         emergencyContactPhone: z.string().optional(),
         insuranceProvider: z.string().optional(),
@@ -36,7 +56,11 @@ export const patientRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
 
       const emailVal = input.email || null;
       const bloodVal = (input.bloodGroup || null) as any;
@@ -80,7 +104,10 @@ export const patientRouter = router({
         .limit(1);
 
       if (inserted.length === 0) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve created patient" });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to retrieve created patient",
+        });
       }
 
       // 3. Log Audit Trail entry (Section 55 of spec)
@@ -106,7 +133,10 @@ export const patientRouter = router({
     .query(async ({ input, ctx }) => {
       const patient = await db.getPatientById(input.id);
       if (!patient) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Patient not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Patient not found",
+        });
       }
       return patient;
     }),
@@ -125,20 +155,24 @@ export const patientRouter = router({
 
   list: protectedProcedure
     .input(
-      z.object({
-        status: z.enum([
-          "Registered",
-          "Checked-In",
-          "Waiting",
-          "Consultation",
-          "Laboratory",
-          "Radiology",
-          "Pharmacy",
-          "Admitted",
-          "Discharged",
-          "Archived",
-        ]).optional(),
-      }).optional()
+      z
+        .object({
+          status: z
+            .enum([
+              "Registered",
+              "Checked-In",
+              "Waiting",
+              "Consultation",
+              "Laboratory",
+              "Radiology",
+              "Pharmacy",
+              "Admitted",
+              "Discharged",
+              "Archived",
+            ])
+            .optional(),
+        })
+        .optional()
     )
     .query(async ({ input }) => {
       const dbInstance = await db.getDb();
@@ -153,7 +187,12 @@ export const patientRouter = router({
         query = dbInstance
           .select()
           .from(patients)
-          .where(and(eq(patients.isDeleted, false), eq(patients.status, input.status))) as any;
+          .where(
+            and(
+              eq(patients.isDeleted, false),
+              eq(patients.status, input.status)
+            )
+          ) as any;
       }
       return query.orderBy(desc(patients.createdAt));
     }),
@@ -171,24 +210,31 @@ export const patientRouter = router({
         state: z.string().optional(),
         zipCode: z.string().optional(),
         gender: z.enum(["male", "female", "other"]).optional(),
-        dateOfBirth: z.string().transform(s => new Date(s)).optional(),
-        bloodGroup: z.enum(["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]).optional(),
+        dateOfBirth: z
+          .string()
+          .transform(s => new Date(s))
+          .optional(),
+        bloodGroup: z
+          .enum(["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"])
+          .optional(),
         emergencyContactName: z.string().optional(),
         emergencyContactPhone: z.string().optional(),
         insuranceProvider: z.string().optional(),
         insuranceNumber: z.string().optional(),
-        status: z.enum([
-          "Registered",
-          "Checked-In",
-          "Waiting",
-          "Consultation",
-          "Laboratory",
-          "Radiology",
-          "Pharmacy",
-          "Admitted",
-          "Discharged",
-          "Archived",
-        ]).optional(),
+        status: z
+          .enum([
+            "Registered",
+            "Checked-In",
+            "Waiting",
+            "Consultation",
+            "Laboratory",
+            "Radiology",
+            "Pharmacy",
+            "Admitted",
+            "Discharged",
+            "Archived",
+          ])
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -201,8 +247,12 @@ export const patientRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
-      
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+
       // Perform Soft Delete
       await dbInstance
         .update(patients)
@@ -248,47 +298,48 @@ export const patientRouter = router({
       // Map to standard timeline shapes
       const timelineItems: any[] = [];
 
-      records.forEach((r) => {
+      records.forEach(r => {
         timelineItems.push({
           id: `record-${r.id}`,
           date: r.recordDate,
           type: "clinical",
           title: r.title,
           description: r.content || `Clinical record of type ${r.recordType}`,
-          meta: { recordType: r.recordType, attachmentUrl: r.attachmentUrl }
+          meta: { recordType: r.recordType, attachmentUrl: r.attachmentUrl },
         });
       });
 
-      prescriptions.forEach((p) => {
+      prescriptions.forEach(p => {
         timelineItems.push({
           id: `prescription-${p.id}`,
           date: p.prescriptionDate,
           type: "pharmacy",
           title: "Medication Prescribed",
-          description: p.notes || "New prescription mapped by attending practitioner.",
-          meta: { status: p.status }
+          description:
+            p.notes || "New prescription mapped by attending practitioner.",
+          meta: { status: p.status },
         });
       });
 
-      invoices.forEach((i) => {
+      invoices.forEach(i => {
         timelineItems.push({
           id: `invoice-${i.id}`,
           date: i.invoiceDate,
           type: "billing",
           title: `Invoice Generated (${i.invoiceNumber})`,
           description: `Total amount due: $${i.totalAmount}. Current status: ${i.status}.`,
-          meta: { status: i.status, totalAmount: i.totalAmount }
+          meta: { status: i.status, totalAmount: i.totalAmount },
         });
       });
 
-      appointments.forEach((a) => {
+      appointments.forEach(a => {
         timelineItems.push({
           id: `appointment-${a.id}`,
           date: new Date(a.appointmentDate),
           type: "appointment",
           title: "Appointment Scheduled",
           description: a.reason || `Scheduled slot at ${a.appointmentTime}`,
-          meta: { status: a.status, time: a.appointmentTime }
+          meta: { status: a.status, time: a.appointmentTime },
         });
       });
 
@@ -327,7 +378,11 @@ export const patientRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
 
       const [res] = await dbInstance.insert(uploadedFiles).values({
         fileKey: input.fileKey,
@@ -362,16 +417,66 @@ async function autoSeedDoctors(dbInstance: any) {
     }
 
     const docData = [
-      { name: "Dr. Alice Smith", email: "alice.smith@hms.com", specialty: "Cardiology", license: "LIC-CARD-001" },
-      { name: "Dr. Bob Johnson", email: "bob.johnson@hms.com", specialty: "Pediatrics", license: "LIC-PED-002" },
-      { name: "Dr. Catherine Howard", email: "catherine.h@hms.com", specialty: "Emergency Medicine", license: "LIC-EMG-003" },
-      { name: "Dr. Daniel Craig", email: "daniel.c@hms.com", specialty: "Internal Medicine", license: "LIC-GEN-004" },
-      { name: "Dr. Emma Watson", email: "emma.w@hms.com", specialty: "Neurology", license: "LIC-NEU-005" },
-      { name: "Dr. Frank Miller", email: "frank.m@hms.com", specialty: "Radiology", license: "LIC-RAD-006" },
-      { name: "Dr. Grace Hopper", email: "grace.h@hms.com", specialty: "Surgery", license: "LIC-SURG-007" },
-      { name: "Dr. Henry Cavill", email: "henry.c@hms.com", specialty: "Oncology", license: "LIC-ONC-008" },
-      { name: "Dr. Irene Adler", email: "irene.a@hms.com", specialty: "Obstetrics & Gynecology", license: "LIC-OBG-009" },
-      { name: "Dr. Jack Shepard", email: "jack.s@hms.com", specialty: "General Surgery", license: "LIC-SURG-010" },
+      {
+        name: "Dr. Alice Smith",
+        email: "alice.smith@hms.com",
+        specialty: "Cardiology",
+        license: "LIC-CARD-001",
+      },
+      {
+        name: "Dr. Bob Johnson",
+        email: "bob.johnson@hms.com",
+        specialty: "Pediatrics",
+        license: "LIC-PED-002",
+      },
+      {
+        name: "Dr. Catherine Howard",
+        email: "catherine.h@hms.com",
+        specialty: "Emergency Medicine",
+        license: "LIC-EMG-003",
+      },
+      {
+        name: "Dr. Daniel Craig",
+        email: "daniel.c@hms.com",
+        specialty: "Internal Medicine",
+        license: "LIC-GEN-004",
+      },
+      {
+        name: "Dr. Emma Watson",
+        email: "emma.w@hms.com",
+        specialty: "Neurology",
+        license: "LIC-NEU-005",
+      },
+      {
+        name: "Dr. Frank Miller",
+        email: "frank.m@hms.com",
+        specialty: "Radiology",
+        license: "LIC-RAD-006",
+      },
+      {
+        name: "Dr. Grace Hopper",
+        email: "grace.h@hms.com",
+        specialty: "Surgery",
+        license: "LIC-SURG-007",
+      },
+      {
+        name: "Dr. Henry Cavill",
+        email: "henry.c@hms.com",
+        specialty: "Oncology",
+        license: "LIC-ONC-008",
+      },
+      {
+        name: "Dr. Irene Adler",
+        email: "irene.a@hms.com",
+        specialty: "Obstetrics & Gynecology",
+        license: "LIC-OBG-009",
+      },
+      {
+        name: "Dr. Jack Shepard",
+        email: "jack.s@hms.com",
+        specialty: "General Surgery",
+        license: "LIC-SURG-010",
+      },
     ];
 
     for (const doc of docData) {
@@ -381,7 +486,8 @@ async function autoSeedDoctors(dbInstance: any) {
         phone: "9876541" + Math.floor(100 + Math.random() * 900).toString(),
         role: "doctor",
         isActive: true,
-        passwordHash: "$2a$10$UoW3sLdREb1G/8bO4J68.unK9Jv.VqM.jT3aZf9w1Rj7uL.i4gObe",
+        passwordHash:
+          "$2a$10$UoW3sLdREb1G/8bO4J68.unK9Jv.VqM.jT3aZf9w1Rj7uL.i4gObe",
         isVerified: true,
       });
 
@@ -402,7 +508,7 @@ async function autoSeedDoctors(dbInstance: any) {
           tuesday: ["09:00", "17:00"],
           wednesday: ["09:00", "17:00"],
           thursday: ["09:00", "17:00"],
-          friday: ["09:00", "17:00"]
+          friday: ["09:00", "17:00"],
         },
       });
     }
@@ -428,28 +534,57 @@ export const doctorRouter = router({
         languagesSpoken: z.array(z.string()).optional(),
         emergencyContactName: z.string().optional(),
         emergencyContactPhone: z.string().optional(),
-        employmentType: z.enum(["Full-Time", "Part-Time", "On-Call", "Visiting Consultant"]).optional(),
+        employmentType: z
+          .enum(["Full-Time", "Part-Time", "On-Call", "Visiting Consultant"])
+          .optional(),
         licenseNumber: z.string().optional(),
-        licenseExpiryDate: z.string().transform(s => new Date(s)).optional(),
-        boardCertificationExpiryDate: z.string().transform(s => new Date(s)).optional(),
-        nmcRegistrationExpiryDate: z.string().transform(s => new Date(s)).optional(),
+        licenseExpiryDate: z
+          .string()
+          .transform(s => new Date(s))
+          .optional(),
+        boardCertificationExpiryDate: z
+          .string()
+          .transform(s => new Date(s))
+          .optional(),
+        nmcRegistrationExpiryDate: z
+          .string()
+          .transform(s => new Date(s))
+          .optional(),
         availabilitySchedule: z.any().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
 
       // Check for duplicate profile
-      const existing = await dbInstance.select().from(doctors).where(eq(doctors.userId, input.userId)).limit(1);
+      const existing = await dbInstance
+        .select()
+        .from(doctors)
+        .where(eq(doctors.userId, input.userId))
+        .limit(1);
       if (existing.length > 0) {
-        throw new TRPCError({ code: "CONFLICT", message: "This user already has a doctor profile." });
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This user already has a doctor profile.",
+        });
       }
 
       // Update user's role to doctor only if they are not an admin
-      const [user] = await dbInstance.select().from(users).where(eq(users.id, input.userId)).limit(1);
+      const [user] = await dbInstance
+        .select()
+        .from(users)
+        .where(eq(users.id, input.userId))
+        .limit(1);
       if (user && user.role !== "admin") {
-        await dbInstance.update(users).set({ role: "doctor" }).where(eq(users.id, input.userId));
+        await dbInstance
+          .update(users)
+          .set({ role: "doctor" })
+          .where(eq(users.id, input.userId));
       }
 
       const {
@@ -466,10 +601,16 @@ export const doctorRouter = router({
 
       const [res] = await dbInstance.insert(doctors).values({
         ...rest,
-        secondaryDepartmentIds: secondaryDepartmentIds ? JSON.stringify(secondaryDepartmentIds) : null,
+        secondaryDepartmentIds: secondaryDepartmentIds
+          ? JSON.stringify(secondaryDepartmentIds)
+          : null,
         degrees: degrees ? JSON.stringify(degrees) : null,
-        consultationFees: consultationFees ? consultationFees.toString() : "50.00",
-        languagesSpoken: languagesSpoken ? JSON.stringify(languagesSpoken) : null,
+        consultationFees: consultationFees
+          ? consultationFees.toString()
+          : "50.00",
+        languagesSpoken: languagesSpoken
+          ? JSON.stringify(languagesSpoken)
+          : null,
         employmentType: employmentType || "Full-Time",
         licenseExpiryDate: licenseExpiryDate || null,
         boardCertificationExpiryDate: boardCertificationExpiryDate || null,
@@ -502,8 +643,12 @@ export const doctorRouter = router({
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
-      
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+
       const result = await dbInstance
         .select({
           id: doctors.id,
@@ -571,7 +716,7 @@ export const doctorRouter = router({
       if (existing.length === 0) {
         await autoSeedDoctors(dbInstance);
       }
-      
+
       const query = dbInstance
         .select({
           id: doctors.id,
@@ -615,34 +760,76 @@ export const doctorRouter = router({
         languagesSpoken: z.array(z.string()).optional(),
         emergencyContactName: z.string().optional(),
         emergencyContactPhone: z.string().optional(),
-        employmentType: z.enum(["Full-Time", "Part-Time", "On-Call", "Visiting Consultant"]).optional(),
+        employmentType: z
+          .enum(["Full-Time", "Part-Time", "On-Call", "Visiting Consultant"])
+          .optional(),
         licenseNumber: z.string().optional(),
-        licenseExpiryDate: z.string().transform(s => new Date(s)).optional(),
-        boardCertificationExpiryDate: z.string().transform(s => new Date(s)).optional(),
-        nmcRegistrationExpiryDate: z.string().transform(s => new Date(s)).optional(),
+        licenseExpiryDate: z
+          .string()
+          .transform(s => new Date(s))
+          .optional(),
+        boardCertificationExpiryDate: z
+          .string()
+          .transform(s => new Date(s))
+          .optional(),
+        nmcRegistrationExpiryDate: z
+          .string()
+          .transform(s => new Date(s))
+          .optional(),
         availabilitySchedule: z.any().optional(),
         isAvailable: z.boolean().optional(),
-        verificationStatus: z.enum(["Draft", "Pending_Verification", "Under_Review", "Verified", "Rejected", "Suspended", "License_Expired"]).optional(),
+        verificationStatus: z
+          .enum([
+            "Draft",
+            "Pending_Verification",
+            "Under_Review",
+            "Verified",
+            "Rejected",
+            "Suspended",
+            "License_Expired",
+          ])
+          .optional(),
         rejectionReason: z.string().optional(),
-        status: z.enum(["Active", "Inactive", "Suspended", "On-Leave", "Retired"]).optional(),
+        status: z
+          .enum(["Active", "Inactive", "Suspended", "On-Leave", "Retired"])
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, secondaryDepartmentIds, degrees, languagesSpoken, consultationFees, ...updateData } = input;
+      const {
+        id,
+        secondaryDepartmentIds,
+        degrees,
+        languagesSpoken,
+        consultationFees,
+        ...updateData
+      } = input;
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
-      const [prev] = await dbInstance.select().from(doctors).where(eq(doctors.id, id)).limit(1);
+      const [prev] = await dbInstance
+        .select()
+        .from(doctors)
+        .where(eq(doctors.id, id))
+        .limit(1);
 
       const updateFields: any = {
         ...updateData,
       };
-      if (secondaryDepartmentIds) updateFields.secondaryDepartmentIds = JSON.stringify(secondaryDepartmentIds);
+      if (secondaryDepartmentIds)
+        updateFields.secondaryDepartmentIds = JSON.stringify(
+          secondaryDepartmentIds
+        );
       if (degrees) updateFields.degrees = JSON.stringify(degrees);
-      if (languagesSpoken) updateFields.languagesSpoken = JSON.stringify(languagesSpoken);
-      if (consultationFees) updateFields.consultationFees = consultationFees.toString();
+      if (languagesSpoken)
+        updateFields.languagesSpoken = JSON.stringify(languagesSpoken);
+      if (consultationFees)
+        updateFields.consultationFees = consultationFees.toString();
 
-      await dbInstance.update(doctors).set(updateFields).where(eq(doctors.id, id));
+      await dbInstance
+        .update(doctors)
+        .set(updateFields)
+        .where(eq(doctors.id, id));
 
       // Log Audit Trail
       try {
@@ -666,14 +853,21 @@ export const doctorRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
-      
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+
       // Perform Soft Delete
-      await dbInstance.update(doctors).set({
-        isDeleted: true,
-        deletedAt: new Date(),
-        deletedBy: ctx.user.id,
-      }).where(eq(doctors.id, input.id));
+      await dbInstance
+        .update(doctors)
+        .set({
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: ctx.user.id,
+        })
+        .where(eq(doctors.id, input.id));
 
       return { success: true };
     }),
@@ -682,13 +876,20 @@ export const doctorRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
-      
-      await dbInstance.update(doctors).set({
-        isDeleted: false,
-        deletedAt: null,
-        deletedBy: null,
-      }).where(eq(doctors.id, input.id));
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
+
+      await dbInstance
+        .update(doctors)
+        .set({
+          isDeleted: false,
+          deletedAt: null,
+          deletedBy: null,
+        })
+        .where(eq(doctors.id, input.id));
 
       return { success: true };
     }),
@@ -706,7 +907,11 @@ export const doctorRouter = router({
     )
     .mutation(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
 
       const [res] = await dbInstance.insert(doctorLeaves).values({
         doctorId: input.doctorId,
@@ -743,7 +948,11 @@ export const doctorRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
 
       await dbInstance
         .update(doctorLeaves)
@@ -766,7 +975,11 @@ export const doctorRouter = router({
     )
     .mutation(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
       const timestamp = new Date();
 
       if (input.action === "Clock_In") {
@@ -784,7 +997,10 @@ export const doctorRouter = router({
           .limit(1);
 
         if (latest.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "No clock-in logs mapped for today." });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No clock-in logs mapped for today.",
+          });
         }
 
         const record = latest[0];
@@ -827,7 +1043,11 @@ export const doctorRouter = router({
     )
     .mutation(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
 
       await dbInstance.insert(shiftExchanges).values({
         requestorDoctorId: input.requestorDoctorId,
@@ -868,7 +1088,11 @@ export const doctorRouter = router({
     )
     .mutation(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
 
       await dbInstance
         .update(doctors)
@@ -906,7 +1130,10 @@ export const departmentRouter = router({
     .query(async ({ input }) => {
       const dept = await db.getDepartmentById(input.id);
       if (!dept) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Department not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Department not found",
+        });
       }
       return dept;
     }),
@@ -914,7 +1141,10 @@ export const departmentRouter = router({
   list: protectedProcedure.query(async () => {
     const dbInstance = await db.getDb();
     if (!dbInstance) return [];
-    return dbInstance.select().from(departments).where(eq(departments.isActive, true));
+    return dbInstance
+      .select()
+      .from(departments)
+      .where(eq(departments.isActive, true));
   }),
 
   update: adminProcedure
@@ -931,8 +1161,11 @@ export const departmentRouter = router({
       const { id, ...updateData } = input;
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
-      
-      await dbInstance.update(departments).set(updateData).where(eq(departments.id, id));
+
+      await dbInstance
+        .update(departments)
+        .set(updateData)
+        .where(eq(departments.id, id));
       return { success: true };
     }),
 
@@ -940,9 +1173,16 @@ export const departmentRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      if (!dbInstance)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database not available",
+        });
       // Safely deactivate department rather than hard delete to preserve audits and relationships
-      await dbInstance.update(departments).set({ isActive: false }).where(eq(departments.id, input.id));
+      await dbInstance
+        .update(departments)
+        .set({ isActive: false })
+        .where(eq(departments.id, input.id));
       return { success: true };
     }),
 });

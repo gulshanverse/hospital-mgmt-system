@@ -9,7 +9,6 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic } from "./serveStatic";
 
-
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
@@ -40,7 +39,10 @@ async function startServer() {
       res.setHeader("Access-Control-Allow-Origin", origin);
     }
     res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,DELETE,OPTIONS"
+    );
     res.setHeader(
       "Access-Control-Allow-Headers",
       "Content-Type, Authorization, Cookie, X-Requested-With"
@@ -69,15 +71,13 @@ async function startServer() {
     } catch (err: any) {
       dbStatus = "error: " + err.message;
     }
-    
-    res.status(dbStatus === "connected" ? 200 : 500).json({ 
-      status: dbStatus === "connected" ? "ok" : "error", 
+
+    res.status(dbStatus === "connected" ? 200 : 500).json({
+      status: dbStatus === "connected" ? "ok" : "error",
       database: dbStatus,
-      timestamp: Date.now() 
+      timestamp: Date.now(),
     });
   });
-
-  
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
@@ -102,9 +102,10 @@ async function startServer() {
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = process.env.NODE_ENV === "production"
-    ? preferredPort
-    : await findAvailablePort(preferredPort);
+  const port =
+    process.env.NODE_ENV === "production"
+      ? preferredPort
+      : await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);

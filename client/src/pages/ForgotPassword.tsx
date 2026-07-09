@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
@@ -15,7 +21,7 @@ export default function ForgotPassword() {
       setSubmitted(true);
       toast.success("Password reset request submitted");
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to submit request");
     },
   });
@@ -31,7 +37,8 @@ export default function ForgotPassword() {
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl">Reset Password</CardTitle>
           <CardDescription>
-            Enter your email address and we'll send you a link to reset your password
+            Enter your email address and we'll send you a link to reset your
+            password
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -44,11 +51,15 @@ export default function ForgotPassword() {
                   type="email"
                   placeholder="your@hospital.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={forgotMutation.isPending}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={forgotMutation.isPending}
+              >
                 {forgotMutation.isPending ? "Sending..." : "Send Reset Link"}
               </Button>
             </form>
@@ -58,7 +69,7 @@ export default function ForgotPassword() {
               <p className="text-gray-600">
                 We've sent a password reset link to {email}
               </p>
-              
+
               <Button
                 onClick={() => {
                   setSubmitted(false);

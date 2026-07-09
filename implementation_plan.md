@@ -23,7 +23,9 @@ This document outlines the engineering specification, database schemas, backend 
 ## Proposed Changes
 
 ### 1. Database Schema
+
 #### [MODIFY] [schema.ts](file:///c:/hospital-management-system/drizzle/schema.ts)
+
 - Update the `appointments` table definition:
   - Modify `status` to use a MySQL enum containing: `["Scheduled", "Confirmed", "Checked-In", "Waiting", "In_Consultation", "Completed", "Cancelled", "No_Show", "Rescheduled"]`.
   - Add `priority` column: `mysqlEnum("priority", ["Low", "Medium", "High", "Emergency", "VIP"]).default("Medium").notNull()`.
@@ -38,8 +40,11 @@ This document outlines the engineering specification, database schemas, backend 
 ---
 
 ### 2. Backend Routing & Smart Scheduling API
+
 #### [MODIFY] [clinical.ts](file:///c:/hospital-management-system/server/routers/clinical.ts)
+
 We will expand `appointmentRouter` with the following tRPC procedures:
+
 - `getAvailableSlots`:
   - Input: `doctorId: number, date: string`
   - Logic: Generates day slots (e.g. 09:00 to 17:00 in increments of 15m). Filters out:
@@ -70,8 +75,11 @@ We will expand `appointmentRouter` with the following tRPC procedures:
 ---
 
 ### 3. Frontend Portal & User Experience
+
 #### [MODIFY] [AppointmentScheduling.tsx](file:///c:/hospital-management-system/client/src/pages/AppointmentScheduling.tsx)
+
 Redesign this page into a dual-column portal:
+
 - **Left Column: Scheduler & Grid Controls**
   - **Tabs for Calendar Views**: Day View, Week View, Month View, and Timeline View.
   - Interactive grid cards containing patient name, physician name, time badge, status badge, priority tag, and interactive transition menus.
@@ -82,7 +90,9 @@ Redesign this page into a dual-column portal:
   - Action buttons: Print slip (print-friendly custom iframe layout), edit appointment notes, duplicate appointment, mark no-show.
 
 #### [NEW] [AppointmentWizard.tsx](file:///c:/hospital-management-system/client/src/components/enterprise/AppointmentWizard.tsx)
+
 A step-by-step appointment booking wizard built on the Enterprise Form system:
+
 - **Step 1: Patient Selection** - Searchable patient selector utilizing standard card styling.
 - **Step 2: Department Selection** - Choice of active wings (Cardiology, Pediatrics, etc.).
 - **Step 3: Doctor Selection** - List of doctors in the selected wing showing availability.
@@ -97,10 +107,12 @@ A step-by-step appointment booking wizard built on the Enterprise Form system:
 ## Verification Plan
 
 ### Automated Tests
+
 - Type checking: `npm run check`
 - Build verification: `npm run build`
 
 ### Manual Verification
+
 1. Open the appointment dashboard, verify all widgets load without errors.
 2. Launch the Appointment Wizard, fill and submit an appointment, confirm slot blockings prevent double bookings.
 3. Test check-in flow, check queue counters update in real-time, inspect audit log logs.
@@ -111,37 +123,47 @@ A step-by-step appointment booking wizard built on the Enterprise Form system:
 ## Enterprise-Grade Scheduling Enhancements
 
 ### 1. Recurring Appointment Engine
+
 - **Types supported**: Weekly, Monthly, Follow-up schedules, Therapy sessions, Dialysis/Chemotherapy recurring schedules.
 - **Implementation**: Add a `recurringRule` column (JSON/text representation) to the `appointments` table, enabling a parent-child series structure.
 
 ### 2. Conflict Detection Engine
+
 - **Checks**: Doctor conflicts, Patient double-bookings, Room/Clinic Space conflicts, and Key Equipment conflicts (e.g., MRI, Ultrasound).
 - **Rule Engine**: Transactional verification checks executed within DB writes.
 
 ### 3. Queue Token Management
+
 - **Token Generation**: Dynamic alphanumeric token generation (e.g., `CAR-042`) assigned on check-in.
 - **Operations**: Support for Recall token, Skip token, and real-time dashboard display hooks.
 
 ### 4. Multi-Resource Booking
+
 - **Associations**: Map rooms, equipment, nurses, and technicians to an appointment slot, verifying availability across all units simultaneously.
 
 ### 5. Waiting List Engine
+
 - **Waiting Queue**: Patient entries mapped to full slots.
 - **Promotion**: Automatic promotion and slot assignment when a cancellation matching the query is processed.
 
 ### 6. Reminder Engine
+
 - **Schedules**: Notification hooks triggered 24h, 2h, and 30m before start, plus missed slot follow-ups.
 
 ### 7. Calendar Integration Hooks (Architecture only)
+
 - **Exports**: Support for ICS standard downloads, Google Calendar and Outlook Calendar OAuth synchronization hooks.
 
 ### 8. Enterprise KPI Widgets
+
 - **Metrics**: Doctor utilization percentage, average consultation time, average waiting time, peak hour analysis, and slot completion rate.
 
 ### 9. Offline Reception Support
+
 - **Resilience**: IndexedDB browser storage hooks for offline check-in logs and queue sequencing, auto-syncing upon recovery.
 
 ### 10. Future AI Extension Points
+
 - **Hooks**: Integration points for AI wait-time prediction, no-show probability forecasting, and smart slot recommendation models.
 
 ---
@@ -158,6 +180,7 @@ A step-by-step appointment booking wizard built on the Enterprise Form system:
 ---
 
 ## Empty States Architecture
+
 - When there is no active table or queue records, render the reusable premium `<EmptyState />` component containing:
   - Custom illustrative SVG.
   - Informative context descriptions.

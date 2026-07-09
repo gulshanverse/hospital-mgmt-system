@@ -3,9 +3,21 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Microscope, Plus, Upload, Download, Eye } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -36,14 +48,19 @@ export default function LabManagement() {
   const [reportPdfUrl, setReportPdfUrl] = useState("");
 
   const { data: patientsList } = trpc.patient.list.useQuery();
-  const { data: labOrders, refetch: refetchOrders } = trpc.lab.getOrders.useQuery({});
-  const { data: labReports, refetch: refetchReports } = trpc.lab.getReports.useQuery({});
+  const { data: labOrders, refetch: refetchOrders } =
+    trpc.lab.getOrders.useQuery({});
+  const { data: labReports, refetch: refetchReports } =
+    trpc.lab.getReports.useQuery({});
 
   const filteredPatients = patientSearch
-    ? patientsList?.filter((p: any) =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
-        p.phone?.includes(patientSearch) ||
-        p.patientCode?.toLowerCase().includes(patientSearch.toLowerCase())
+    ? patientsList?.filter(
+        (p: any) =>
+          `${p.firstName} ${p.lastName}`
+            .toLowerCase()
+            .includes(patientSearch.toLowerCase()) ||
+          p.phone?.includes(patientSearch) ||
+          p.patientCode?.toLowerCase().includes(patientSearch.toLowerCase())
       ) || []
     : [];
 
@@ -58,7 +75,7 @@ export default function LabManagement() {
       setNotes("");
       refetchOrders();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to create lab order");
     },
   });
@@ -90,7 +107,7 @@ export default function LabManagement() {
       refetchOrders();
       refetchReports();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to upload report");
     },
   });
@@ -100,7 +117,7 @@ export default function LabManagement() {
       toast.success("Lab order assigned successfully");
       refetchOrders();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to assign order");
     },
   });
@@ -123,7 +140,9 @@ export default function LabManagement() {
     const patId = parseInt(reportPatientId, 10);
 
     if (isNaN(orderId) || isNaN(patId) || !results) {
-      toast.error("Please enter valid Lab Order ID, Patient ID, and Test Results");
+      toast.error(
+        "Please enter valid Lab Order ID, Patient ID, and Test Results"
+      );
       return;
     }
 
@@ -187,7 +206,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #1a1a1a;
 <div class="grid">
   <div>
     <div class="field-label">Patient Name</div>
-    <div class="field-value">${report.patientName || 'N/A'}</div>
+    <div class="field-value">${report.patientName || "N/A"}</div>
   </div>
   <div>
     <div class="field-label">Report Date</div>
@@ -195,7 +214,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #1a1a1a;
   </div>
   <div>
     <div class="field-label">Status</div>
-    <div class="field-value"><span class="status-badge">${report.status || 'Completed'}</span></div>
+    <div class="field-value"><span class="status-badge">${report.status || "Completed"}</span></div>
   </div>
   <div>
     <div class="field-label">Report ID</div>
@@ -208,12 +227,16 @@ body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #1a1a1a;
   <p style="white-space: pre-wrap; font-size: 14px;">${report.results}</p>
 </div>
 
-${report.normalRange ? `
+${
+  report.normalRange
+    ? `
 <div class="normal-range">
   <div class="results-title" style="color: #065f46;">Reference / Normal Range</div>
   <p style="font-size: 13px;">${report.normalRange}</p>
 </div>
-` : ''}
+`
+    : ""
+}
 
 <div class="footer">
   <p>This report has been generated electronically by CareFlow HMS.</p>
@@ -222,21 +245,23 @@ ${report.normalRange ? `
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: 'text/html' });
+    const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const printWindow = window.open(url, '_blank');
+    const printWindow = window.open(url, "_blank");
     if (printWindow) {
       printWindow.onload = () => {
         printWindow.print();
       };
     } else {
       // Fallback: download as HTML file
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `lab-report-${report.labOrderId}.html`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Report downloaded. Open and use Print > Save as PDF to generate PDF.');
+      toast.success(
+        "Report downloaded. Open and use Print > Save as PDF to generate PDF."
+      );
     }
   };
 
@@ -306,11 +331,15 @@ ${report.normalRange ? `
                             {order.orderCode}
                           </TableCell>
                           <TableCell>{order.patientName || "N/A"}</TableCell>
-                          <TableCell>{getTestTypeLabel(order.testType)}</TableCell>
+                          <TableCell>
+                            {getTestTypeLabel(order.testType)}
+                          </TableCell>
                           <TableCell>
                             {new Date(order.orderDate).toLocaleDateString()}
                           </TableCell>
-                          <TableCell>{order.assignedToName || "Unassigned"}</TableCell>
+                          <TableCell>
+                            {order.assignedToName || "Unassigned"}
+                          </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(order.status)}>
                               {order.status}
@@ -338,7 +367,11 @@ ${report.normalRange ? `
                                   Upload Report
                                 </Button>
                               )}
-                              <Button size="sm" variant="outline" onClick={() => openOrderView(order)}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openOrderView(order)}
+                              >
                                 View
                               </Button>
                             </div>
@@ -386,11 +419,21 @@ ${report.normalRange ? `
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button size="sm" variant="outline" className="gap-1" onClick={() => openReportView(report)}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1"
+                                onClick={() => openReportView(report)}
+                              >
                                 <Eye className="w-4 h-4" />
                                 View
                               </Button>
-                              <Button size="sm" variant="outline" className="gap-1" onClick={() => generateAndDownloadPdf(report)}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1"
+                                onClick={() => generateAndDownloadPdf(report)}
+                              >
                                 <Download className="w-4 h-4" />
                                 PDF
                               </Button>
@@ -421,41 +464,69 @@ ${report.normalRange ? `
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 border rounded-lg bg-slate-50">
-                  <p className="text-xs text-gray-500 font-semibold uppercase">Order Code</p>
-                  <p className="font-mono font-bold">{selectedOrder.orderCode}</p>
+                  <p className="text-xs text-gray-500 font-semibold uppercase">
+                    Order Code
+                  </p>
+                  <p className="font-mono font-bold">
+                    {selectedOrder.orderCode}
+                  </p>
                 </div>
                 <div className="p-3 border rounded-lg bg-slate-50">
-                  <p className="text-xs text-gray-500 font-semibold uppercase">Status</p>
-                  <Badge className={getStatusColor(selectedOrder.status)}>{selectedOrder.status}</Badge>
+                  <p className="text-xs text-gray-500 font-semibold uppercase">
+                    Status
+                  </p>
+                  <Badge className={getStatusColor(selectedOrder.status)}>
+                    {selectedOrder.status}
+                  </Badge>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 font-semibold">Patient</p>
-                  <p className="font-semibold">{selectedOrder.patientName || 'N/A'}</p>
+                  <p className="font-semibold">
+                    {selectedOrder.patientName || "N/A"}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-semibold">Test Type</p>
+                  <p className="text-xs text-gray-500 font-semibold">
+                    Test Type
+                  </p>
                   <p>{getTestTypeLabel(selectedOrder.testType)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-500 font-semibold">Order Date</p>
-                  <p>{new Date(selectedOrder.orderDate).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-500 font-semibold">
+                    Order Date
+                  </p>
+                  <p>
+                    {new Date(selectedOrder.orderDate).toLocaleDateString()}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-semibold">Assigned To</p>
-                  <p>{selectedOrder.assignedToName || 'Unassigned'}</p>
+                  <p className="text-xs text-gray-500 font-semibold">
+                    Assigned To
+                  </p>
+                  <p>{selectedOrder.assignedToName || "Unassigned"}</p>
                 </div>
               </div>
               {selectedOrder.notes && (
                 <div className="border-t pt-3">
-                  <p className="text-xs text-gray-500 font-semibold mb-1">Notes</p>
-                  <p className="text-sm whitespace-pre-wrap">{selectedOrder.notes}</p>
+                  <p className="text-xs text-gray-500 font-semibold mb-1">
+                    Notes
+                  </p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {selectedOrder.notes}
+                  </p>
                 </div>
               )}
-              <Button variant="outline" className="w-full" onClick={() => setIsOrderViewOpen(false)}>Close</Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsOrderViewOpen(false)}
+              >
+                Close
+              </Button>
             </div>
           )}
         </DialogContent>
@@ -471,43 +542,71 @@ ${report.normalRange ? `
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 border rounded-lg bg-slate-50">
-                  <p className="text-xs text-gray-500 font-semibold uppercase">Report ID</p>
+                  <p className="text-xs text-gray-500 font-semibold uppercase">
+                    Report ID
+                  </p>
                   <p className="font-mono font-bold">#{selectedReport.id}</p>
                 </div>
                 <div className="p-3 border rounded-lg bg-slate-50">
-                  <p className="text-xs text-gray-500 font-semibold uppercase">Lab Order</p>
-                  <p className="font-mono font-bold">#{selectedReport.labOrderId}</p>
+                  <p className="text-xs text-gray-500 font-semibold uppercase">
+                    Lab Order
+                  </p>
+                  <p className="font-mono font-bold">
+                    #{selectedReport.labOrderId}
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 font-semibold">Patient</p>
-                  <p className="font-semibold">{selectedReport.patientName || 'N/A'}</p>
+                  <p className="font-semibold">
+                    {selectedReport.patientName || "N/A"}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-semibold">Report Date</p>
-                  <p>{new Date(selectedReport.reportDate).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-500 font-semibold">
+                    Report Date
+                  </p>
+                  <p>
+                    {new Date(selectedReport.reportDate).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
               <div className="border-t pt-3">
-                <p className="text-xs text-gray-500 font-semibold mb-2">Test Results</p>
+                <p className="text-xs text-gray-500 font-semibold mb-2">
+                  Test Results
+                </p>
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm whitespace-pre-wrap">{selectedReport.results}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {selectedReport.results}
+                  </p>
                 </div>
               </div>
               {selectedReport.normalRange && (
                 <div>
-                  <p className="text-xs text-gray-500 font-semibold mb-2">Normal Range</p>
+                  <p className="text-xs text-gray-500 font-semibold mb-2">
+                    Normal Range
+                  </p>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm">{selectedReport.normalRange}</p>
                   </div>
                 </div>
               )}
               <div className="flex gap-2 pt-2 border-t">
-                <Button variant="outline" className="flex-1 gap-1" onClick={() => generateAndDownloadPdf(selectedReport)}>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-1"
+                  onClick={() => generateAndDownloadPdf(selectedReport)}
+                >
                   <Download className="w-4 h-4" /> Download PDF
                 </Button>
-                <Button variant="outline" className="flex-1" onClick={() => setIsReportViewOpen(false)}>Close</Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsReportViewOpen(false)}
+                >
+                  Close
+                </Button>
               </div>
             </div>
           )}
@@ -523,7 +622,9 @@ ${report.normalRange ? `
           <div className="space-y-4">
             {/* Patient Select Autocomplete */}
             <div className="space-y-1 relative">
-              <label className="text-xs text-gray-500 font-semibold px-1">Patient</label>
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Patient
+              </label>
               {selectedPatient ? (
                 <div className="flex items-center justify-between p-2.5 border rounded-lg bg-blue-50 border-blue-200">
                   <div>
@@ -531,7 +632,10 @@ ${report.normalRange ? `
                       {selectedPatient.firstName} {selectedPatient.lastName}
                     </p>
                     <p className="text-xs text-blue-700">
-                      {selectedPatient.patientCode} {selectedPatient.phone ? `• ${selectedPatient.phone}` : ""}
+                      {selectedPatient.patientCode}{" "}
+                      {selectedPatient.phone
+                        ? `• ${selectedPatient.phone}`
+                        : ""}
                     </p>
                   </div>
                   <Button
@@ -552,7 +656,7 @@ ${report.normalRange ? `
                   <Input
                     placeholder="Search patient by name, code or phone..."
                     value={patientSearch}
-                    onChange={(e) => setPatientSearch(e.target.value)}
+                    onChange={e => setPatientSearch(e.target.value)}
                   />
                   {patientSearch && filteredPatients.length > 0 && (
                     <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground border rounded-md shadow-lg max-h-40 overflow-y-auto divide-y divide-border">
@@ -566,7 +670,9 @@ ${report.normalRange ? `
                             setPatientSearch("");
                           }}
                         >
-                          <div className="font-semibold">{p.firstName} {p.lastName}</div>
+                          <div className="font-semibold">
+                            {p.firstName} {p.lastName}
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             {p.patientCode} {p.phone ? `• ${p.phone}` : ""}
                           </div>
@@ -584,12 +690,20 @@ ${report.normalRange ? `
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Appointment ID (optional)</label>
-              <Input placeholder="Appointment ID (optional Number)" value={appointmentId} onChange={(e) => setAppointmentId(e.target.value)} />
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Appointment ID (optional)
+              </label>
+              <Input
+                placeholder="Appointment ID (optional Number)"
+                value={appointmentId}
+                onChange={e => setAppointmentId(e.target.value)}
+              />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Test Type</label>
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Test Type
+              </label>
               <select
                 value={testType}
                 onChange={(e: any) => setTestType(e.target.value)}
@@ -605,11 +719,21 @@ ${report.normalRange ? `
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Notes</label>
-              <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Notes
+              </label>
+              <Input
+                placeholder="Notes (optional)"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+              />
             </div>
 
-            <Button onClick={handleCreateOrder} disabled={createOrderMutation.isPending} className="w-full">
+            <Button
+              onClick={handleCreateOrder}
+              disabled={createOrderMutation.isPending}
+              className="w-full"
+            >
               {createOrderMutation.isPending ? "Creating..." : "Create Order"}
             </Button>
           </div>
@@ -624,27 +748,67 @@ ${report.normalRange ? `
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Lab Order ID</label>
-              <Input placeholder="Lab Order ID (Number)" value={labOrderId} readOnly disabled className="bg-gray-100 cursor-not-allowed" />
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Lab Order ID
+              </label>
+              <Input
+                placeholder="Lab Order ID (Number)"
+                value={labOrderId}
+                readOnly
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
+              />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Patient ID</label>
-              <Input placeholder="Patient ID (Number)" value={reportPatientId} readOnly disabled className="bg-gray-100 cursor-not-allowed" />
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Patient ID
+              </label>
+              <Input
+                placeholder="Patient ID (Number)"
+                value={reportPatientId}
+                readOnly
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
+              />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Test Results</label>
-              <Input placeholder="Test Results" value={results} onChange={(e) => setResults(e.target.value)} />
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Test Results
+              </label>
+              <Input
+                placeholder="Test Results"
+                value={results}
+                onChange={e => setResults(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Normal Range</label>
-              <Input placeholder="Normal Range" value={normalRange} onChange={(e) => setNormalRange(e.target.value)} />
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Normal Range
+              </label>
+              <Input
+                placeholder="Normal Range"
+                value={normalRange}
+                onChange={e => setNormalRange(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500 font-semibold px-1">Report PDF URL (optional)</label>
-              <Input placeholder="Report PDF URL (optional)" value={reportPdfUrl} onChange={(e) => setReportPdfUrl(e.target.value)} />
+              <label className="text-xs text-gray-500 font-semibold px-1">
+                Report PDF URL (optional)
+              </label>
+              <Input
+                placeholder="Report PDF URL (optional)"
+                value={reportPdfUrl}
+                onChange={e => setReportPdfUrl(e.target.value)}
+              />
             </div>
-            <Button onClick={handleUploadReport} disabled={uploadReportMutation.isPending} className="w-full">
-              {uploadReportMutation.isPending ? "Uploading..." : "Upload Report"}
+            <Button
+              onClick={handleUploadReport}
+              disabled={uploadReportMutation.isPending}
+              className="w-full"
+            >
+              {uploadReportMutation.isPending
+                ? "Uploading..."
+                : "Upload Report"}
             </Button>
           </div>
         </DialogContent>
@@ -652,5 +816,3 @@ ${report.normalRange ? `
     </DashboardLayout>
   );
 }
-
-

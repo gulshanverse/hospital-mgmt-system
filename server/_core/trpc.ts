@@ -1,4 +1,4 @@
-import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
+import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from "@shared/const";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
@@ -32,7 +32,7 @@ export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 
-    if (!ctx.user || ctx.user.role !== 'admin') {
+    if (!ctx.user || ctx.user.role !== "admin") {
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
 
@@ -42,7 +42,7 @@ export const adminProcedure = t.procedure.use(
         user: ctx.user,
       },
     });
-  }),
+  })
 );
 
 export const createRoleBasedProcedure = (allowedRoles: HMSRole[]) =>
@@ -51,7 +51,10 @@ export const createRoleBasedProcedure = (allowedRoles: HMSRole[]) =>
       const { ctx, next } = opts;
 
       if (!ctx.user) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: UNAUTHED_ERR_MSG,
+        });
       }
 
       requireRole(ctx.user.role as HMSRole, allowedRoles);
@@ -67,6 +70,15 @@ export const createRoleBasedProcedure = (allowedRoles: HMSRole[]) =>
 
 export const doctorProcedure = createRoleBasedProcedure(["doctor", "admin"]);
 export const nurseProcedure = createRoleBasedProcedure(["nurse", "admin"]);
-export const receptionistProcedure = createRoleBasedProcedure(["receptionist", "admin"]);
-export const pharmacistProcedure = createRoleBasedProcedure(["pharmacist", "admin"]);
-export const labTechnicianProcedure = createRoleBasedProcedure(["lab_technician", "admin"]);
+export const receptionistProcedure = createRoleBasedProcedure([
+  "receptionist",
+  "admin",
+]);
+export const pharmacistProcedure = createRoleBasedProcedure([
+  "pharmacist",
+  "admin",
+]);
+export const labTechnicianProcedure = createRoleBasedProcedure([
+  "lab_technician",
+  "admin",
+]);

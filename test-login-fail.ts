@@ -1,11 +1,11 @@
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import type { AppRouter } from './server/routers';
-import superjson from 'superjson';
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import type { AppRouter } from "./server/routers";
+import superjson from "superjson";
 
 const client = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: 'https://jeevanos.up.railway.app/api/trpc',
+      url: "https://jeevanos.up.railway.app/api/trpc",
       transformer: superjson,
       fetch: globalThis.fetch as any,
     }),
@@ -14,14 +14,14 @@ const client = createTRPCClient<AppRouter>({
 
 async function test() {
   try {
-    console.log('Testing Login with non-existent user...');
+    console.log("Testing Login with non-existent user...");
     await client.auth.login.mutate({
-      email: 'non-existent-' + Date.now() + '@example.com',
-      password: 'some-password'
+      email: "non-existent-" + Date.now() + "@example.com",
+      password: "some-password",
     });
   } catch (error: any) {
-    console.log('Response Status:', error.data?.httpStatus);
-    console.log('Response Message:', error.message);
+    console.log("Response Status:", error.data?.httpStatus);
+    console.log("Response Message:", error.message);
   }
 }
 test();

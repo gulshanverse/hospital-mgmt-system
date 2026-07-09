@@ -9,10 +9,10 @@ export type TrpcContext = {
 
 /**
  * Simplified Context Creation (Phase 1)
- * 
+ *
  * This is a temporary implementation without Manus OAuth.
  * JWT authentication will be implemented in Phase 2.
- * 
+ *
  * For now, all requests are treated as unauthenticated.
  */
 export async function createContext(

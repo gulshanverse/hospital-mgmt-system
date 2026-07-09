@@ -3,35 +3,51 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Calendar as CalendarIcon, 
-  Plus, 
-  Clock, 
-  User, 
-  Users, 
-  CheckCircle2, 
-  XCircle, 
-  BarChart3, 
-  Printer, 
-  Download, 
-  RefreshCw, 
-  SlidersHorizontal, 
-  ListOrdered, 
-  Activity, 
+import {
+  Calendar as CalendarIcon,
+  Plus,
+  Clock,
+  User,
+  Users,
+  CheckCircle2,
+  XCircle,
+  BarChart3,
+  Printer,
+  Download,
+  RefreshCw,
+  SlidersHorizontal,
+  ListOrdered,
+  Activity,
   AlertTriangle,
   ArrowRight,
   Sparkles,
-  ClipboardList
+  ClipboardList,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 export default function AppointmentScheduling() {
-  const [activeTab, setActiveTab] = useState<"list" | "calendar" | "queue" | "analytics">("list");
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [activeTab, setActiveTab] = useState<
+    "list" | "calendar" | "queue" | "analytics"
+  >("list");
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Filters State
@@ -61,16 +77,21 @@ export default function AppointmentScheduling() {
   const [doctorSearch, setDoctorSearch] = useState("");
   const [wizDate, setWizDate] = useState(selectedDate);
   const [wizTime, setWizTime] = useState("");
-  const [wizPriority, setWizPriority] = useState<"Low" | "Medium" | "High" | "Emergency" | "VIP">("Medium");
-  const [wizType, setWizType] = useState<"Walk-In" | "Pre-Booked" | "Telemedicine">("Pre-Booked");
+  const [wizPriority, setWizPriority] = useState<
+    "Low" | "Medium" | "High" | "Emergency" | "VIP"
+  >("Medium");
+  const [wizType, setWizType] = useState<
+    "Walk-In" | "Pre-Booked" | "Telemedicine"
+  >("Pre-Booked");
   const [wizReason, setWizReason] = useState("");
   const [wizNotes, setWizNotes] = useState("");
 
   // Available slots check for Wizard
-  const { data: availableSlots = [], isFetching: isSlotsLoading } = trpc.appointment.getAvailableSlots.useQuery(
-    { doctorId: selectedDoctor?.id || 0, date: wizDate },
-    { enabled: !!selectedDoctor && !!wizDate }
-  );
+  const { data: availableSlots = [], isFetching: isSlotsLoading } =
+    trpc.appointment.getAvailableSlots.useQuery(
+      { doctorId: selectedDoctor?.id || 0, date: wizDate },
+      { enabled: !!selectedDoctor && !!wizDate }
+    );
 
   // Edit / Status Reschedule Wizard State
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
@@ -88,14 +109,19 @@ export default function AppointmentScheduling() {
   const [checkInMethod, setCheckInMethod] = useState("Self-Service Kiosk");
 
   // Queue query
-  const { data: queueData, refetch: refetchQueue } = trpc.appointment.getQueue.useQuery({
-    date: selectedDate,
-  });
+  const { data: queueData, refetch: refetchQueue } =
+    trpc.appointment.getQueue.useQuery({
+      date: selectedDate,
+    });
 
   // Reports Analytics Query
   const { data: reportsData } = trpc.appointment.getReports.useQuery({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
   });
 
   // Mutations
@@ -107,7 +133,7 @@ export default function AppointmentScheduling() {
       refetch();
       refetchQueue();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to schedule appointment");
     },
   });
@@ -119,7 +145,7 @@ export default function AppointmentScheduling() {
       refetch();
       refetchQueue();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to update status");
     },
   });
@@ -131,30 +157,34 @@ export default function AppointmentScheduling() {
       refetch();
       refetchQueue();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Rescheduling failed");
     },
   });
 
   const checkInMutation = trpc.appointment.checkIn.useMutation({
-    onSuccess: (data) => {
-      toast.success(`Patient checked in. Assigned Queue Token: TKN-${data.queuePosition}`);
+    onSuccess: data => {
+      toast.success(
+        `Patient checked in. Assigned Queue Token: TKN-${data.queuePosition}`
+      );
       setIsCheckInOpen(false);
       refetch();
       refetchQueue();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Check-In failed");
     },
   });
 
   const demoDataMutation = trpc.appointment.generateDemoData.useMutation({
-    onSuccess: (data) => {
-      toast.success(`Successfully populated database with ${data.count} demo appointments.`);
+    onSuccess: data => {
+      toast.success(
+        `Successfully populated database with ${data.count} demo appointments.`
+      );
       refetch();
       refetchQueue();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Demo data generation failed");
     },
   });
@@ -228,11 +258,19 @@ export default function AppointmentScheduling() {
   };
 
   const handleExport = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + ["Patient ID,Patient Name,Doctor,Department,Date,Time,Priority,Type,Status"]
-      .concat(appointments.map(a => `${a.patientCode},${a.patientName},${a.doctorName},${a.departmentName},${a.appointmentDate},${a.appointmentTime},${a.priority},${a.appointmentType},${a.status}`))
-      .join("\n");
-    
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [
+        "Patient ID,Patient Name,Doctor,Department,Date,Time,Priority,Type,Status",
+      ]
+        .concat(
+          appointments.map(
+            a =>
+              `${a.patientCode},${a.patientName},${a.doctorName},${a.departmentName},${a.appointmentDate},${a.appointmentTime},${a.priority},${a.appointmentType},${a.status}`
+          )
+        )
+        .join("\n");
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -285,23 +323,59 @@ export default function AppointmentScheduling() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Scheduled":
-        return <Badge className="bg-blue-50 text-blue-700 border border-blue-200">Scheduled</Badge>;
+        return (
+          <Badge className="bg-blue-50 text-blue-700 border border-blue-200">
+            Scheduled
+          </Badge>
+        );
       case "Confirmed":
-        return <Badge className="bg-indigo-50 text-indigo-700 border border-indigo-200">Confirmed</Badge>;
+        return (
+          <Badge className="bg-indigo-50 text-indigo-700 border border-indigo-200">
+            Confirmed
+          </Badge>
+        );
       case "Checked-In":
-        return <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">Checked-In</Badge>;
+        return (
+          <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Checked-In
+          </Badge>
+        );
       case "Waiting":
-        return <Badge className="bg-amber-50 text-amber-700 border border-amber-200">Waiting</Badge>;
+        return (
+          <Badge className="bg-amber-50 text-amber-700 border border-amber-200">
+            Waiting
+          </Badge>
+        );
       case "In_Consultation":
-        return <Badge className="bg-purple-50 text-purple-700 border border-purple-200">In Consultation</Badge>;
+        return (
+          <Badge className="bg-purple-50 text-purple-700 border border-purple-200">
+            In Consultation
+          </Badge>
+        );
       case "Completed":
-        return <Badge className="bg-green-50 text-green-700 border border-green-200">Completed</Badge>;
+        return (
+          <Badge className="bg-green-50 text-green-700 border border-green-200">
+            Completed
+          </Badge>
+        );
       case "Cancelled":
-        return <Badge className="bg-rose-50 text-rose-700 border border-rose-200">Cancelled</Badge>;
+        return (
+          <Badge className="bg-rose-50 text-rose-700 border border-rose-200">
+            Cancelled
+          </Badge>
+        );
       case "No_Show":
-        return <Badge className="bg-slate-100 text-slate-700 border border-slate-300">No Show</Badge>;
+        return (
+          <Badge className="bg-slate-100 text-slate-700 border border-slate-300">
+            No Show
+          </Badge>
+        );
       case "Rescheduled":
-        return <Badge className="bg-sky-50 text-sky-700 border border-sky-200">Rescheduled</Badge>;
+        return (
+          <Badge className="bg-sky-50 text-sky-700 border border-sky-200">
+            Rescheduled
+          </Badge>
+        );
       default:
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
@@ -310,32 +384,56 @@ export default function AppointmentScheduling() {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "Low":
-        return <Badge className="bg-slate-50 text-slate-600 border border-slate-200">Low</Badge>;
+        return (
+          <Badge className="bg-slate-50 text-slate-600 border border-slate-200">
+            Low
+          </Badge>
+        );
       case "Medium":
-        return <Badge className="bg-blue-50 text-blue-600 border border-blue-200">Medium</Badge>;
+        return (
+          <Badge className="bg-blue-50 text-blue-600 border border-blue-200">
+            Medium
+          </Badge>
+        );
       case "High":
-        return <Badge className="bg-orange-50 text-orange-600 border border-orange-200">High</Badge>;
+        return (
+          <Badge className="bg-orange-50 text-orange-600 border border-orange-200">
+            High
+          </Badge>
+        );
       case "Emergency":
-        return <Badge className="bg-red-50 text-red-600 border border-red-200 animate-pulse">🔴 Emergency</Badge>;
+        return (
+          <Badge className="bg-red-50 text-red-600 border border-red-200 animate-pulse">
+            🔴 Emergency
+          </Badge>
+        );
       case "VIP":
-        return <Badge className="bg-amber-50 text-amber-700 border border-amber-200">✨ VIP</Badge>;
+        return (
+          <Badge className="bg-amber-50 text-amber-700 border border-amber-200">
+            ✨ VIP
+          </Badge>
+        );
       default:
         return <Badge>{priority}</Badge>;
     }
   };
 
   const filteredPatients = patientSearch
-    ? patientsList?.filter((p: any) =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
-        p.phone?.includes(patientSearch) ||
-        p.patientCode?.toLowerCase().includes(patientSearch.toLowerCase())
+    ? patientsList?.filter(
+        (p: any) =>
+          `${p.firstName} ${p.lastName}`
+            .toLowerCase()
+            .includes(patientSearch.toLowerCase()) ||
+          p.phone?.includes(patientSearch) ||
+          p.patientCode?.toLowerCase().includes(patientSearch.toLowerCase())
       ) || []
     : [];
 
   const filteredDoctors = doctorSearch
-    ? doctorsList?.filter((d: any) =>
-        d.name?.toLowerCase().includes(doctorSearch.toLowerCase()) ||
-        d.specialty?.toLowerCase().includes(doctorSearch.toLowerCase())
+    ? doctorsList?.filter(
+        (d: any) =>
+          d.name?.toLowerCase().includes(doctorSearch.toLowerCase()) ||
+          d.specialty?.toLowerCase().includes(doctorSearch.toLowerCase())
       ) || []
     : [];
 
@@ -349,7 +447,6 @@ export default function AppointmentScheduling() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        
         {/* Module Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
           <div>
@@ -357,14 +454,19 @@ export default function AppointmentScheduling() {
               <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
                 Clinical ERP v1.1
               </span>
-              <Badge className="bg-emerald-500 text-white font-medium hover:bg-emerald-600">Enterprise Engine</Badge>
+              <Badge className="bg-emerald-500 text-white font-medium hover:bg-emerald-600">
+                Enterprise Engine
+              </Badge>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight mt-1">Appointment Scheduling Engine</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight mt-1">
+              Appointment Scheduling Engine
+            </h1>
             <p className="text-muted-foreground text-sm mt-0.5">
-              Smart scheduling slots, real-time wait lists, conflict checking, and live queue displays.
+              Smart scheduling slots, real-time wait lists, conflict checking,
+              and live queue displays.
             </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
@@ -374,10 +476,15 @@ export default function AppointmentScheduling() {
               className="gap-2 border-dashed border-primary text-primary hover:bg-primary/5 transition-all"
             >
               <Sparkles className="w-4.5 h-4.5" />
-              {demoDataMutation.isPending ? "Generating Demo..." : "One-Click Demo Data (500)"}
+              {demoDataMutation.isPending
+                ? "Generating Demo..."
+                : "One-Click Demo Data (500)"}
             </Button>
 
-            <Button onClick={() => setIsCreateOpen(true)} className="gap-2 shadow-sm font-semibold">
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              className="gap-2 shadow-sm font-semibold"
+            >
               <Plus className="w-4.5 h-4.5" />
               New Appointment
             </Button>
@@ -389,8 +496,8 @@ export default function AppointmentScheduling() {
           <button
             onClick={() => setActiveTab("list")}
             className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
-              activeTab === "list" 
-                ? "border-primary text-primary font-semibold" 
+              activeTab === "list"
+                ? "border-primary text-primary font-semibold"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -399,12 +506,12 @@ export default function AppointmentScheduling() {
               Appointments Registry
             </span>
           </button>
-          
+
           <button
             onClick={() => setActiveTab("calendar")}
             className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
-              activeTab === "calendar" 
-                ? "border-primary text-primary font-semibold" 
+              activeTab === "calendar"
+                ? "border-primary text-primary font-semibold"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -417,8 +524,8 @@ export default function AppointmentScheduling() {
           <button
             onClick={() => setActiveTab("queue")}
             className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
-              activeTab === "queue" 
-                ? "border-primary text-primary font-semibold" 
+              activeTab === "queue"
+                ? "border-primary text-primary font-semibold"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -431,8 +538,8 @@ export default function AppointmentScheduling() {
           <button
             onClick={() => setActiveTab("analytics")}
             className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
-              activeTab === "analytics" 
-                ? "border-primary text-primary font-semibold" 
+              activeTab === "analytics"
+                ? "border-primary text-primary font-semibold"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -446,24 +553,27 @@ export default function AppointmentScheduling() {
         {/* Tab 1: Registry Table */}
         {activeTab === "list" && (
           <div className="space-y-4">
-            
             {/* Filters Bar */}
             <Card className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-center">
               <div>
-                <label className="text-xs text-muted-foreground font-semibold">Search Registry</label>
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Search Registry
+                </label>
                 <Input
                   placeholder="Patient, doctor name or reason..."
                   value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
+                  onChange={e => setSearchFilter(e.target.value)}
                   className="mt-1"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-muted-foreground font-semibold">Filter Status</label>
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Filter Status
+                </label>
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={e => setStatusFilter(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background mt-1"
                 >
                   <option value="all">All Statuses</option>
@@ -479,10 +589,12 @@ export default function AppointmentScheduling() {
               </div>
 
               <div>
-                <label className="text-xs text-muted-foreground font-semibold">Filter Priority</label>
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Filter Priority
+                </label>
                 <select
                   value={priorityFilter}
-                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  onChange={e => setPriorityFilter(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background mt-1"
                 >
                   <option value="all">All Priorities</option>
@@ -495,10 +607,12 @@ export default function AppointmentScheduling() {
               </div>
 
               <div>
-                <label className="text-xs text-muted-foreground font-semibold">Filter Type</label>
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Filter Type
+                </label>
                 <select
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
+                  onChange={e => setTypeFilter(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background mt-1"
                 >
                   <option value="all">All Types</option>
@@ -509,11 +623,19 @@ export default function AppointmentScheduling() {
               </div>
 
               <div className="flex gap-2 self-end w-full">
-                <Button variant="outline" onClick={handleExport} className="flex-1 gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleExport}
+                  className="flex-1 gap-2"
+                >
                   <Download className="w-4.5 h-4.5" />
                   CSV
                 </Button>
-                <Button variant="outline" onClick={() => refetch()} className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => refetch()}
+                  className="gap-2"
+                >
                   <RefreshCw className="w-4 h-4" />
                 </Button>
               </div>
@@ -543,14 +665,22 @@ export default function AppointmentScheduling() {
                             <Clock className="w-4 h-4 text-muted-foreground" />
                             {apt.appointmentTime}
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5">{apt.appointmentDate}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {apt.appointmentDate}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-semibold text-foreground">{apt.patientName}</div>
-                          <div className="text-xs text-muted-foreground">{apt.patientCode || "N/A"}</div>
+                          <div className="font-semibold text-foreground">
+                            {apt.patientName}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {apt.patientCode || "N/A"}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium text-slate-800">{apt.doctorName}</div>
+                          <div className="font-medium text-slate-800">
+                            {apt.doctorName}
+                          </div>
                         </TableCell>
                         <TableCell>{apt.departmentName}</TableCell>
                         <TableCell>{getPriorityBadge(apt.priority)}</TableCell>
@@ -562,7 +692,8 @@ export default function AppointmentScheduling() {
                         <TableCell>{getStatusBadge(apt.status)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            {apt.status === "Scheduled" || apt.status === "Confirmed" ? (
+                            {apt.status === "Scheduled" ||
+                            apt.status === "Confirmed" ? (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -610,11 +741,19 @@ export default function AppointmentScheduling() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                      <TableCell
+                        colSpan={8}
+                        className="text-center py-12 text-muted-foreground"
+                      >
                         <div className="flex flex-col items-center justify-center gap-2">
                           <ClipboardList className="w-8 h-8 text-muted-foreground/50" />
-                          <p className="text-sm font-semibold">No appointments found matching these filters.</p>
-                          <p className="text-xs">Try selecting a different date range or category filter.</p>
+                          <p className="text-sm font-semibold">
+                            No appointments found matching these filters.
+                          </p>
+                          <p className="text-xs">
+                            Try selecting a different date range or category
+                            filter.
+                          </p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -635,7 +774,7 @@ export default function AppointmentScheduling() {
                 <Input
                   type="date"
                   value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  onChange={e => setSelectedDate(e.target.value)}
                   className="w-44"
                 />
               </div>
@@ -645,14 +784,33 @@ export default function AppointmentScheduling() {
               {/* Headings */}
               <div className="grid grid-cols-4 bg-muted/50 font-bold p-3 text-sm">
                 <div>Time Slot</div>
-                <div className="col-span-3">Scheduled Patient & Consultant Details</div>
+                <div className="col-span-3">
+                  Scheduled Patient & Consultant Details
+                </div>
               </div>
 
               {/* Time rows from 09:00 to 17:00 */}
-              {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"].map((time) => {
+              {[
+                "09:00",
+                "09:30",
+                "10:00",
+                "10:30",
+                "11:00",
+                "11:30",
+                "12:00",
+                "14:00",
+                "14:30",
+                "15:00",
+                "15:30",
+                "16:00",
+                "16:30",
+              ].map(time => {
                 const slotApts = calendarAppointments[time] || [];
                 return (
-                  <div key={time} className="grid grid-cols-4 items-center p-3 text-sm hover:bg-muted/10">
+                  <div
+                    key={time}
+                    className="grid grid-cols-4 items-center p-3 text-sm hover:bg-muted/10"
+                  >
                     <div className="font-semibold text-muted-foreground flex items-center gap-1.5">
                       <Clock className="w-4 h-4" />
                       {time}
@@ -671,7 +829,9 @@ export default function AppointmentScheduling() {
                             }}
                           >
                             <div className="flex items-center justify-between gap-4">
-                              <span className="font-semibold text-slate-800">{apt.patientName}</span>
+                              <span className="font-semibold text-slate-800">
+                                {apt.patientName}
+                              </span>
                               {getStatusBadge(apt.status)}
                             </div>
                             <div className="text-xs text-muted-foreground flex items-center gap-1">
@@ -681,7 +841,9 @@ export default function AppointmentScheduling() {
                           </div>
                         ))
                       ) : (
-                        <span className="text-xs text-muted-foreground/60 italic">Available slot</span>
+                        <span className="text-xs text-muted-foreground/60 italic">
+                          Available slot
+                        </span>
                       )}
                     </div>
                   </div>
@@ -701,19 +863,24 @@ export default function AppointmentScheduling() {
                   Live Queue Telemetry Board
                 </h2>
                 <p className="text-xs text-slate-300">
-                  Track waitlists, emergency escalations, average consultant loads and room token releases.
+                  Track waitlists, emergency escalations, average consultant
+                  loads and room token releases.
                 </p>
               </div>
 
               <div className="flex items-center gap-6">
                 <div className="text-center">
                   <p className="text-xs text-slate-400">Total Waiting</p>
-                  <p className="text-2xl font-black text-emerald-400">{queueData?.waiting.length || 0}</p>
+                  <p className="text-2xl font-black text-emerald-400">
+                    {queueData?.waiting.length || 0}
+                  </p>
                 </div>
                 <div className="w-px h-8 bg-slate-700" />
                 <div className="text-center">
                   <p className="text-xs text-slate-400">In Consult</p>
-                  <p className="text-2xl font-black text-indigo-400">{queueData?.in_consultation.length || 0}</p>
+                  <p className="text-2xl font-black text-indigo-400">
+                    {queueData?.in_consultation.length || 0}
+                  </p>
                 </div>
                 <div className="w-px h-8 bg-slate-700" />
                 <div className="text-center">
@@ -724,28 +891,36 @@ export default function AppointmentScheduling() {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
               {/* Waiting List Queue */}
               <Card className="p-4 border-l-4 border-l-amber-500">
                 <h3 className="font-bold text-sm text-slate-900 border-b pb-2 mb-3 uppercase tracking-wider flex justify-between">
                   <span>Waiting Lobby</span>
-                  <Badge className="bg-amber-100 text-amber-800 border-none">{queueData?.waiting.length || 0}</Badge>
+                  <Badge className="bg-amber-100 text-amber-800 border-none">
+                    {queueData?.waiting.length || 0}
+                  </Badge>
                 </h3>
-                
+
                 <div className="space-y-3">
                   {queueData?.waiting && queueData.waiting.length > 0 ? (
                     queueData.waiting.map((q: any, i: number) => (
-                      <div key={q.id} className="p-3 border rounded-lg bg-slate-50 relative flex items-center justify-between gap-4">
+                      <div
+                        key={q.id}
+                        className="p-3 border rounded-lg bg-slate-50 relative flex items-center justify-between gap-4"
+                      >
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="bg-amber-500 text-white font-bold text-xs px-2 py-0.5 rounded">
-                              TKN-{q.queuePosition || (i + 1)}
+                              TKN-{q.queuePosition || i + 1}
                             </span>
-                            <span className="font-semibold text-sm">{q.patientName}</span>
+                            <span className="font-semibold text-sm">
+                              {q.patientName}
+                            </span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">Consulting: {q.doctorName}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Consulting: {q.doctorName}
+                          </p>
                         </div>
-                        
+
                         <Button
                           size="sm"
                           variant="outline"
@@ -763,7 +938,9 @@ export default function AppointmentScheduling() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">Lobby is currently empty.</p>
+                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">
+                      Lobby is currently empty.
+                    </p>
                   )}
                 </div>
               </Card>
@@ -772,16 +949,26 @@ export default function AppointmentScheduling() {
               <Card className="p-4 border-l-4 border-l-indigo-500">
                 <h3 className="font-bold text-sm text-slate-900 border-b pb-2 mb-3 uppercase tracking-wider flex justify-between">
                   <span>In Consultation rooms</span>
-                  <Badge className="bg-indigo-100 text-indigo-800 border-none">{queueData?.in_consultation.length || 0}</Badge>
+                  <Badge className="bg-indigo-100 text-indigo-800 border-none">
+                    {queueData?.in_consultation.length || 0}
+                  </Badge>
                 </h3>
 
                 <div className="space-y-3">
-                  {queueData?.in_consultation && queueData.in_consultation.length > 0 ? (
+                  {queueData?.in_consultation &&
+                  queueData.in_consultation.length > 0 ? (
                     queueData.in_consultation.map((q: any) => (
-                      <div key={q.id} className="p-3 border rounded-lg bg-indigo-50/40 relative flex items-center justify-between gap-4">
+                      <div
+                        key={q.id}
+                        className="p-3 border rounded-lg bg-indigo-50/40 relative flex items-center justify-between gap-4"
+                      >
                         <div>
-                          <p className="font-semibold text-sm text-indigo-950">{q.patientName}</p>
-                          <p className="text-xs text-indigo-700 mt-0.5">With {q.doctorName}</p>
+                          <p className="font-semibold text-sm text-indigo-950">
+                            {q.patientName}
+                          </p>
+                          <p className="text-xs text-indigo-700 mt-0.5">
+                            With {q.doctorName}
+                          </p>
                         </div>
 
                         <Button
@@ -799,7 +986,9 @@ export default function AppointmentScheduling() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">No patients currently in consultation rooms.</p>
+                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">
+                      No patients currently in consultation rooms.
+                    </p>
                   )}
                 </div>
               </Card>
@@ -808,44 +997,61 @@ export default function AppointmentScheduling() {
               <Card className="p-4 border-l-4 border-l-red-500">
                 <h3 className="font-bold text-sm text-slate-900 border-b pb-2 mb-3 uppercase tracking-wider flex justify-between">
                   <span>Triage Priority list</span>
-                  <Badge className="bg-red-100 text-red-800 border-none">Escalations</Badge>
+                  <Badge className="bg-red-100 text-red-800 border-none">
+                    Escalations
+                  </Badge>
                 </h3>
 
                 <div className="space-y-3">
                   {queueData?.emergency && queueData.emergency.length > 0 ? (
                     queueData.emergency.map((q: any) => (
-                      <div key={q.id} className="p-3 border border-red-200 rounded-lg bg-red-50/50 flex items-center justify-between gap-2">
+                      <div
+                        key={q.id}
+                        className="p-3 border border-red-200 rounded-lg bg-red-50/50 flex items-center justify-between gap-2"
+                      >
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="bg-red-600 text-white font-extrabold text-xs px-1.5 py-0.5 rounded uppercase">
                               Emergency
                             </span>
-                            <span className="font-semibold text-sm text-red-950">{q.patientName}</span>
+                            <span className="font-semibold text-sm text-red-950">
+                              {q.patientName}
+                            </span>
                           </div>
-                          <p className="text-xs text-red-700 mt-1">Specialist: {q.doctorName}</p>
+                          <p className="text-xs text-red-700 mt-1">
+                            Specialist: {q.doctorName}
+                          </p>
                         </div>
                       </div>
                     ))
                   ) : queueData?.vip && queueData.vip.length > 0 ? (
                     queueData.vip.map((q: any) => (
-                      <div key={q.id} className="p-3 border border-amber-200 rounded-lg bg-amber-50/30 flex items-center justify-between gap-2">
+                      <div
+                        key={q.id}
+                        className="p-3 border border-amber-200 rounded-lg bg-amber-50/30 flex items-center justify-between gap-2"
+                      >
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="bg-amber-600 text-white font-extrabold text-xs px-1.5 py-0.5 rounded uppercase">
                               VIP
                             </span>
-                            <span className="font-semibold text-sm text-amber-950">{q.patientName}</span>
+                            <span className="font-semibold text-sm text-amber-950">
+                              {q.patientName}
+                            </span>
                           </div>
-                          <p className="text-xs text-amber-700 mt-1">Specialist: {q.doctorName}</p>
+                          <p className="text-xs text-amber-700 mt-1">
+                            Specialist: {q.doctorName}
+                          </p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">No emergency triggers registered today.</p>
+                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">
+                      No emergency triggers registered today.
+                    </p>
                   )}
                 </div>
               </Card>
-
             </div>
           </div>
         )}
@@ -855,46 +1061,75 @@ export default function AppointmentScheduling() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <Card className="p-4 bg-blue-50/80 border border-blue-200">
-                <p className="text-xs text-blue-800 font-semibold uppercase">Total Appointments</p>
+                <p className="text-xs text-blue-800 font-semibold uppercase">
+                  Total Appointments
+                </p>
                 <h3 className="text-2xl font-bold text-blue-950 mt-1">
-                  {reportsData?.statusCounts.reduce((sum: number, c: any) => sum + (c.count || 0), 0) || 0}
+                  {reportsData?.statusCounts.reduce(
+                    (sum: number, c: any) => sum + (c.count || 0),
+                    0
+                  ) || 0}
                 </h3>
-                <p className="text-xs text-blue-700 mt-1">Computed past 30 days and upcoming schedules.</p>
+                <p className="text-xs text-blue-700 mt-1">
+                  Computed past 30 days and upcoming schedules.
+                </p>
               </Card>
 
               <Card className="p-4 bg-emerald-50/80 border border-emerald-200">
-                <p className="text-xs text-emerald-800 font-semibold uppercase">Completed Consultations</p>
+                <p className="text-xs text-emerald-800 font-semibold uppercase">
+                  Completed Consultations
+                </p>
                 <h3 className="text-2xl font-bold text-emerald-950 mt-1">
-                  {reportsData?.statusCounts.find((c: any) => c.status === "Completed")?.count || 0}
+                  {reportsData?.statusCounts.find(
+                    (c: any) => c.status === "Completed"
+                  )?.count || 0}
                 </h3>
-                <p className="text-xs text-emerald-700 mt-1">Pristine completion rates.</p>
+                <p className="text-xs text-emerald-700 mt-1">
+                  Pristine completion rates.
+                </p>
               </Card>
 
               <Card className="p-4 bg-rose-50/80 border border-rose-200">
-                <p className="text-xs text-rose-800 font-semibold uppercase">Cancellations / No Show</p>
+                <p className="text-xs text-rose-800 font-semibold uppercase">
+                  Cancellations / No Show
+                </p>
                 <h3 className="text-2xl font-bold text-rose-950 mt-1">
-                  {(reportsData?.statusCounts.find((c: any) => c.status === "Cancelled")?.count || 0) + 
-                   (reportsData?.statusCounts.find((c: any) => c.status === "No_Show")?.count || 0)}
+                  {(reportsData?.statusCounts.find(
+                    (c: any) => c.status === "Cancelled"
+                  )?.count || 0) +
+                    (reportsData?.statusCounts.find(
+                      (c: any) => c.status === "No_Show"
+                    )?.count || 0)}
                 </h3>
-                <p className="text-xs text-rose-700 mt-1">Requires follow-ups list review.</p>
+                <p className="text-xs text-rose-700 mt-1">
+                  Requires follow-ups list review.
+                </p>
               </Card>
 
               <Card className="p-4 bg-amber-50/80 border border-amber-200">
-                <p className="text-xs text-amber-800 font-semibold uppercase">Emergency triage Triggers</p>
+                <p className="text-xs text-amber-800 font-semibold uppercase">
+                  Emergency triage Triggers
+                </p>
                 <h3 className="text-2xl font-bold text-amber-950 mt-1">
-                  {reportsData?.priorityCounts.find((c: any) => c.priority === "Emergency")?.count || 0}
+                  {reportsData?.priorityCounts.find(
+                    (c: any) => c.priority === "Emergency"
+                  )?.count || 0}
                 </h3>
-                <p className="text-xs text-amber-700 mt-1">Prioritized bypass token routing.</p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Prioritized bypass token routing.
+                </p>
               </Card>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
               {/* Doctor load workload bar representation */}
               <Card className="p-5">
-                <h3 className="font-bold text-sm text-slate-800 mb-4 uppercase tracking-wider">Clinician Workloads</h3>
+                <h3 className="font-bold text-sm text-slate-800 mb-4 uppercase tracking-wider">
+                  Clinician Workloads
+                </h3>
                 <div className="space-y-3.5">
-                  {reportsData?.loadByDoctor && reportsData.loadByDoctor.length > 0 ? (
+                  {reportsData?.loadByDoctor &&
+                  reportsData.loadByDoctor.length > 0 ? (
                     reportsData.loadByDoctor.map((d: any, i: number) => (
                       <div key={i}>
                         <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
@@ -902,24 +1137,31 @@ export default function AppointmentScheduling() {
                           <span>{d.count} appointments</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2">
-                          <div 
-                            className="bg-primary h-2 rounded-full" 
-                            style={{ width: `${Math.min((d.count / 15) * 100, 100)}%` }}
+                          <div
+                            className="bg-primary h-2 rounded-full"
+                            style={{
+                              width: `${Math.min((d.count / 15) * 100, 100)}%`,
+                            }}
                           />
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">No data registered.</p>
+                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">
+                      No data registered.
+                    </p>
                   )}
                 </div>
               </Card>
 
               {/* Peak hours representation */}
               <Card className="p-5">
-                <h3 className="font-bold text-sm text-slate-800 mb-4 uppercase tracking-wider">Peak booking hours</h3>
+                <h3 className="font-bold text-sm text-slate-800 mb-4 uppercase tracking-wider">
+                  Peak booking hours
+                </h3>
                 <div className="space-y-3.5">
-                  {reportsData?.peakHours && reportsData.peakHours.length > 0 ? (
+                  {reportsData?.peakHours &&
+                  reportsData.peakHours.length > 0 ? (
                     reportsData.peakHours.map((h: any, i: number) => (
                       <div key={i}>
                         <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
@@ -927,23 +1169,25 @@ export default function AppointmentScheduling() {
                           <span>{h.count} slots booked</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2">
-                          <div 
-                            className="bg-indigo-600 h-2 rounded-full" 
-                            style={{ width: `${Math.min((h.count / 30) * 100, 100)}%` }}
+                          <div
+                            className="bg-indigo-600 h-2 rounded-full"
+                            style={{
+                              width: `${Math.min((h.count / 30) * 100, 100)}%`,
+                            }}
                           />
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">No data registered.</p>
+                    <p className="text-xs text-muted-foreground/80 italic text-center py-6">
+                      No data registered.
+                    </p>
                   )}
                 </div>
               </Card>
-
             </div>
           </div>
         )}
-
       </div>
 
       {/* Wizard Scheduling Modal */}
@@ -956,20 +1200,23 @@ export default function AppointmentScheduling() {
             </DialogTitle>
           </DialogHeader>
 
-          {(!patientsList || patientsList.length === 0) ? (
+          {!patientsList || patientsList.length === 0 ? (
             <div className="p-4 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-lg text-sm text-center">
-              No registered patients found. Please register a patient in Patient Management first.
+              No registered patients found. Please register a patient in Patient
+              Management first.
             </div>
-          ) : (!doctorsList || doctorsList.length === 0) ? (
+          ) : !doctorsList || doctorsList.length === 0 ? (
             <div className="p-4 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-lg text-sm text-center">
-              No doctors registered in the system. Please register a doctor first.
+              No doctors registered in the system. Please register a doctor
+              first.
             </div>
           ) : (
             <div className="space-y-4">
-              
               {/* Patient Selection */}
               <div className="space-y-1 relative">
-                <label className="text-xs text-slate-500 font-bold">Select Patient</label>
+                <label className="text-xs text-slate-500 font-bold">
+                  Select Patient
+                </label>
                 {selectedPatient ? (
                   <div className="flex items-center justify-between p-2.5 border rounded-lg bg-blue-50/60 border-blue-200">
                     <div>
@@ -977,7 +1224,10 @@ export default function AppointmentScheduling() {
                         {selectedPatient.firstName} {selectedPatient.lastName}
                       </p>
                       <p className="text-xs text-blue-700">
-                        {selectedPatient.patientCode} {selectedPatient.phone ? `• ${selectedPatient.phone}` : ""}
+                        {selectedPatient.patientCode}{" "}
+                        {selectedPatient.phone
+                          ? `• ${selectedPatient.phone}`
+                          : ""}
                       </p>
                     </div>
                     <Button
@@ -998,7 +1248,7 @@ export default function AppointmentScheduling() {
                     <Input
                       placeholder="Search patient by name, code or phone..."
                       value={patientSearch}
-                      onChange={(e) => setPatientSearch(e.target.value)}
+                      onChange={e => setPatientSearch(e.target.value)}
                     />
                     {patientSearch && filteredPatients.length > 0 && (
                       <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground border rounded-md shadow-lg max-h-40 overflow-y-auto divide-y divide-border">
@@ -1012,7 +1262,9 @@ export default function AppointmentScheduling() {
                               setPatientSearch("");
                             }}
                           >
-                            <div className="font-semibold">{p.firstName} {p.lastName}</div>
+                            <div className="font-semibold">
+                              {p.firstName} {p.lastName}
+                            </div>
                             <div className="text-xs text-muted-foreground font-medium">
                               {p.patientCode} {p.phone ? `• ${p.phone}` : ""}
                             </div>
@@ -1026,14 +1278,18 @@ export default function AppointmentScheduling() {
 
               {/* Doctor Selection */}
               <div className="space-y-1 relative">
-                <label className="text-xs text-slate-500 font-bold">Select Specialist</label>
+                <label className="text-xs text-slate-500 font-bold">
+                  Select Specialist
+                </label>
                 {selectedDoctor ? (
                   <div className="flex items-center justify-between p-2.5 border rounded-lg bg-green-50/60 border-green-200">
                     <div>
                       <p className="font-semibold text-sm text-green-900">
                         {selectedDoctor.name}
                       </p>
-                      <p className="text-xs text-green-700 font-medium">{selectedDoctor.specialty}</p>
+                      <p className="text-xs text-green-700 font-medium">
+                        {selectedDoctor.specialty}
+                      </p>
                     </div>
                     <Button
                       type="button"
@@ -1054,7 +1310,7 @@ export default function AppointmentScheduling() {
                     <Input
                       placeholder="Search doctor by name or specialty..."
                       value={doctorSearch}
-                      onChange={(e) => setDoctorSearch(e.target.value)}
+                      onChange={e => setDoctorSearch(e.target.value)}
                     />
                     {doctorSearch && filteredDoctors.length > 0 && (
                       <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground border rounded-md shadow-lg max-h-40 overflow-y-auto divide-y divide-border">
@@ -1067,12 +1323,16 @@ export default function AppointmentScheduling() {
                               setSelectedDoctor(d);
                               setDoctorSearch("");
                               if (d.departmentId) {
-                                setSelectedDepartmentId(d.departmentId.toString());
+                                setSelectedDepartmentId(
+                                  d.departmentId.toString()
+                                );
                               }
                             }}
                           >
                             <div className="font-semibold">{d.name}</div>
-                            <div className="text-xs text-muted-foreground font-medium">{d.specialty}</div>
+                            <div className="text-xs text-muted-foreground font-medium">
+                              {d.specialty}
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -1083,10 +1343,12 @@ export default function AppointmentScheduling() {
 
               {/* Department Selection */}
               <div className="space-y-1">
-                <label className="text-xs text-slate-500 font-bold">Department Link</label>
+                <label className="text-xs text-slate-500 font-bold">
+                  Department Link
+                </label>
                 <select
                   value={selectedDepartmentId}
-                  onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                  onChange={e => setSelectedDepartmentId(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background"
                 >
                   <option value="">Select Department</option>
@@ -1101,12 +1363,23 @@ export default function AppointmentScheduling() {
               {/* Date & Time Picker Slots */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-500 font-bold">Target Date</label>
-                  <Input type="date" value={wizDate} onChange={(e) => { setWizDate(e.target.value); setWizTime(""); }} />
+                  <label className="text-xs text-slate-500 font-bold">
+                    Target Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={wizDate}
+                    onChange={e => {
+                      setWizDate(e.target.value);
+                      setWizTime("");
+                    }}
+                  />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-500 font-bold">Triage Priority</label>
+                  <label className="text-xs text-slate-500 font-bold">
+                    Triage Priority
+                  </label>
                   <select
                     value={wizPriority}
                     onChange={(e: any) => setWizPriority(e.target.value)}
@@ -1123,7 +1396,9 @@ export default function AppointmentScheduling() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-500 font-bold">Appointment Channel</label>
+                  <label className="text-xs text-slate-500 font-bold">
+                    Appointment Channel
+                  </label>
                   <select
                     value={wizType}
                     onChange={(e: any) => setWizType(e.target.value)}
@@ -1136,8 +1411,16 @@ export default function AppointmentScheduling() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-500 font-bold">Selected Time Slot</label>
-                  <Input type="text" value={wizTime} placeholder="Select slot below..." readOnly className="bg-slate-50 text-slate-800 font-semibold" />
+                  <label className="text-xs text-slate-500 font-bold">
+                    Selected Time Slot
+                  </label>
+                  <Input
+                    type="text"
+                    value={wizTime}
+                    placeholder="Select slot below..."
+                    readOnly
+                    className="bg-slate-50 text-slate-800 font-semibold"
+                  />
                 </div>
               </div>
 
@@ -1149,7 +1432,9 @@ export default function AppointmentScheduling() {
                     Conflict Detection Available Slots
                   </label>
                   {isSlotsLoading ? (
-                    <p className="text-xs text-muted-foreground">Checking doctor calendars...</p>
+                    <p className="text-xs text-muted-foreground">
+                      Checking doctor calendars...
+                    </p>
                   ) : availableSlots.length > 0 ? (
                     <div className="grid grid-cols-5 gap-1.5 max-h-36 overflow-y-auto border p-2 rounded bg-slate-50">
                       {availableSlots.map((slot: any) => (
@@ -1162,8 +1447,8 @@ export default function AppointmentScheduling() {
                             wizTime === slot.time
                               ? "bg-primary text-white"
                               : slot.available
-                              ? "bg-white text-slate-800 border hover:bg-slate-100"
-                              : "bg-red-50 text-red-400 border border-red-100 line-through cursor-not-allowed"
+                                ? "bg-white text-slate-800 border hover:bg-slate-100"
+                                : "bg-red-50 text-red-400 border border-red-100 line-through cursor-not-allowed"
                           }`}
                         >
                           {slot.time}
@@ -1173,19 +1458,32 @@ export default function AppointmentScheduling() {
                   ) : (
                     <div className="flex items-center gap-1.5 p-2 bg-rose-50 border border-rose-100 rounded text-rose-800 text-xs">
                       <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                      No times available. Doctor is fully booked or on approved leave.
+                      No times available. Doctor is fully booked or on approved
+                      leave.
                     </div>
                   )}
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-500 font-bold">Consultation Reason</label>
-                <Input placeholder="Describe complaints..." value={wizReason} onChange={(e) => setWizReason(e.target.value)} />
+                <label className="text-xs text-slate-500 font-bold">
+                  Consultation Reason
+                </label>
+                <Input
+                  placeholder="Describe complaints..."
+                  value={wizReason}
+                  onChange={e => setWizReason(e.target.value)}
+                />
               </div>
 
-              <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full mt-2 font-bold">
-                {createMutation.isPending ? "Routing Booking..." : "Execute Schedule Reservation"}
+              <Button
+                onClick={handleCreate}
+                disabled={createMutation.isPending}
+                className="w-full mt-2 font-bold"
+              >
+                {createMutation.isPending
+                  ? "Routing Booking..."
+                  : "Execute Schedule Reservation"}
               </Button>
             </div>
           )}
@@ -1196,11 +1494,15 @@ export default function AppointmentScheduling() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="font-bold text-slate-900">Manage Appointment Status</DialogTitle>
+            <DialogTitle className="font-bold text-slate-900">
+              Manage Appointment Status
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 font-bold">Status Transitions</label>
+              <label className="text-xs text-slate-500 font-bold">
+                Status Transitions
+              </label>
               <select
                 value={editStatus}
                 onChange={(e: any) => setEditStatus(e.target.value)}
@@ -1219,17 +1521,25 @@ export default function AppointmentScheduling() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 font-bold">Progress / EHR Clinical Notes</label>
+              <label className="text-xs text-slate-500 font-bold">
+                Progress / EHR Clinical Notes
+              </label>
               <textarea
                 placeholder="Clinical details, diagnosis summaries, or follow-up notes..."
                 value={editNotes}
-                onChange={(e) => setEditNotes(e.target.value)}
+                onChange={e => setEditNotes(e.target.value)}
                 className="w-full border rounded px-3 py-2 text-sm bg-background min-h-[100px]"
               />
             </div>
 
-            <Button onClick={handleStatusUpdateSubmit} disabled={updateStatusMutation.isPending} className="w-full font-bold">
-              {updateStatusMutation.isPending ? "Updating state..." : "Save Status Configuration"}
+            <Button
+              onClick={handleStatusUpdateSubmit}
+              disabled={updateStatusMutation.isPending}
+              className="w-full font-bold"
+            >
+              {updateStatusMutation.isPending
+                ? "Updating state..."
+                : "Save Status Configuration"}
             </Button>
           </div>
         </DialogContent>
@@ -1239,29 +1549,42 @@ export default function AppointmentScheduling() {
       <Dialog open={isCheckInOpen} onOpenChange={setIsCheckInOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="font-bold text-slate-900">Release Client Token Check-In</DialogTitle>
+            <DialogTitle className="font-bold text-slate-900">
+              Release Client Token Check-In
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">
-              Release queue tokens immediately for arriving patient: <strong>{selectedAppointment?.patientName}</strong>.
+              Release queue tokens immediately for arriving patient:{" "}
+              <strong>{selectedAppointment?.patientName}</strong>.
             </p>
 
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 font-bold">Check-In Method</label>
+              <label className="text-xs text-slate-500 font-bold">
+                Check-In Method
+              </label>
               <select
                 value={checkInMethod}
                 onChange={(e: any) => setCheckInMethod(e.target.value)}
                 className="w-full border rounded px-3 py-2 text-sm bg-background"
               >
                 <option value="Reception Desk">Reception Desk Assistant</option>
-                <option value="Self-Service Kiosk">Self-Service Lobby Kiosk</option>
+                <option value="Self-Service Kiosk">
+                  Self-Service Lobby Kiosk
+                </option>
                 <option value="Mobile Check-In GPS">Mobile Check-In GPS</option>
                 <option value="Priority Bypass">Priority Triage Bypass</option>
               </select>
             </div>
 
-            <Button onClick={handleCheckInSubmit} disabled={checkInMutation.isPending} className="w-full font-bold bg-emerald-600 hover:bg-emerald-700 text-white">
-              {checkInMutation.isPending ? "Generating Token..." : "Release Queue Token & Check-In"}
+            <Button
+              onClick={handleCheckInSubmit}
+              disabled={checkInMutation.isPending}
+              className="w-full font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {checkInMutation.isPending
+                ? "Generating Token..."
+                : "Release Queue Token & Check-In"}
             </Button>
           </div>
         </DialogContent>
@@ -1271,26 +1594,45 @@ export default function AppointmentScheduling() {
       <Dialog open={isRescheduleOpen} onOpenChange={setIsRescheduleOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="font-bold text-slate-900">Reschedule Clinician Slot</DialogTitle>
+            <DialogTitle className="font-bold text-slate-900">
+              Reschedule Clinician Slot
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 font-bold">Reschedule Date</label>
-              <Input type="date" value={reschDate} onChange={(e) => setReschDate(e.target.value)} />
+              <label className="text-xs text-slate-500 font-bold">
+                Reschedule Date
+              </label>
+              <Input
+                type="date"
+                value={reschDate}
+                onChange={e => setReschDate(e.target.value)}
+              />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 font-bold">Reschedule Time</label>
-              <Input type="time" value={reschTime} onChange={(e) => setReschTime(e.target.value)} />
+              <label className="text-xs text-slate-500 font-bold">
+                Reschedule Time
+              </label>
+              <Input
+                type="time"
+                value={reschTime}
+                onChange={e => setReschTime(e.target.value)}
+              />
             </div>
 
-            <Button onClick={handleRescheduleSubmit} disabled={rescheduleMutation.isPending} className="w-full font-bold">
-              {rescheduleMutation.isPending ? "Rescheduling..." : "Save Reschedule Configuration"}
+            <Button
+              onClick={handleRescheduleSubmit}
+              disabled={rescheduleMutation.isPending}
+              className="w-full font-bold"
+            >
+              {rescheduleMutation.isPending
+                ? "Rescheduling..."
+                : "Save Reschedule Configuration"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-
     </DashboardLayout>
   );
 }

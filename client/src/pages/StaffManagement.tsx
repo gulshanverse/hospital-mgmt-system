@@ -3,10 +3,30 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Plus, Edit2, Trash2, Mail, Phone, Briefcase } from "lucide-react";
+import {
+  Shield,
+  Plus,
+  Edit2,
+  Trash2,
+  Mail,
+  Phone,
+  Briefcase,
+} from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -20,7 +40,14 @@ export default function StaffManagement() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "doctor" | "nurse" | "receptionist" | "pharmacist" | "lab_technician">("nurse");
+  const [role, setRole] = useState<
+    | "admin"
+    | "doctor"
+    | "nurse"
+    | "receptionist"
+    | "pharmacist"
+    | "lab_technician"
+  >("nurse");
   const [departmentId, setDepartmentId] = useState("");
   const [position, setPosition] = useState("");
   const [qualifications, setQualifications] = useState("");
@@ -38,7 +65,7 @@ export default function StaffManagement() {
       resetForm();
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to create staff member");
     },
   });
@@ -50,7 +77,7 @@ export default function StaffManagement() {
       resetForm();
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to update staff member");
     },
   });
@@ -60,7 +87,7 @@ export default function StaffManagement() {
       toast.success("Staff member permanently deleted successfully");
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to delete staff member");
     },
   });
@@ -127,7 +154,11 @@ export default function StaffManagement() {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to permanently delete this staff member? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to permanently delete this staff member? This action cannot be undone."
+      )
+    ) {
       deleteMutation.mutate({ id });
     }
   };
@@ -141,11 +172,17 @@ export default function StaffManagement() {
       case "nurse":
         return <Badge className="bg-green-100 text-green-800">Nurse</Badge>;
       case "receptionist":
-        return <Badge className="bg-purple-100 text-purple-800">Receptionist</Badge>;
+        return (
+          <Badge className="bg-purple-100 text-purple-800">Receptionist</Badge>
+        );
       case "pharmacist":
-        return <Badge className="bg-yellow-100 text-yellow-800">Pharmacist</Badge>;
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800">Pharmacist</Badge>
+        );
       case "lab_technician":
-        return <Badge className="bg-indigo-100 text-indigo-800">Technician</Badge>;
+        return (
+          <Badge className="bg-indigo-100 text-indigo-800">Technician</Badge>
+        );
       default:
         return <Badge>{role}</Badge>;
     }
@@ -159,7 +196,13 @@ export default function StaffManagement() {
             <Shield className="w-8 h-8 text-indigo-600" />
             <h1 className="text-3xl font-bold">Staff Management</h1>
           </div>
-          <Button onClick={() => { resetForm(); setIsCreateOpen(true); }} className="gap-2">
+          <Button
+            onClick={() => {
+              resetForm();
+              setIsCreateOpen(true);
+            }}
+            className="gap-2"
+          >
             <Plus className="w-4 h-4" />
             Add Staff Member
           </Button>
@@ -183,7 +226,9 @@ export default function StaffManagement() {
                 {staffList && staffList.length > 0 ? (
                   staffList.map((item: any) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-semibold text-gray-900">{item.name}</TableCell>
+                      <TableCell className="font-semibold text-gray-900">
+                        {item.name}
+                      </TableCell>
                       <TableCell>{getRoleBadge(item.role)}</TableCell>
                       <TableCell>
                         <div className="space-y-1">
@@ -204,18 +249,26 @@ export default function StaffManagement() {
                             </p>
                           )}
                           {item.qualifications && (
-                            <p className="text-[11px] text-gray-500 italic">{item.qualifications}</p>
+                            <p className="text-[11px] text-gray-500 italic">
+                              {item.qualifications}
+                            </p>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={item.isActive ? "default" : "secondary"}>
+                        <Badge
+                          variant={item.isActive ? "default" : "secondary"}
+                        >
                           {item.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEdit(item)}
+                          >
                             <Edit2 className="w-3.5 h-3.5" />
                           </Button>
                           <Button
@@ -232,7 +285,10 @@ export default function StaffManagement() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={7}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       No staff members found.
                     </TableCell>
                   </TableRow>
@@ -252,28 +308,49 @@ export default function StaffManagement() {
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold">Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full Name" />
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+                placeholder="Full Name"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Email</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="staff@hms.com" />
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  placeholder="staff@hms.com"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Phone</label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" />
+                <Input
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="Phone Number"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold">Password</label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
+              <Input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Role</label>
                 <select
                   value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
+                  onChange={e => setRole(e.target.value as any)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background"
                 >
                   <option value="admin">Admin</option>
@@ -288,12 +365,14 @@ export default function StaffManagement() {
                 <label className="text-sm font-semibold">Department</label>
                 <select
                   value={departmentId}
-                  onChange={(e) => setDepartmentId(e.target.value)}
+                  onChange={e => setDepartmentId(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background"
                 >
                   <option value="">No Department Assigned</option>
                   {departments?.map((dept: any) => (
-                    <option key={dept.id} value={dept.id.toString()}>{dept.name}</option>
+                    <option key={dept.id} value={dept.id.toString()}>
+                      {dept.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -301,14 +380,26 @@ export default function StaffManagement() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Position</label>
-                <Input value={position} onChange={(e) => setPosition(e.target.value)} placeholder="e.g., Head Nurse" />
+                <Input
+                  value={position}
+                  onChange={e => setPosition(e.target.value)}
+                  placeholder="e.g., Head Nurse"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Qualifications</label>
-                <Input value={qualifications} onChange={(e) => setQualifications(e.target.value)} placeholder="e.g., M.Sc Nursing" />
+                <Input
+                  value={qualifications}
+                  onChange={e => setQualifications(e.target.value)}
+                  placeholder="e.g., M.Sc Nursing"
+                />
               </div>
             </div>
-            <Button type="submit" disabled={createMutation.isPending} className="w-full">
+            <Button
+              type="submit"
+              disabled={createMutation.isPending}
+              className="w-full"
+            >
               {createMutation.isPending ? "Adding..." : "Add Staff Member"}
             </Button>
           </form>
@@ -324,16 +415,25 @@ export default function StaffManagement() {
           <form onSubmit={handleEdit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold">Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Email</label>
-                <Input type="email" value={email} disabled className="bg-slate-100" />
+                <Input
+                  type="email"
+                  value={email}
+                  disabled
+                  className="bg-slate-100"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Phone</label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <Input value={phone} onChange={e => setPhone(e.target.value)} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -341,7 +441,7 @@ export default function StaffManagement() {
                 <label className="text-sm font-semibold">Role</label>
                 <select
                   value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
+                  onChange={e => setRole(e.target.value as any)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background"
                 >
                   <option value="admin">Admin</option>
@@ -356,12 +456,14 @@ export default function StaffManagement() {
                 <label className="text-sm font-semibold">Department</label>
                 <select
                   value={departmentId}
-                  onChange={(e) => setDepartmentId(e.target.value)}
+                  onChange={e => setDepartmentId(e.target.value)}
                   className="w-full border rounded px-3 py-2 text-sm bg-background"
                 >
                   <option value="">No Department Assigned</option>
                   {departments?.map((dept: any) => (
-                    <option key={dept.id} value={dept.id.toString()}>{dept.name}</option>
+                    <option key={dept.id} value={dept.id.toString()}>
+                      {dept.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -369,18 +471,38 @@ export default function StaffManagement() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Position</label>
-                <Input value={position} onChange={(e) => setPosition(e.target.value)} />
+                <Input
+                  value={position}
+                  onChange={e => setPosition(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Qualifications</label>
-                <Input value={qualifications} onChange={(e) => setQualifications(e.target.value)} />
+                <Input
+                  value={qualifications}
+                  onChange={e => setQualifications(e.target.value)}
+                />
               </div>
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <input type="checkbox" id="active-checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-              <label htmlFor="active-checkbox" className="text-sm font-semibold cursor-pointer">Active Staff Member</label>
+              <input
+                type="checkbox"
+                id="active-checkbox"
+                checked={isActive}
+                onChange={e => setIsActive(e.target.checked)}
+              />
+              <label
+                htmlFor="active-checkbox"
+                className="text-sm font-semibold cursor-pointer"
+              >
+                Active Staff Member
+              </label>
             </div>
-            <Button type="submit" disabled={updateMutation.isPending} className="w-full">
+            <Button
+              type="submit"
+              disabled={updateMutation.isPending}
+              className="w-full"
+            >
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </form>

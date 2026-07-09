@@ -1,9 +1,29 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure, adminProcedure, doctorProcedure, nurseProcedure, labTechnicianProcedure } from "../_core/trpc";
+import {
+  router,
+  protectedProcedure,
+  adminProcedure,
+  doctorProcedure,
+  nurseProcedure,
+  labTechnicianProcedure,
+} from "../_core/trpc";
 import * as db from "../db";
 import { eq, desc, and, asc, sql } from "drizzle-orm";
-import { appointments, medicalRecords, prescriptions, prescriptionItems, labOrders, labReports, patients, doctors, users, departments, doctorLeaves, auditLogs } from "../../drizzle/schema";
+import {
+  appointments,
+  medicalRecords,
+  prescriptions,
+  prescriptionItems,
+  labOrders,
+  labReports,
+  patients,
+  doctors,
+  users,
+  departments,
+  doctorLeaves,
+  auditLogs,
+} from "../../drizzle/schema";
 
 // ============================================================================
 // APPOINTMENT MANAGEMENT
@@ -20,14 +40,18 @@ export const appointmentRouter = router({
         appointmentTime: z.string(),
         reason: z.string().optional(),
         notes: z.string().optional(),
-        priority: z.enum(["Low", "Medium", "High", "Emergency", "VIP"]).optional(),
-        appointmentType: z.enum(["Walk-In", "Pre-Booked", "Telemedicine"]).optional(),
+        priority: z
+          .enum(["Low", "Medium", "High", "Emergency", "VIP"])
+          .optional(),
+        appointmentType: z
+          .enum(["Walk-In", "Pre-Booked", "Telemedicine"])
+          .optional(),
         slotDuration: z.number().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      
+
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
@@ -64,9 +88,10 @@ export const appointmentRouter = router({
       if (doctorProfile) {
         let maxPerDay = 30;
         try {
-          const parsedSettings = typeof doctorProfile.settings === "string" 
-            ? JSON.parse(doctorProfile.settings) 
-            : doctorProfile.settings;
+          const parsedSettings =
+            typeof doctorProfile.settings === "string"
+              ? JSON.parse(doctorProfile.settings)
+              : doctorProfile.settings;
           if (parsedSettings?.maxAppointmentsPerDay) {
             maxPerDay = parseInt(parsedSettings.maxAppointmentsPerDay, 10);
           }
@@ -147,17 +172,19 @@ export const appointmentRouter = router({
 
   list: protectedProcedure
     .input(
-      z.object({
-        patientId: z.number().optional(),
-        doctorId: z.number().optional(),
-        departmentId: z.number().optional(),
-        status: z.string().optional(),
-        priority: z.string().optional(),
-        appointmentType: z.string().optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        search: z.string().optional(),
-      }).optional()
+      z
+        .object({
+          patientId: z.number().optional(),
+          doctorId: z.number().optional(),
+          departmentId: z.number().optional(),
+          status: z.string().optional(),
+          priority: z.string().optional(),
+          appointmentType: z.string().optional(),
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+          search: z.string().optional(),
+        })
+        .optional()
     )
     .query(async ({ input }) => {
       const dbInstance = await db.getDb();
@@ -211,13 +238,19 @@ export const appointmentRouter = router({
         conditions.push(eq(appointments.priority, input.priority as any));
       }
       if (input?.appointmentType && input.appointmentType !== "all") {
-        conditions.push(eq(appointments.appointmentType, input.appointmentType as any));
+        conditions.push(
+          eq(appointments.appointmentType, input.appointmentType as any)
+        );
       }
       if (input?.startDate) {
-        conditions.push(sql`${appointments.appointmentDate} >= ${input.startDate}`);
+        conditions.push(
+          sql`${appointments.appointmentDate} >= ${input.startDate}`
+        );
       }
       if (input?.endDate) {
-        conditions.push(sql`${appointments.appointmentDate} <= ${input.endDate}`);
+        conditions.push(
+          sql`${appointments.appointmentDate} <= ${input.endDate}`
+        );
       }
       if (input?.search) {
         const searchPattern = `%${input.search}%`;
@@ -230,7 +263,10 @@ export const appointmentRouter = router({
         query = query.where(and(...conditions)) as any;
       }
 
-      return query.orderBy(desc(appointments.appointmentDate), asc(appointments.appointmentTime));
+      return query.orderBy(
+        desc(appointments.appointmentDate),
+        asc(appointments.appointmentTime)
+      );
     }),
 
   getById: protectedProcedure
@@ -311,19 +347,22 @@ export const appointmentRouter = router({
         tuesday: ["09:00", "17:00"],
         wednesday: ["09:00", "17:00"],
         thursday: ["09:00", "17:00"],
-        friday: ["09:00", "17:00"]
+        friday: ["09:00", "17:00"],
       };
 
       if (doctorProfile && doctorProfile.availabilitySchedule) {
         try {
-          schedule = typeof doctorProfile.availabilitySchedule === "string"
-            ? JSON.parse(doctorProfile.availabilitySchedule)
-            : doctorProfile.availabilitySchedule;
+          schedule =
+            typeof doctorProfile.availabilitySchedule === "string"
+              ? JSON.parse(doctorProfile.availabilitySchedule)
+              : doctorProfile.availabilitySchedule;
         } catch (e) {}
       }
 
       // Check Day of Week
-      const dayOfWeek = targetDate.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+      const dayOfWeek = targetDate
+        .toLocaleDateString("en-US", { weekday: "long" })
+        .toLowerCase();
       const activeDaySchedule = schedule[dayOfWeek];
       if (!activeDaySchedule || activeDaySchedule.length < 2) return [];
 
@@ -352,9 +391,12 @@ export const appointmentRouter = router({
 
       const bookedTimes = new Set(booked.map(b => b.appointmentTime));
 
-      while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
+      while (
+        currentHour < endHour ||
+        (currentHour === endHour && currentMin < endMin)
+      ) {
         const timeStr = `${currentHour.toString().padStart(2, "0")}:${currentMin.toString().padStart(2, "0")}`;
-        
+
         // Exclude Lunch Break (13:00 to 14:00)
         const isLunch = currentHour === 13;
 
@@ -388,7 +430,7 @@ export const appointmentRouter = router({
           "Completed",
           "Cancelled",
           "No_Show",
-          "Rescheduled"
+          "Rescheduled",
         ]),
         notes: z.string().optional(),
       })
@@ -408,7 +450,10 @@ export const appointmentRouter = router({
       const updateFields: any = { status: input.status };
       if (input.notes) updateFields.notes = input.notes;
 
-      await dbInstance.update(appointments).set(updateFields).where(eq(appointments.id, input.id));
+      await dbInstance
+        .update(appointments)
+        .set(updateFields)
+        .where(eq(appointments.id, input.id));
 
       // Log Audit Trail
       try {
@@ -417,7 +462,11 @@ export const appointmentRouter = router({
           action: "UPDATE_STATUS_APPOINTMENT",
           entityType: "APPOINTMENT",
           entityId: input.id,
-          changes: JSON.stringify({ from: prev.status, to: input.status, notes: input.notes }),
+          changes: JSON.stringify({
+            from: prev.status,
+            to: input.status,
+            notes: input.notes,
+          }),
           ipAddress: "127.0.0.1",
           userAgent: "System/Scheduling",
         });
@@ -490,7 +539,7 @@ export const appointmentRouter = router({
           entityId: input.id,
           changes: JSON.stringify({
             from: { date: prev.appointmentDate, time: prev.appointmentTime },
-            to: { date: input.appointmentDate, time: input.appointmentTime }
+            to: { date: input.appointmentDate, time: input.appointmentTime },
           }),
           ipAddress: "127.0.0.1",
           userAgent: "System/Scheduling",
@@ -558,7 +607,10 @@ export const appointmentRouter = router({
           action: "CHECKIN_APPOINTMENT",
           entityType: "APPOINTMENT",
           entityId: input.id,
-          changes: JSON.stringify({ queuePosition: nextPosition, method: input.checkInMethod }),
+          changes: JSON.stringify({
+            queuePosition: nextPosition,
+            method: input.checkInMethod,
+          }),
           ipAddress: "127.0.0.1",
           userAgent: "System/Queue",
         });
@@ -579,7 +631,15 @@ export const appointmentRouter = router({
     )
     .query(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) return { waiting: [], in_consultation: [], completed: [], emergency: [], vip: [], avgWaitTime: 15 };
+      if (!dbInstance)
+        return {
+          waiting: [],
+          in_consultation: [],
+          completed: [],
+          emergency: [],
+          vip: [],
+          avgWaitTime: 15,
+        };
 
       let query = dbInstance
         .select({
@@ -599,18 +659,35 @@ export const appointmentRouter = router({
         .$dynamic();
 
       const conditions = [eq(appointments.appointmentDate, input.date as any)];
-      if (input.doctorId) conditions.push(eq(appointments.doctorId, input.doctorId));
-      if (input.departmentId) conditions.push(eq(appointments.departmentId, input.departmentId));
+      if (input.doctorId)
+        conditions.push(eq(appointments.doctorId, input.doctorId));
+      if (input.departmentId)
+        conditions.push(eq(appointments.departmentId, input.departmentId));
 
       query = query.where(and(...conditions)) as any;
 
-      const list = await query.orderBy(asc(appointments.queuePosition), asc(appointments.appointmentTime));
+      const list = await query.orderBy(
+        asc(appointments.queuePosition),
+        asc(appointments.appointmentTime)
+      );
 
-      const waiting = list.filter(a => a.status === "Checked-In" || a.status === "Waiting");
+      const waiting = list.filter(
+        a => a.status === "Checked-In" || a.status === "Waiting"
+      );
       const in_consultation = list.filter(a => a.status === "In_Consultation");
       const completed = list.filter(a => a.status === "Completed");
-      const emergency = list.filter(a => a.priority === "Emergency" && a.status !== "Completed" && a.status !== "Cancelled");
-      const vip = list.filter(a => a.priority === "VIP" && a.status !== "Completed" && a.status !== "Cancelled");
+      const emergency = list.filter(
+        a =>
+          a.priority === "Emergency" &&
+          a.status !== "Completed" &&
+          a.status !== "Cancelled"
+      );
+      const vip = list.filter(
+        a =>
+          a.priority === "VIP" &&
+          a.status !== "Completed" &&
+          a.status !== "Cancelled"
+      );
 
       return {
         waiting,
@@ -660,17 +737,31 @@ export const appointmentRouter = router({
     }),
 
   getReports: protectedProcedure
-    .input(z.object({
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      })
+    )
     .query(async ({ input }) => {
       const dbInstance = await db.getDb();
-      if (!dbInstance) return { statusCounts: [], priorityCounts: [], loadByDoctor: [], peakHours: [] };
+      if (!dbInstance)
+        return {
+          statusCounts: [],
+          priorityCounts: [],
+          loadByDoctor: [],
+          peakHours: [],
+        };
 
       const conditions = [];
-      if (input.startDate) conditions.push(sql`${appointments.appointmentDate} >= ${input.startDate}`);
-      if (input.endDate) conditions.push(sql`${appointments.appointmentDate} <= ${input.endDate}`);
+      if (input.startDate)
+        conditions.push(
+          sql`${appointments.appointmentDate} >= ${input.startDate}`
+        );
+      if (input.endDate)
+        conditions.push(
+          sql`${appointments.appointmentDate} <= ${input.endDate}`
+        );
 
       let baseFilter = sql`1=1`;
       if (conditions.length > 0) baseFilter = and(...conditions) as any;
@@ -682,7 +773,10 @@ export const appointmentRouter = router({
         .groupBy(appointments.status);
 
       const priorityCounts = await dbInstance
-        .select({ priority: appointments.priority, count: sql<number>`count(*)` })
+        .select({
+          priority: appointments.priority,
+          count: sql<number>`count(*)`,
+        })
         .from(appointments)
         .where(baseFilter)
         .groupBy(appointments.priority);
@@ -696,7 +790,10 @@ export const appointmentRouter = router({
         .groupBy(users.name);
 
       const peakHours = await dbInstance
-        .select({ hour: sql<string>`substring(${appointments.appointmentTime}, 1, 2)`, count: sql<number>`count(*)` })
+        .select({
+          hour: sql<string>`substring(${appointments.appointmentTime}, 1, 2)`,
+          count: sql<number>`count(*)`,
+        })
         .from(appointments)
         .where(baseFilter)
         .groupBy(sql`substring(${appointments.appointmentTime}, 1, 2)`);
@@ -760,22 +857,26 @@ export const appointmentRouter = router({
       if (!prev) throw new TRPCError({ code: "NOT_FOUND" });
 
       const updateFields: any = {};
-      
+
       if (input.status) {
         let mapped = input.status;
         if (mapped.toLowerCase() === "scheduled") mapped = "Scheduled";
         else if (mapped.toLowerCase() === "completed") mapped = "Completed";
         else if (mapped.toLowerCase() === "cancelled") mapped = "Cancelled";
-        else if (mapped.toLowerCase() === "in_progress") mapped = "In_Consultation";
+        else if (mapped.toLowerCase() === "in_progress")
+          mapped = "In_Consultation";
         else if (mapped.toLowerCase() === "checked-in") mapped = "Checked-In";
         else if (mapped.toLowerCase() === "waiting") mapped = "Waiting";
-        
+
         updateFields.status = mapped;
       }
-      
+
       if (input.notes !== undefined) updateFields.notes = input.notes;
 
-      await dbInstance.update(appointments).set(updateFields).where(eq(appointments.id, input.id));
+      await dbInstance
+        .update(appointments)
+        .set(updateFields)
+        .where(eq(appointments.id, input.id));
 
       // Audit Log
       try {
@@ -784,7 +885,11 @@ export const appointmentRouter = router({
           action: "UPDATE_APPOINTMENT",
           entityType: "APPOINTMENT",
           entityId: input.id,
-          changes: JSON.stringify({ from: prev.status, to: updateFields.status || prev.status, notes: input.notes }),
+          changes: JSON.stringify({
+            from: prev.status,
+            to: updateFields.status || prev.status,
+            notes: input.notes,
+          }),
           ipAddress: "127.0.0.1",
           userAgent: "System/Scheduling",
         });
@@ -802,48 +907,113 @@ export const appointmentRouter = router({
     const doctorsList = await dbInstance.select().from(doctors);
     const patientsList = await dbInstance.select().from(patients);
 
-    if (departmentsList.length === 0 || doctorsList.length === 0 || patientsList.length === 0) {
+    if (
+      departmentsList.length === 0 ||
+      doctorsList.length === 0 ||
+      patientsList.length === 0
+    ) {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
-        message: "Base data missing. Please seed departments, doctors, and patients first before generating demo schedules.",
+        message:
+          "Base data missing. Please seed departments, doctors, and patients first before generating demo schedules.",
       });
     }
 
     const reasons = [
-      "Routine Health Checkup", "Chronic hypertension evaluation", "Cardiology follow-up",
-      "Severe throat infection", "Fever and cold symptoms", "Migraine consultation",
-      "Knee joints pain examination", "Pediatric vaccination", "Antenatal routine checkup",
-      "Emergency chest discomfort review", "EHR report discussion", "Skin rashes inspection"
+      "Routine Health Checkup",
+      "Chronic hypertension evaluation",
+      "Cardiology follow-up",
+      "Severe throat infection",
+      "Fever and cold symptoms",
+      "Migraine consultation",
+      "Knee joints pain examination",
+      "Pediatric vaccination",
+      "Antenatal routine checkup",
+      "Emergency chest discomfort review",
+      "EHR report discussion",
+      "Skin rashes inspection",
     ];
 
     const slotTimes = [
-      "09:00", "09:15", "09:30", "09:45", "10:00", "10:15", "10:30", "10:45",
-      "11:00", "11:15", "11:30", "11:45", "12:00", "12:15", "12:30", "12:45",
-      "14:00", "14:15", "14:30", "14:45", "15:00", "15:15", "15:30", "15:45",
-      "16:00", "16:15", "16:30", "16:45"
+      "09:00",
+      "09:15",
+      "09:30",
+      "09:45",
+      "10:00",
+      "10:15",
+      "10:30",
+      "10:45",
+      "11:00",
+      "11:15",
+      "11:30",
+      "11:45",
+      "12:00",
+      "12:15",
+      "12:30",
+      "12:45",
+      "14:00",
+      "14:15",
+      "14:30",
+      "14:45",
+      "15:00",
+      "15:15",
+      "15:30",
+      "15:45",
+      "16:00",
+      "16:15",
+      "16:30",
+      "16:45",
     ];
 
-    const statuses: Array<"Scheduled" | "Confirmed" | "Checked-In" | "Waiting" | "In_Consultation" | "Completed" | "Cancelled" | "No_Show" | "Rescheduled"> = [
-      "Completed", "Completed", "Completed", "Scheduled", "Confirmed", 
-      "Checked-In", "Waiting", "Cancelled", "No_Show", "Rescheduled"
+    const statuses: Array<
+      | "Scheduled"
+      | "Confirmed"
+      | "Checked-In"
+      | "Waiting"
+      | "In_Consultation"
+      | "Completed"
+      | "Cancelled"
+      | "No_Show"
+      | "Rescheduled"
+    > = [
+      "Completed",
+      "Completed",
+      "Completed",
+      "Scheduled",
+      "Confirmed",
+      "Checked-In",
+      "Waiting",
+      "Cancelled",
+      "No_Show",
+      "Rescheduled",
     ];
 
     const priorities: Array<"Low" | "Medium" | "High" | "Emergency" | "VIP"> = [
-      "Low", "Medium", "Medium", "High", "Emergency", "VIP"
+      "Low",
+      "Medium",
+      "Medium",
+      "High",
+      "Emergency",
+      "VIP",
     ];
 
     const appointmentTypes: Array<"Walk-In" | "Pre-Booked" | "Telemedicine"> = [
-      "Pre-Booked", "Pre-Booked", "Walk-In", "Telemedicine"
+      "Pre-Booked",
+      "Pre-Booked",
+      "Walk-In",
+      "Telemedicine",
     ];
 
     // Seed 500 appointments
     console.log("[Demo Seeder] Populating 500 appointments...");
     const valuesToInsert = [];
-    
+
     for (let i = 0; i < 500; i++) {
-      const patient = patientsList[Math.floor(Math.random() * patientsList.length)];
-      const doctor = doctorsList[Math.floor(Math.random() * doctorsList.length)];
-      
+      const patient =
+        patientsList[Math.floor(Math.random() * patientsList.length)];
+      const doctor =
+        doctorsList[Math.floor(Math.random() * doctorsList.length)];
+
       const offsetDays = Math.floor(Math.random() * 60) - 30; // -30 to +30 days range
       const aptDate = new Date();
       aptDate.setDate(aptDate.getDate() + offsetDays);
@@ -851,8 +1021,10 @@ export const appointmentRouter = router({
 
       const timeStr = slotTimes[Math.floor(Math.random() * slotTimes.length)];
       const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const priority = priorities[Math.floor(Math.random() * priorities.length)];
-      const type = appointmentTypes[Math.floor(Math.random() * appointmentTypes.length)];
+      const priority =
+        priorities[Math.floor(Math.random() * priorities.length)];
+      const type =
+        appointmentTypes[Math.floor(Math.random() * appointmentTypes.length)];
       const reason = reasons[Math.floor(Math.random() * reasons.length)];
 
       valuesToInsert.push({
@@ -867,7 +1039,10 @@ export const appointmentRouter = router({
         priority,
         appointmentType: type,
         createdBy: 1, // System Admin
-        queuePosition: status === "Checked-In" || status === "Waiting" ? Math.floor(Math.random() * 10) + 1 : null,
+        queuePosition:
+          status === "Checked-In" || status === "Waiting"
+            ? Math.floor(Math.random() * 10) + 1
+            : null,
       });
     }
 
@@ -891,7 +1066,13 @@ export const ehrRouter = router({
     .input(
       z.object({
         patientId: z.number(),
-        recordType: z.enum(["diagnosis", "prescription", "lab_result", "doctor_note", "attachment"]),
+        recordType: z.enum([
+          "diagnosis",
+          "prescription",
+          "lab_result",
+          "doctor_note",
+          "attachment",
+        ]),
         title: z.string().min(1),
         content: z.string().optional(),
         attachmentUrl: z.string().optional(),
@@ -946,7 +1127,7 @@ export const prescriptionRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      
+
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
@@ -962,7 +1143,11 @@ export const prescriptionRouter = router({
         doctorId = doctorProfile.id;
       } else {
         const allDocs = await dbInstance.select().from(doctors).limit(1);
-        if (allDocs.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "No doctors registered" });
+        if (allDocs.length === 0)
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No doctors registered",
+          });
         doctorId = allDocs[0].id;
       }
 
@@ -1006,17 +1191,24 @@ export const labRouter = router({
       z.object({
         patientId: z.number(),
         appointmentId: z.number().optional(),
-        testType: z.enum(["blood_test", "urine_test", "mri", "ct_scan", "xray", "ultrasound"]),
+        testType: z.enum([
+          "blood_test",
+          "urine_test",
+          "mri",
+          "ct_scan",
+          "xray",
+          "ultrasound",
+        ]),
         notes: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      
+
       const orderCode = `LAB-${Date.now()}`;
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
-      
+
       const [res] = await dbInstance.insert(labOrders).values({
         orderCode,
         patientId: input.patientId,
@@ -1034,14 +1226,22 @@ export const labRouter = router({
         .where(eq(labOrders.id, (res as any).insertId))
         .limit(1);
 
-      return inserted[0] || { id: (res as any).insertId, orderCode, status: "pending" };
+      return (
+        inserted[0] || {
+          id: (res as any).insertId,
+          orderCode,
+          status: "pending",
+        }
+      );
     }),
 
   assignOrder: protectedProcedure
-    .input(z.object({ orderId: z.number(), technicianId: z.number().optional() }))
+    .input(
+      z.object({ orderId: z.number(), technicianId: z.number().optional() })
+    )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      
+
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
@@ -1068,7 +1268,7 @@ export const labRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
-      
+
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
 
@@ -1132,7 +1332,9 @@ export const labRouter = router({
         .leftJoin(users, eq(labOrders.assignedTo, users.id));
 
       if (input.patientId) {
-        return query.where(eq(labOrders.patientId, input.patientId)).orderBy(desc(labOrders.orderDate));
+        return query
+          .where(eq(labOrders.patientId, input.patientId))
+          .orderBy(desc(labOrders.orderDate));
       }
 
       return query.orderBy(desc(labOrders.orderDate));
@@ -1161,7 +1363,9 @@ export const labRouter = router({
         .innerJoin(patients, eq(labReports.patientId, patients.id));
 
       if (input.patientId) {
-        return query.where(eq(labReports.patientId, input.patientId)).orderBy(desc(labReports.reportDate));
+        return query
+          .where(eq(labReports.patientId, input.patientId))
+          .orderBy(desc(labReports.reportDate));
       }
 
       return query.orderBy(desc(labReports.reportDate));
