@@ -10,7 +10,9 @@ import type { User, RefreshToken } from "../../drizzle/schema";
 /**
  * Find user by email
  */
-export async function findUserByEmail(email: string): Promise<User | undefined> {
+export async function findUserByEmail(
+  email: string
+): Promise<User | undefined> {
   const db = await getDb();
   if (!db) {
     throw new Error("Database not available");
@@ -132,7 +134,10 @@ export async function updateLastLogin(userId: number): Promise<void> {
 /**
  * Update user password
  */
-export async function updateUserPassword(userId: number, passwordHash: string): Promise<void> {
+export async function updateUserPassword(
+  userId: number,
+  passwordHash: string
+): Promise<void> {
   const db = await getDb();
   if (!db) {
     throw new Error("Database not available");
@@ -140,9 +145,9 @@ export async function updateUserPassword(userId: number, passwordHash: string): 
 
   await db
     .update(users)
-    .set({ 
+    .set({
       passwordHash,
-      updatedAt: new Date() 
+      updatedAt: new Date(),
     })
     .where(eq(users.id, userId));
 }
@@ -210,7 +215,11 @@ export async function verifyUserEmail(userId: number): Promise<void> {
 /**
  * Save refresh token
  */
-export async function saveRefreshToken(userId: number, token: string, expiresAt: Date): Promise<void> {
+export async function saveRefreshToken(
+  userId: number,
+  token: string,
+  expiresAt: Date
+): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -224,7 +233,9 @@ export async function saveRefreshToken(userId: number, token: string, expiresAt:
 /**
  * Find refresh token
  */
-export async function findRefreshToken(token: string): Promise<RefreshToken | undefined> {
+export async function findRefreshToken(
+  token: string
+): Promise<RefreshToken | undefined> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 

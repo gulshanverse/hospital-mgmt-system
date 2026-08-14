@@ -56,7 +56,10 @@ export async function getUserById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function getAllUsers(filters?: { role?: string; isActive?: boolean }) {
+export async function getAllUsers(filters?: {
+  role?: string;
+  isActive?: boolean;
+}) {
   const db = await getDb();
   if (!db) return [];
 
@@ -69,7 +72,10 @@ export async function getAllUsers(filters?: { role?: string; isActive?: boolean 
   }
 
   if (conditions.length > 0) {
-    return db.select().from(users).where(and(...conditions));
+    return db
+      .select()
+      .from(users)
+      .where(and(...conditions));
   }
 
   return db.select().from(users);
@@ -188,10 +194,7 @@ export async function getDoctorsByDepartment(departmentId: number) {
     .select()
     .from(doctors)
     .where(
-      and(
-        eq(doctors.departmentId, departmentId),
-        eq(doctors.isAvailable, true)
-      )
+      and(eq(doctors.departmentId, departmentId), eq(doctors.isAvailable, true))
     );
 }
 
@@ -237,7 +240,9 @@ export async function searchDoctors(query: string, limit: number = 5) {
 // APPOINTMENT MANAGEMENT
 // ============================================================================
 
-export async function createAppointment(data: typeof appointments.$inferInsert) {
+export async function createAppointment(
+  data: typeof appointments.$inferInsert
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -304,7 +309,9 @@ export async function updateAppointment(
 // MEDICAL RECORDS & EHR
 // ============================================================================
 
-export async function createMedicalRecord(data: typeof medicalRecords.$inferInsert) {
+export async function createMedicalRecord(
+  data: typeof medicalRecords.$inferInsert
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -326,7 +333,9 @@ export async function getMedicalRecordsByPatient(patientId: number) {
 // PRESCRIPTIONS
 // ============================================================================
 
-export async function createPrescription(data: typeof prescriptions.$inferInsert) {
+export async function createPrescription(
+  data: typeof prescriptions.$inferInsert
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -371,10 +380,7 @@ export async function getAllDepartments() {
   const db = await getDb();
   if (!db) return [];
 
-  return db
-    .select()
-    .from(departments)
-    .where(eq(departments.isActive, true));
+  return db.select().from(departments).where(eq(departments.isActive, true));
 }
 
 // ============================================================================
@@ -385,10 +391,7 @@ export async function getAvailableBeds() {
   const db = await getDb();
   if (!db) return [];
 
-  return db
-    .select()
-    .from(beds)
-    .where(eq(beds.status, "available"));
+  return db.select().from(beds).where(eq(beds.status, "available"));
 }
 
 export async function getBedsByWard(wardId: number) {
@@ -417,10 +420,7 @@ export async function getActiveAdmissionsByPatient(patientId: number) {
     .select()
     .from(admissions)
     .where(
-      and(
-        eq(admissions.patientId, patientId),
-        eq(admissions.status, "active")
-      )
+      and(eq(admissions.patientId, patientId), eq(admissions.status, "active"))
     );
 }
 
@@ -471,17 +471,16 @@ export async function getPendingInvoices() {
   const db = await getDb();
   if (!db) return [];
 
-  return db
-    .select()
-    .from(invoices)
-    .where(eq(invoices.status, "pending"));
+  return db.select().from(invoices).where(eq(invoices.status, "pending"));
 }
 
 // ============================================================================
 // NOTIFICATIONS
 // ============================================================================
 
-export async function createNotification(data: typeof notifications.$inferInsert) {
+export async function createNotification(
+  data: typeof notifications.$inferInsert
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -520,5 +519,3 @@ export async function createAuditLog(data: typeof auditLogs.$inferInsert) {
 
   return db.insert(auditLogs).values(data);
 }
-
-

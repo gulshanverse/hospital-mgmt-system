@@ -3,8 +3,20 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Plus, Edit2, Trash2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -33,7 +45,7 @@ export default function DepartmentManagement() {
       resetForm();
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to create department");
     },
   });
@@ -45,7 +57,7 @@ export default function DepartmentManagement() {
       resetForm();
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to update department");
     },
   });
@@ -55,7 +67,7 @@ export default function DepartmentManagement() {
       toast.success("Department deactivated successfully");
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to deactivate department");
     },
   });
@@ -105,7 +117,9 @@ export default function DepartmentManagement() {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to deactivate this department?")) {
+    if (
+      window.confirm("Are you sure you want to deactivate this department?")
+    ) {
       deleteMutation.mutate({ id });
     }
   };
@@ -124,7 +138,13 @@ export default function DepartmentManagement() {
             <BookOpen className="w-8 h-8 text-indigo-600" />
             <h1 className="text-3xl font-bold">Departments</h1>
           </div>
-          <Button onClick={() => { resetForm(); setIsCreateOpen(true); }} className="gap-2">
+          <Button
+            onClick={() => {
+              resetForm();
+              setIsCreateOpen(true);
+            }}
+            className="gap-2"
+          >
             <Plus className="w-4 h-4" />
             Add Department
           </Button>
@@ -146,7 +166,9 @@ export default function DepartmentManagement() {
                 {departments && departments.length > 0 ? (
                   departments.map((dept: any) => (
                     <TableRow key={dept.id}>
-                      <TableCell className="font-semibold text-gray-900">{dept.name}</TableCell>
+                      <TableCell className="font-semibold text-gray-900">
+                        {dept.name}
+                      </TableCell>
                       <TableCell className="max-w-md truncate text-sm text-gray-600">
                         {dept.description || "-"}
                       </TableCell>
@@ -154,13 +176,21 @@ export default function DepartmentManagement() {
                         {getDoctorName(dept.headDoctorId)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={dept.isActive !== false ? "default" : "secondary"}>
+                        <Badge
+                          variant={
+                            dept.isActive !== false ? "default" : "secondary"
+                          }
+                        >
                           {dept.isActive !== false ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => openEdit(dept)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEdit(dept)}
+                          >
                             <Edit2 className="w-3.5 h-3.5" />
                           </Button>
                           <Button
@@ -177,7 +207,10 @@ export default function DepartmentManagement() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       No departments found.
                     </TableCell>
                   </TableRow>
@@ -197,26 +230,41 @@ export default function DepartmentManagement() {
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold">Department Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g., Cardiology" />
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+                placeholder="e.g., Cardiology"
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold">Description</label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of department role" />
+              <Input
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Brief description of department role"
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold">Head Doctor</label>
               <select
                 value={headDoctorId}
-                onChange={(e) => setHeadDoctorId(e.target.value)}
+                onChange={e => setHeadDoctorId(e.target.value)}
                 className="w-full border rounded px-3 py-2 text-sm bg-background"
               >
                 <option value="">No Head Doctor Assigned</option>
                 {doctors?.map((doc: any) => (
-                  <option key={doc.id} value={doc.id.toString()}>{doc.name} ({doc.specialty})</option>
+                  <option key={doc.id} value={doc.id.toString()}>
+                    {doc.name} ({doc.specialty})
+                  </option>
                 ))}
               </select>
             </div>
-            <Button type="submit" disabled={createMutation.isPending} className="w-full">
+            <Button
+              type="submit"
+              disabled={createMutation.isPending}
+              className="w-full"
+            >
               {createMutation.isPending ? "Adding..." : "Add Department"}
             </Button>
           </form>
@@ -232,30 +280,53 @@ export default function DepartmentManagement() {
           <form onSubmit={handleEdit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold">Department Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold">Description</label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Input
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold">Head Doctor</label>
               <select
                 value={headDoctorId}
-                onChange={(e) => setHeadDoctorId(e.target.value)}
+                onChange={e => setHeadDoctorId(e.target.value)}
                 className="w-full border rounded px-3 py-2 text-sm bg-background"
               >
                 <option value="">No Head Doctor Assigned</option>
                 {doctors?.map((doc: any) => (
-                  <option key={doc.id} value={doc.id.toString()}>{doc.name} ({doc.specialty})</option>
+                  <option key={doc.id} value={doc.id.toString()}>
+                    {doc.name} ({doc.specialty})
+                  </option>
                 ))}
               </select>
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <input type="checkbox" id="active-checkbox-dept" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-              <label htmlFor="active-checkbox-dept" className="text-sm font-semibold cursor-pointer">Active Department</label>
+              <input
+                type="checkbox"
+                id="active-checkbox-dept"
+                checked={isActive}
+                onChange={e => setIsActive(e.target.checked)}
+              />
+              <label
+                htmlFor="active-checkbox-dept"
+                className="text-sm font-semibold cursor-pointer"
+              >
+                Active Department
+              </label>
             </div>
-            <Button type="submit" disabled={updateMutation.isPending} className="w-full">
+            <Button
+              type="submit"
+              disabled={updateMutation.isPending}
+              className="w-full"
+            >
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </form>

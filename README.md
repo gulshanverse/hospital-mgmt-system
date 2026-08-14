@@ -5,12 +5,14 @@ A comprehensive, full-stack Hospital Management System built with React 19, Node
 ## Features
 
 ### 1. Role-Based Access Control
+
 - **6 Hospital Roles**: Admin, Doctor, Nurse, Receptionist, Pharmacist, Lab Technician
 - **API-Level RBAC**: All endpoints enforce role-based permissions
 - **Frontend Guards**: Route protection based on user roles
 - **Permission Matrix**: Granular control over who can perform which operations
 
 ### 2. Patient Management
+
 - Patient registration with comprehensive demographics
 - Advanced search by name, email, phone
 - Pagination and filtering
@@ -18,24 +20,28 @@ A comprehensive, full-stack Hospital Management System built with React 19, Node
 - Emergency contact and insurance information
 
 ### 3. Appointment Management
+
 - Calendar-based scheduling (day, week, month, list views)
 - Doctor and department assignment
 - Status tracking (scheduled, in progress, completed, cancelled)
 - Appointment history and trends
 
 ### 4. Electronic Health Records (EHR)
+
 - Comprehensive medical timeline per patient
 - Record types: diagnoses, prescriptions, lab results, doctor notes, attachments
 - Role-based read/write permissions
 - Automatic linking of lab reports and prescriptions
 
 ### 5. Prescription Management
+
 - Linked to appointments and medical records
 - Multiple medications per prescription
 - Dosage, frequency, duration, and instructions
 - Automatic EHR attachment
 
 ### 6. Laboratory Management
+
 - Lab order creation and tracking
 - Technician assignment and workflow
 - Result upload with PDF generation
@@ -43,18 +49,21 @@ A comprehensive, full-stack Hospital Management System built with React 19, Node
 - Automatic EHR integration
 
 ### 7. Bed Management
+
 - Ward and ICU bed tracking
 - Real-time availability status
 - Bed statuses: Available, Occupied, Cleaning, Maintenance
 - Occupancy visualization
 
 ### 8. Admission Management
+
 - Patient admission workflow
 - Bed assignment
 - Discharge management
 - Status tracking
 
 ### 9. Pharmacy Inventory
+
 - Medicine stock management
 - Reorder level tracking
 - Expiry date alerts
@@ -62,6 +71,7 @@ A comprehensive, full-stack Hospital Management System built with React 19, Node
 - Batch and storage location tracking
 
 ### 10. Billing & Invoicing
+
 - Invoice creation with line items
 - Item types: consultation, procedures, medications, room charges, lab charges
 - Status tracking: Paid, Pending, Overdue
@@ -69,12 +79,14 @@ A comprehensive, full-stack Hospital Management System built with React 19, Node
 - Payment tracking
 
 ### 11. Analytics Dashboard
+
 - KPI cards: total patients, today's appointments, available beds, occupied beds, total doctors, revenue, pending bills, low stock items
 - Charts: weekly admissions, monthly revenue, appointment trends, bed occupancy
 - Department performance analysis
 - Real-time alerts for low stock and pending bills
 
 ### 12. System Features
+
 - Global search functionality
 - Notification system
 - Audit logging
@@ -84,6 +96,7 @@ A comprehensive, full-stack Hospital Management System built with React 19, Node
 ## Technology Stack
 
 ### Frontend
+
 - **React 19** - Modern UI framework
 - **Tailwind CSS 4** - Utility-first styling
 - **TypeScript** - Type-safe development
@@ -92,6 +105,7 @@ A comprehensive, full-stack Hospital Management System built with React 19, Node
 - **tRPC Client** - Type-safe API calls
 
 ### Backend
+
 - **Node.js** - JavaScript runtime
 - **Express 4** - Web framework
 - **tRPC 11** - Type-safe RPC framework
@@ -99,6 +113,7 @@ A comprehensive, full-stack Hospital Management System built with React 19, Node
 - **MySQL** - Relational database
 
 ### Authentication
+
 - **Manus OAuth** - Secure authentication
 - **JWT** - Session management
 - **SuperJSON** - Complex type serialization
@@ -135,6 +150,7 @@ The system uses 22 normalized tables:
 All endpoints are accessible via tRPC at `/api/trpc/`:
 
 ### Patient Operations
+
 - `patient.create` - Create new patient
 - `patient.getById` - Get patient by ID
 - `patient.search` - Search patients
@@ -142,6 +158,7 @@ All endpoints are accessible via tRPC at `/api/trpc/`:
 - `patient.update` - Update patient
 
 ### Doctor Operations
+
 - `doctor.create` - Create doctor profile
 - `doctor.getById` - Get doctor by ID
 - `doctor.getByUserId` - Get doctor by user ID
@@ -150,12 +167,14 @@ All endpoints are accessible via tRPC at `/api/trpc/`:
 - `doctor.update` - Update doctor
 
 ### Department Operations
+
 - `department.create` - Create department
 - `department.getById` - Get department
 - `department.list` - List departments
 - `department.update` - Update department
 
 ### Appointment Operations
+
 - `appointment.create` - Create appointment
 - `appointment.getById` - Get appointment
 - `appointment.getByPatient` - Get patient appointments
@@ -164,14 +183,17 @@ All endpoints are accessible via tRPC at `/api/trpc/`:
 - `appointment.update` - Update appointment
 
 ### EHR Operations
+
 - `ehr.create` - Create medical record
 - `ehr.getByPatient` - Get patient medical records
 
 ### Prescription Operations
+
 - `prescription.create` - Create prescription
 - `prescription.getByPatient` - Get patient prescriptions
 
 ### Lab Operations
+
 - `lab.createOrder` - Create lab order
 - `lab.assignOrder` - Assign order to technician
 - `lab.uploadReport` - Upload lab report
@@ -179,28 +201,33 @@ All endpoints are accessible via tRPC at `/api/trpc/`:
 - `lab.getReports` - Get lab reports
 
 ### Bed Operations
+
 - `bed.getAvailable` - Get available beds
 - `bed.getByWard` - Get beds by ward
 - `bed.updateStatus` - Update bed status
 
 ### Admission Operations
+
 - `admission.create` - Create admission
 - `admission.discharge` - Discharge patient
 - `admission.getByPatient` - Get patient admissions
 
 ### Pharmacy Operations
+
 - `pharmacy.getInventory` - Get inventory
 - `pharmacy.getLowStock` - Get low stock items
 - `pharmacy.updateStock` - Update stock
 - `pharmacy.addMedicine` - Add medicine
 
 ### Billing Operations
+
 - `billing.createInvoice` - Create invoice
 - `billing.getByPatient` - Get patient invoices
 - `billing.getPending` - Get pending invoices
 - `billing.updateStatus` - Update invoice status
 
 ### Analytics Operations
+
 - `analytics.getDashboardKPIs` - Get dashboard KPIs
 - `analytics.getWeeklyAdmissions` - Get weekly admissions data
 - `analytics.getMonthlyRevenue` - Get monthly revenue
@@ -211,12 +238,14 @@ All endpoints are accessible via tRPC at `/api/trpc/`:
 - `analytics.markNotificationRead` - Mark notification as read
 
 ### Search Operations
+
 - `search.global` - Global search
 - `search.patients` - Search patients
 
 ## Frontend Pages
 
 ### Authenticated Users
+
 - **Dashboard** (`/dashboard`) - Analytics and KPIs
 - **Patients** (`/patients`) - Patient management
 - **Appointments** (`/appointments`) - Appointment scheduling
@@ -227,11 +256,13 @@ All endpoints are accessible via tRPC at `/api/trpc/`:
 - **Lab** (`/lab`) - Laboratory management
 
 ### Public
+
 - **Home** (`/`) - Landing page (redirects to dashboard if authenticated)
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 22.13.0+
 - pnpm 10.4.1+
 - MySQL 8.0+
@@ -239,34 +270,40 @@ All endpoints are accessible via tRPC at `/api/trpc/`:
 ### Installation
 
 1. Clone the repository
+
 ```bash
 git clone <repository-url>
 cd hospital-management-system
 ```
 
 2. Install dependencies
+
 ```bash
 pnpm install
 ```
 
 3. Set up environment variables
+
 ```bash
 # Create .env file with required variables
 # DATABASE_URL, JWT_SECRET, VITE_APP_ID, etc.
 ```
 
 4. Run database migrations
+
 ```bash
 pnpm drizzle-kit generate
 pnpm drizzle-kit migrate
 ```
 
 5. Start development server
+
 ```bash
 pnpm dev
 ```
 
 6. Access the application
+
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3000
 
@@ -296,11 +333,13 @@ pnpm dev
 ### Testing
 
 Run all tests:
+
 ```bash
 pnpm test
 ```
 
 Run specific test file:
+
 ```bash
 pnpm test server/auth.logout.test.ts
 ```
@@ -308,12 +347,14 @@ pnpm test server/auth.logout.test.ts
 ## Deployment
 
 ### Production Build
+
 ```bash
 pnpm build
 pnpm start
 ```
 
 ### Environment Variables for Production
+
 - `DATABASE_URL` - MySQL connection string
 - `JWT_SECRET` - Session signing secret
 - `VITE_APP_ID` - OAuth application ID
@@ -376,6 +417,7 @@ Built by the Manus team.
 ## Changelog
 
 ### Version 1.0.0 (Initial Release)
+
 - Complete backend infrastructure with 22 database tables
 - Role-based access control with 6 hospital roles
 - 13 tRPC routers covering all major modules

@@ -1,7 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import type { TrpcContext } from "./context";
 
-export type HMSRole = "admin" | "doctor" | "nurse" | "receptionist" | "pharmacist" | "lab_technician" | "patient";
+export type HMSRole =
+  | "admin"
+  | "doctor"
+  | "nurse"
+  | "receptionist"
+  | "pharmacist"
+  | "lab_technician"
+  | "patient";
 
 /**
  * Role-based permission matrix
@@ -266,7 +273,10 @@ export function requireRole(userRole: HMSRole, allowedRoles: HMSRole[]): void {
 export const createRoleProcedure = (roles: HMSRole[]) => {
   return (ctx: TrpcContext) => {
     if (!ctx.user) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "User not authenticated" });
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User not authenticated",
+      });
     }
 
     requireRole(ctx.user.role as HMSRole, roles);

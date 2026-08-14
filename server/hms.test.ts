@@ -33,7 +33,12 @@ describe("HMS Core Functionality", () => {
 
   describe("Appointment Management", () => {
     it("should validate appointment status transitions", () => {
-      const validStatuses = ["scheduled", "in_progress", "completed", "cancelled"];
+      const validStatuses = [
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ];
       const currentStatus = "scheduled";
       expect(validStatuses).toContain(currentStatus);
     });
@@ -42,7 +47,7 @@ describe("HMS Core Functionality", () => {
       const today = new Date();
       const pastDate = new Date(today.getTime() - 86400000); // Yesterday
       const futureDate = new Date(today.getTime() + 86400000); // Tomorrow
-      
+
       expect(futureDate.getTime()).toBeGreaterThan(today.getTime());
       expect(pastDate.getTime()).toBeLessThan(today.getTime());
     });
@@ -73,8 +78,13 @@ describe("HMS Core Functionality", () => {
 
     it("should enforce role-based resource access", () => {
       const userRole = "doctor";
-      const allowedResources = ["appointments", "patients", "prescriptions", "ehr"];
-      
+      const allowedResources = [
+        "appointments",
+        "patients",
+        "prescriptions",
+        "ehr",
+      ];
+
       expect(allowedResources).toContain("appointments");
       expect(["admin", "doctor"]).toContain(userRole);
     });
@@ -87,7 +97,7 @@ describe("HMS Core Functionality", () => {
         { description: "Procedure", amount: 500 },
         { description: "Medication", amount: 50 },
       ];
-      
+
       const total = items.reduce((sum, item) => sum + item.amount, 0);
       expect(total).toBe(650);
     });
@@ -115,7 +125,7 @@ describe("HMS Core Functionality", () => {
         quantity: 100,
         reorderLevel: 20,
       };
-      
+
       expect(medicine.quantity).toBeGreaterThan(medicine.reorderLevel);
     });
 
@@ -125,7 +135,7 @@ describe("HMS Core Functionality", () => {
         { name: "Ibuprofen", quantity: 15, reorderLevel: 20 },
         { name: "Paracetamol", quantity: 50, reorderLevel: 25 },
       ];
-      
+
       const lowStock = medicines.filter(m => m.quantity <= m.reorderLevel);
       expect(lowStock).toHaveLength(1);
       expect(lowStock[0].name).toBe("Ibuprofen");
@@ -134,7 +144,7 @@ describe("HMS Core Functionality", () => {
     it("should validate expiry dates", () => {
       const today = new Date();
       const expiryDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
-      
+
       expect(expiryDate.getTime()).toBeGreaterThan(today.getTime());
     });
   });
@@ -150,14 +160,14 @@ describe("HMS Core Functionality", () => {
       const totalBeds = 100;
       const occupiedBeds = 75;
       const occupancyRate = (occupiedBeds / totalBeds) * 100;
-      
+
       expect(occupancyRate).toBe(75);
     });
 
     it("should prevent double-booking beds", () => {
       const bed1 = { id: 1, status: "occupied" };
       const bed2 = { id: 2, status: "available" };
-      
+
       expect(bed1.status).toBe("occupied");
       expect(bed2.status).toBe("available");
     });
@@ -165,7 +175,14 @@ describe("HMS Core Functionality", () => {
 
   describe("Lab Management", () => {
     it("should validate lab test types", () => {
-      const validTests = ["blood_test", "urine_test", "mri", "ct_scan", "xray", "ultrasound"];
+      const validTests = [
+        "blood_test",
+        "urine_test",
+        "mri",
+        "ct_scan",
+        "xray",
+        "ultrasound",
+      ];
       const testType = "blood_test";
       expect(validTests).toContain(testType);
     });
@@ -183,7 +200,7 @@ describe("HMS Core Functionality", () => {
         results: "Normal",
         ehrLinked: true,
       };
-      
+
       expect(labReport.ehrLinked).toBe(true);
       expect(labReport.patientId).toBeDefined();
     });
@@ -191,8 +208,14 @@ describe("HMS Core Functionality", () => {
 
   describe("Electronic Health Records", () => {
     it("should store multiple record types", () => {
-      const recordTypes = ["diagnosis", "prescription", "lab_result", "doctor_note", "attachment"];
-      
+      const recordTypes = [
+        "diagnosis",
+        "prescription",
+        "lab_result",
+        "doctor_note",
+        "attachment",
+      ];
+
       expect(recordTypes).toHaveLength(5);
       expect(recordTypes).toContain("diagnosis");
     });
@@ -203,8 +226,10 @@ describe("HMS Core Functionality", () => {
         { id: 2, date: new Date("2026-01-15") },
         { id: 3, date: new Date("2026-02-01") },
       ];
-      
-      const sorted = [...records].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      const sorted = [...records].sort(
+        (a, b) => a.date.getTime() - b.date.getTime()
+      );
       expect(sorted[0].id).toBe(1);
       expect(sorted[2].id).toBe(3);
     });
@@ -222,7 +247,7 @@ describe("HMS Core Functionality", () => {
         pendingBills: 10,
         lowStockItems: 5,
       };
-      
+
       expect(kpis.totalPatients).toBeGreaterThan(0);
       expect(kpis.availableBeds + kpis.occupiedBeds).toBe(100);
     });
@@ -233,7 +258,7 @@ describe("HMS Core Functionality", () => {
         { day: "Tuesday", count: 25 },
         { day: "Wednesday", count: 22 },
       ];
-      
+
       const total = weeklyData.reduce((sum, day) => sum + day.count, 0);
       expect(total).toBe(67);
     });
@@ -241,9 +266,16 @@ describe("HMS Core Functionality", () => {
 
   describe("Authentication & Authorization", () => {
     it("should validate user roles", () => {
-      const validRoles = ["admin", "doctor", "nurse", "receptionist", "pharmacist", "lab_technician"];
+      const validRoles = [
+        "admin",
+        "doctor",
+        "nurse",
+        "receptionist",
+        "pharmacist",
+        "lab_technician",
+      ];
       const userRole = "doctor";
-      
+
       expect(validRoles).toContain(userRole);
     });
 
@@ -253,8 +285,10 @@ describe("HMS Core Functionality", () => {
         doctor: ["view_patients", "create_prescription", "view_appointments"],
         admin: ["view_all", "manage_users", "manage_departments"],
       };
-      
-      expect(allowedActions[user.role as keyof typeof allowedActions]).toContain("view_patients");
+
+      expect(
+        allowedActions[user.role as keyof typeof allowedActions]
+      ).toContain("view_patients");
     });
   });
 });

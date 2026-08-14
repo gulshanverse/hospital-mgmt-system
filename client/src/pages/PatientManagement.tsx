@@ -4,7 +4,13 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Eye, Trash2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -25,7 +31,9 @@ export default function PatientManagement() {
   const [editLastName, setEditLastName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
-  const [editGender, setEditGender] = useState<"male" | "female" | "other">("male");
+  const [editGender, setEditGender] = useState<"male" | "female" | "other">(
+    "male"
+  );
   const [editDob, setEditDob] = useState("");
   const [editBloodGroup, setEditBloodGroup] = useState("");
   const [editStatus, setEditStatus] = useState<any>("Registered");
@@ -53,7 +61,7 @@ export default function PatientManagement() {
       toast.success("Patient record soft-deleted successfully");
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to delete patient");
     },
   });
@@ -64,14 +72,16 @@ export default function PatientManagement() {
       setIsEditOpen(false);
       refetch();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to update patient");
     },
   });
 
   const handleUpdate = () => {
     if (!editFirstName || !editLastName || !editPhone || !editDob) {
-      toast.error("First Name, Last Name, Phone, and Date of Birth are required");
+      toast.error(
+        "First Name, Last Name, Phone, and Date of Birth are required"
+      );
       return;
     }
     updateMutation.mutate({
@@ -93,7 +103,11 @@ export default function PatientManagement() {
   };
 
   const handleDeletePatient = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this patient record? The record will be soft-deleted and hidden from registry listing.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this patient record? The record will be soft-deleted and hidden from registry listing."
+      )
+    ) {
       deleteMutation.mutate({ id });
     }
   };
@@ -121,12 +135,17 @@ export default function PatientManagement() {
   };
 
   const columns: ColumnDef<any>[] = [
-    { key: "patientCode", header: "Patient ID", sortable: true, sticky: "left" },
+    {
+      key: "patientCode",
+      header: "Patient ID",
+      sortable: true,
+      sticky: "left",
+    },
     {
       key: "fullName",
       header: "Name",
       sortable: true,
-      render: (row) => `${row.firstName} ${row.lastName}`
+      render: row => `${row.firstName} ${row.lastName}`,
     },
     { key: "phone", header: "Phone Number" },
     { key: "email", header: "Email Address" },
@@ -134,16 +153,16 @@ export default function PatientManagement() {
     {
       key: "status",
       header: "Status",
-      render: (row) => (
+      render: row => (
         <Badge variant="outline" className={getStatusColor(row.status)}>
           {row.status}
         </Badge>
-      )
+      ),
     },
     {
       key: "actions",
       header: "Actions",
-      render: (row) => (
+      render: row => (
         <div className="flex gap-2">
           <Button
             size="sm"
@@ -172,8 +191,8 @@ export default function PatientManagement() {
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -188,7 +207,10 @@ export default function PatientManagement() {
               Review and manage demographics, admissions, and history logs.
             </p>
           </div>
-          <Button onClick={() => setIsCreateOpen(true)} className="gap-2 shadow-xs">
+          <Button
+            onClick={() => setIsCreateOpen(true)}
+            className="gap-2 shadow-xs"
+          >
             <Plus className="w-4 h-4" />
             Register Patient
           </Button>
@@ -204,9 +226,13 @@ export default function PatientManagement() {
             bulkActions={[
               {
                 label: "Delete Selected",
-                action: (rows) => {
-                  if (window.confirm(`Are you sure you want to soft-delete ${rows.length} patient records?`)) {
-                    rows.forEach((row) => deleteMutation.mutate({ id: row.id }));
+                action: rows => {
+                  if (
+                    window.confirm(
+                      `Are you sure you want to soft-delete ${rows.length} patient records?`
+                    )
+                  ) {
+                    rows.forEach(row => deleteMutation.mutate({ id: row.id }));
                   }
                 },
                 variant: "destructive",
@@ -265,25 +291,49 @@ export default function PatientManagement() {
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">First Name</label>
-                <Input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} />
+                <label className="text-xs text-muted-foreground font-semibold">
+                  First Name
+                </label>
+                <Input
+                  value={editFirstName}
+                  onChange={e => setEditFirstName(e.target.value)}
+                />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Last Name</label>
-                <Input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} />
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Last Name
+                </label>
+                <Input
+                  value={editLastName}
+                  onChange={e => setEditLastName(e.target.value)}
+                />
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground font-semibold">Email Address</label>
-              <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+              <label className="text-xs text-muted-foreground font-semibold">
+                Email Address
+              </label>
+              <Input
+                type="email"
+                value={editEmail}
+                onChange={e => setEditEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground font-semibold">Phone Number</label>
-              <Input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
+              <label className="text-xs text-muted-foreground font-semibold">
+                Phone Number
+              </label>
+              <Input
+                type="tel"
+                value={editPhone}
+                onChange={e => setEditPhone(e.target.value)}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Gender</label>
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Gender
+                </label>
                 <select
                   value={editGender}
                   onChange={(e: any) => setEditGender(e.target.value)}
@@ -295,7 +345,9 @@ export default function PatientManagement() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground font-semibold">Blood Group</label>
+                <label className="text-xs text-muted-foreground font-semibold">
+                  Blood Group
+                </label>
                 <select
                   value={editBloodGroup}
                   onChange={(e: any) => setEditBloodGroup(e.target.value)}
@@ -314,11 +366,19 @@ export default function PatientManagement() {
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground font-semibold">Date of Birth</label>
-              <Input type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} />
+              <label className="text-xs text-muted-foreground font-semibold">
+                Date of Birth
+              </label>
+              <Input
+                type="date"
+                value={editDob}
+                onChange={e => setEditDob(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground font-semibold">Lifecycle Status</label>
+              <label className="text-xs text-muted-foreground font-semibold">
+                Lifecycle Status
+              </label>
               <select
                 value={editStatus}
                 onChange={(e: any) => setEditStatus(e.target.value)}
@@ -337,10 +397,18 @@ export default function PatientManagement() {
               </select>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1" onClick={() => setIsEditOpen(false)}>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsEditOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleUpdate} disabled={updateMutation.isPending} className="flex-1">
+              <Button
+                onClick={handleUpdate}
+                disabled={updateMutation.isPending}
+                className="flex-1"
+              >
                 {updateMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>
@@ -358,12 +426,23 @@ export default function PatientManagement() {
             <div className="space-y-4 text-sm py-2">
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 border rounded-xl bg-secondary/20">
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Patient UHID</p>
-                  <p className="font-mono font-extrabold text-base mt-1 text-foreground">{selectedPatient.patientCode}</p>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+                    Patient UHID
+                  </p>
+                  <p className="font-mono font-extrabold text-base mt-1 text-foreground">
+                    {selectedPatient.patientCode}
+                  </p>
                 </div>
                 <div className="p-3 border rounded-xl bg-secondary/20 flex flex-col justify-between">
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Status</p>
-                  <Badge variant="outline" className={getStatusColor(selectedPatient.status) + " mt-1.5 w-fit"}>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+                    Status
+                  </p>
+                  <Badge
+                    variant="outline"
+                    className={
+                      getStatusColor(selectedPatient.status) + " mt-1.5 w-fit"
+                    }
+                  >
                     {selectedPatient.status}
                   </Badge>
                 </div>
@@ -371,83 +450,140 @@ export default function PatientManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">First Name</p>
-                  <p className="font-bold text-foreground mt-0.5">{selectedPatient.firstName}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    First Name
+                  </p>
+                  <p className="font-bold text-foreground mt-0.5">
+                    {selectedPatient.firstName}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Last Name</p>
-                  <p className="font-bold text-foreground mt-0.5">{selectedPatient.lastName}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Last Name
+                  </p>
+                  <p className="font-bold text-foreground mt-0.5">
+                    {selectedPatient.lastName}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 border-t pt-3">
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Gender</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Gender
+                  </p>
                   <p className="capitalize mt-0.5">{selectedPatient.gender}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Date of Birth</p>
-                  <p className="mt-0.5">{selectedPatient.dateOfBirth ? new Date(selectedPatient.dateOfBirth).toLocaleDateString() : "-"}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Date of Birth
+                  </p>
+                  <p className="mt-0.5">
+                    {selectedPatient.dateOfBirth
+                      ? new Date(
+                          selectedPatient.dateOfBirth
+                        ).toLocaleDateString()
+                      : "-"}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 border-t pt-3">
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Phone</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Phone
+                  </p>
                   <p className="mt-0.5">{selectedPatient.phone || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Email</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Email
+                  </p>
                   <p className="mt-0.5">{selectedPatient.email || "-"}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 border-t pt-3">
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Blood Group</p>
-                  <p className="font-bold text-destructive mt-0.5">{selectedPatient.bloodGroup || "Unknown"}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Blood Group
+                  </p>
+                  <p className="font-bold text-destructive mt-0.5">
+                    {selectedPatient.bloodGroup || "Unknown"}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold">Registered</p>
-                  <p className="mt-0.5">{selectedPatient.createdAt ? new Date(selectedPatient.createdAt).toLocaleDateString() : "-"}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Registered
+                  </p>
+                  <p className="mt-0.5">
+                    {selectedPatient.createdAt
+                      ? new Date(selectedPatient.createdAt).toLocaleDateString()
+                      : "-"}
+                  </p>
                 </div>
               </div>
 
-              {(selectedPatient.address || selectedPatient.city || selectedPatient.state) && (
+              {(selectedPatient.address ||
+                selectedPatient.city ||
+                selectedPatient.state) && (
                 <div className="border-t pt-3">
-                  <p className="text-xs text-muted-foreground font-semibold mb-1">Address</p>
+                  <p className="text-xs text-muted-foreground font-semibold mb-1">
+                    Address
+                  </p>
                   <p className="text-sm text-foreground/90">
                     {selectedPatient.address || ""}
                     {selectedPatient.city ? `, ${selectedPatient.city}` : ""}
                     {selectedPatient.state ? `, ${selectedPatient.state}` : ""}
-                    {selectedPatient.zipCode ? ` ${selectedPatient.zipCode}` : ""}
+                    {selectedPatient.zipCode
+                      ? ` ${selectedPatient.zipCode}`
+                      : ""}
                   </p>
                 </div>
               )}
 
-              {(selectedPatient.emergencyContactName || selectedPatient.emergencyContactPhone) && (
+              {(selectedPatient.emergencyContactName ||
+                selectedPatient.emergencyContactPhone) && (
                 <div className="border-t pt-3">
-                  <p className="text-xs text-muted-foreground font-semibold mb-1">Emergency Contact</p>
+                  <p className="text-xs text-muted-foreground font-semibold mb-1">
+                    Emergency Contact
+                  </p>
                   <p className="text-sm text-foreground/90">
-                    {selectedPatient.emergencyContactName || "N/A"} — {selectedPatient.emergencyContactPhone || "N/A"}
+                    {selectedPatient.emergencyContactName || "N/A"} —{" "}
+                    {selectedPatient.emergencyContactPhone || "N/A"}
                   </p>
                 </div>
               )}
 
-              {(selectedPatient.insuranceProvider || selectedPatient.insuranceNumber) && (
+              {(selectedPatient.insuranceProvider ||
+                selectedPatient.insuranceNumber) && (
                 <div className="border-t pt-3">
-                  <p className="text-xs text-muted-foreground font-semibold mb-1">Insurance</p>
+                  <p className="text-xs text-muted-foreground font-semibold mb-1">
+                    Insurance
+                  </p>
                   <p className="text-sm text-foreground/90">
-                    {selectedPatient.insuranceProvider || "N/A"} — {selectedPatient.insuranceNumber || "N/A"}
+                    {selectedPatient.insuranceProvider || "N/A"} —{" "}
+                    {selectedPatient.insuranceNumber || "N/A"}
                   </p>
                 </div>
               )}
 
               <div className="flex gap-2 pt-4 border-t mt-4">
-                <Button variant="outline" className="flex-1" onClick={() => { setIsViewOpen(false); openEdit(selectedPatient); }}>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setIsViewOpen(false);
+                    openEdit(selectedPatient);
+                  }}
+                >
                   <Edit2 className="w-4 h-4 mr-2" /> Edit Patient
                 </Button>
-                <Button variant="outline" className="flex-1" onClick={() => setIsViewOpen(false)}>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsViewOpen(false)}
+                >
                   Close
                 </Button>
               </div>

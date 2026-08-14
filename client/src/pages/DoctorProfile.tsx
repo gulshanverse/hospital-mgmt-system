@@ -27,7 +27,9 @@ export default function DoctorProfile() {
 
   const [leaveStartDate, setLeaveStartDate] = React.useState("");
   const [leaveEndDate, setLeaveEndDate] = React.useState("");
-  const [leaveType, setLeaveType] = React.useState<"Annual" | "Casual" | "Medical" | "Sabbatical">("Annual");
+  const [leaveType, setLeaveType] = React.useState<
+    "Annual" | "Casual" | "Medical" | "Sabbatical"
+  >("Annual");
   const [leaveReason, setLeaveReason] = React.useState("");
   const [coveringDoctorId, setCoveringDoctorId] = React.useState("");
 
@@ -36,28 +38,36 @@ export default function DoctorProfile() {
   const [followUpDuration, setFollowUpDuration] = React.useState("10");
   const [emergencyDuration, setEmergencyDuration] = React.useState("15");
   const [bufferTime, setBufferTime] = React.useState("2");
-  const [maxAppointmentsPerDay, setMaxAppointmentsPerDay] = React.useState("30");
-  const [doubleBookingPolicy, setDoubleBookingPolicy] = React.useState("Strict");
+  const [maxAppointmentsPerDay, setMaxAppointmentsPerDay] =
+    React.useState("30");
+  const [doubleBookingPolicy, setDoubleBookingPolicy] =
+    React.useState("Strict");
   const [telemedicineEnabled, setTelemedicineEnabled] = React.useState(false);
   const [notifySMS, setNotifySMS] = React.useState(true);
   const [notifyEmail, setNotifyEmail] = React.useState(true);
   const [sessionTimeout, setSessionTimeout] = React.useState("15");
 
   // Queries
-  const { data: doctor, isLoading: isDocLoading, refetch: refetchDoc } = trpc.doctor.getById.useQuery(
+  const {
+    data: doctor,
+    isLoading: isDocLoading,
+    refetch: refetchDoc,
+  } = trpc.doctor.getById.useQuery(
     { id: doctorId || 0 },
     { enabled: !!doctorId }
   );
 
   const { data: doctorsList } = trpc.doctor.list.useQuery();
-  const { data: leaves, refetch: refetchLeaves } = trpc.doctor.listLeaves.useQuery(
-    { doctorId: doctorId || 0 },
-    { enabled: !!doctorId }
-  );
-  const { data: attendanceLogs, refetch: refetchAttendance } = trpc.doctor.getAttendanceHistory.useQuery(
-    { doctorId: doctorId || 0 },
-    { enabled: !!doctorId }
-  );
+  const { data: leaves, refetch: refetchLeaves } =
+    trpc.doctor.listLeaves.useQuery(
+      { doctorId: doctorId || 0 },
+      { enabled: !!doctorId }
+    );
+  const { data: attendanceLogs, refetch: refetchAttendance } =
+    trpc.doctor.getAttendanceHistory.useQuery(
+      { doctorId: doctorId || 0 },
+      { enabled: !!doctorId }
+    );
 
   // Mutations
   const applyLeaveMutation = trpc.doctor.applyLeave.useMutation({
@@ -69,17 +79,19 @@ export default function DoctorProfile() {
       setCoveringDoctorId("");
       refetchLeaves();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to apply for leave");
     },
   });
 
   const clockAttendanceMutation = trpc.doctor.clockAttendance.useMutation({
     onSuccess: (_, variables) => {
-      toast.success(`Successfully clocked action: ${variables.action.replace("_", " ")}`);
+      toast.success(
+        `Successfully clocked action: ${variables.action.replace("_", " ")}`
+      );
       refetchAttendance();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Attendance log action failed");
     },
   });
@@ -89,7 +101,7 @@ export default function DoctorProfile() {
       toast.success("Doctor Settings updated successfully!");
       refetchDoc();
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to save settings");
     },
   });
@@ -100,14 +112,20 @@ export default function DoctorProfile() {
       try {
         const parsed = JSON.parse(doctor.settings as string);
         if (parsed.defaultDuration) setDefaultDuration(parsed.defaultDuration);
-        if (parsed.followUpDuration) setFollowUpDuration(parsed.followUpDuration);
-        if (parsed.emergencyDuration) setEmergencyDuration(parsed.emergencyDuration);
+        if (parsed.followUpDuration)
+          setFollowUpDuration(parsed.followUpDuration);
+        if (parsed.emergencyDuration)
+          setEmergencyDuration(parsed.emergencyDuration);
         if (parsed.bufferTime) setBufferTime(parsed.bufferTime);
-        if (parsed.maxAppointmentsPerDay) setMaxAppointmentsPerDay(parsed.maxAppointmentsPerDay);
-        if (parsed.doubleBookingPolicy) setDoubleBookingPolicy(parsed.doubleBookingPolicy);
-        if (parsed.telemedicineEnabled !== undefined) setTelemedicineEnabled(parsed.telemedicineEnabled);
+        if (parsed.maxAppointmentsPerDay)
+          setMaxAppointmentsPerDay(parsed.maxAppointmentsPerDay);
+        if (parsed.doubleBookingPolicy)
+          setDoubleBookingPolicy(parsed.doubleBookingPolicy);
+        if (parsed.telemedicineEnabled !== undefined)
+          setTelemedicineEnabled(parsed.telemedicineEnabled);
         if (parsed.notifySMS !== undefined) setNotifySMS(parsed.notifySMS);
-        if (parsed.notifyEmail !== undefined) setNotifyEmail(parsed.notifyEmail);
+        if (parsed.notifyEmail !== undefined)
+          setNotifyEmail(parsed.notifyEmail);
         if (parsed.sessionTimeout) setSessionTimeout(parsed.sessionTimeout);
       } catch (e) {
         console.error("Failed to parse settings", e);
@@ -119,7 +137,9 @@ export default function DoctorProfile() {
     return (
       <DashboardLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <p className="text-muted-foreground text-sm font-semibold">Loading Doctor Profile...</p>
+          <p className="text-muted-foreground text-sm font-semibold">
+            Loading Doctor Profile...
+          </p>
         </div>
       </DashboardLayout>
     );
@@ -129,7 +149,9 @@ export default function DoctorProfile() {
     return (
       <DashboardLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <p className="text-destructive text-sm font-semibold">Doctor profile not found</p>
+          <p className="text-destructive text-sm font-semibold">
+            Doctor profile not found
+          </p>
         </div>
       </DashboardLayout>
     );
@@ -160,11 +182,15 @@ export default function DoctorProfile() {
       endDate: leaveEndDate,
       leaveType,
       reason: leaveReason,
-      coveringDoctorId: coveringDoctorId ? parseInt(coveringDoctorId) : undefined,
+      coveringDoctorId: coveringDoctorId
+        ? parseInt(coveringDoctorId)
+        : undefined,
     });
   };
 
-  const handleClock = (action: "Clock_In" | "Clock_Out" | "Break_Start" | "Break_End") => {
+  const handleClock = (
+    action: "Clock_In" | "Clock_Out" | "Break_Start" | "Break_End"
+  ) => {
     clockAttendanceMutation.mutate({
       doctorId: doctor.id,
       action,
@@ -201,7 +227,9 @@ export default function DoctorProfile() {
                 <Stethoscope className="size-8" />
               </div>
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">{doctor.name}</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  {doctor.name}
+                </h1>
                 <p className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                   <span>{doctor.specialty}</span>
                   {doctor.superSpecialty && (
@@ -212,7 +240,10 @@ export default function DoctorProfile() {
                   )}
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="text-xs bg-slate-50 border-slate-200 text-slate-800">
+                  <Badge
+                    variant="outline"
+                    className="text-xs bg-slate-50 border-slate-200 text-slate-800"
+                  >
                     License: {doctor.licenseNumber || "N/A"}
                   </Badge>
                   <Badge
@@ -230,9 +261,14 @@ export default function DoctorProfile() {
             </div>
 
             <div className="flex flex-col items-end gap-1.5 shrink-0">
-              <span className="text-sm font-bold text-muted-foreground">Consultation Fee</span>
+              <span className="text-sm font-bold text-muted-foreground">
+                Consultation Fee
+              </span>
               <span className="text-2xl font-extrabold text-foreground">
-                ${doctor.consultationFees ? parseFloat(doctor.consultationFees).toFixed(2) : "0.00"}
+                $
+                {doctor.consultationFees
+                  ? parseFloat(doctor.consultationFees).toFixed(2)
+                  : "0.00"}
               </span>
             </div>
           </div>
@@ -244,7 +280,9 @@ export default function DoctorProfile() {
               <div className="space-y-1">
                 <p className="text-sm font-bold">Credentialing Alert</p>
                 {warnings.map((w, i) => (
-                  <p key={i} className="text-xs">{w}</p>
+                  <p key={i} className="text-xs">
+                    {w}
+                  </p>
                 ))}
               </div>
             </div>
@@ -285,26 +323,46 @@ export default function DoctorProfile() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold">Degrees & Qualifications</span>
-                  <p className="text-sm font-bold text-foreground">{doctor.qualification || "N/A"}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold">Years of Experience</span>
-                  <p className="text-sm font-bold text-foreground">{doctor.experience ? `${doctor.experience} Years` : "N/A"}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold">License Expiry</span>
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    Degrees & Qualifications
+                  </span>
                   <p className="text-sm font-bold text-foreground">
-                    {doctor.licenseExpiryDate ? new Date(doctor.licenseExpiryDate).toLocaleDateString() : "N/A"}
+                    {doctor.qualification || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold">Emergency Contact Name</span>
-                  <p className="text-sm font-bold text-foreground">{doctor.emergencyContactName || "N/A"}</p>
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    Years of Experience
+                  </span>
+                  <p className="text-sm font-bold text-foreground">
+                    {doctor.experience ? `${doctor.experience} Years` : "N/A"}
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-semibold">Emergency Contact Phone</span>
-                  <p className="text-sm font-bold text-foreground">{doctor.emergencyContactPhone || "N/A"}</p>
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    License Expiry
+                  </span>
+                  <p className="text-sm font-bold text-foreground">
+                    {doctor.licenseExpiryDate
+                      ? new Date(doctor.licenseExpiryDate).toLocaleDateString()
+                      : "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    Emergency Contact Name
+                  </span>
+                  <p className="text-sm font-bold text-foreground">
+                    {doctor.emergencyContactName || "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    Emergency Contact Phone
+                  </span>
+                  <p className="text-sm font-bold text-foreground">
+                    {doctor.emergencyContactPhone || "N/A"}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -317,34 +375,60 @@ export default function DoctorProfile() {
                 <Calendar className="size-5 text-primary" />
                 Clinician Shift Availability Schedule
               </h2>
-              <p className="text-xs text-muted-foreground">Standard scheduling blocks for booking slots.</p>
+              <p className="text-xs text-muted-foreground">
+                Standard scheduling blocks for booking slots.
+              </p>
               <div className="grid grid-cols-5 gap-3">
-                {["monday", "tuesday", "wednesday", "thursday", "friday"].map((day) => {
-                  const sched = doctor.availabilitySchedule as any;
-                  const val = sched?.[day] || "Not Scheduled";
-                  return (
-                    <div key={day} className="p-4 border rounded-lg bg-slate-50 text-center space-y-1">
-                      <span className="text-xs font-bold text-slate-800 capitalize">{day}</span>
-                      <p className="text-xs text-slate-600 font-semibold">{val}</p>
-                    </div>
-                  );
-                })}
+                {["monday", "tuesday", "wednesday", "thursday", "friday"].map(
+                  day => {
+                    const sched = doctor.availabilitySchedule as any;
+                    const val = sched?.[day] || "Not Scheduled";
+                    return (
+                      <div
+                        key={day}
+                        className="p-4 border rounded-lg bg-slate-50 text-center space-y-1"
+                      >
+                        <span className="text-xs font-bold text-slate-800 capitalize">
+                          {day}
+                        </span>
+                        <p className="text-xs text-slate-600 font-semibold">
+                          {val}
+                        </p>
+                      </div>
+                    );
+                  }
+                )}
               </div>
             </Card>
           </TabsContent>
 
           {/* Leave Management Tab */}
-          <TabsContent value="leaves" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <TabsContent
+            value="leaves"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
             <Card className="p-6 space-y-4 lg:col-span-1 h-fit">
-              <h2 className="text-lg font-bold text-foreground">Apply for Leave</h2>
+              <h2 className="text-lg font-bold text-foreground">
+                Apply for Leave
+              </h2>
               <form onSubmit={handleApplyLeave} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold">Start Date</label>
-                  <Input type="date" value={leaveStartDate} onChange={(e) => setLeaveStartDate(e.target.value)} required />
+                  <Input
+                    type="date"
+                    value={leaveStartDate}
+                    onChange={e => setLeaveStartDate(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold">End Date</label>
-                  <Input type="date" value={leaveEndDate} onChange={(e) => setLeaveEndDate(e.target.value)} required />
+                  <Input
+                    type="date"
+                    value={leaveEndDate}
+                    onChange={e => setLeaveEndDate(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold">Leave Type</label>
@@ -360,16 +444,18 @@ export default function DoctorProfile() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold">Covering Clinician</label>
+                  <label className="text-xs font-bold">
+                    Covering Clinician
+                  </label>
                   <select
                     value={coveringDoctorId}
-                    onChange={(e) => setCoveringDoctorId(e.target.value)}
+                    onChange={e => setCoveringDoctorId(e.target.value)}
                     className="w-full h-9 border rounded-lg px-3 py-1 text-sm bg-background"
                   >
                     <option value="">-- Choose Peer --</option>
                     {doctorsList
-                      ?.filter((d) => d.id !== doctor.id)
-                      .map((d) => (
+                      ?.filter(d => d.id !== doctor.id)
+                      .map(d => (
                         <option key={d.id} value={d.id}>
                           {d.name}
                         </option>
@@ -378,16 +464,28 @@ export default function DoctorProfile() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold">Reason</label>
-                  <Input value={leaveReason} onChange={(e) => setLeaveReason(e.target.value)} placeholder="Reason for leave request" />
+                  <Input
+                    value={leaveReason}
+                    onChange={e => setLeaveReason(e.target.value)}
+                    placeholder="Reason for leave request"
+                  />
                 </div>
-                <Button type="submit" disabled={applyLeaveMutation.isPending} className="w-full">
-                  {applyLeaveMutation.isPending ? "Applying..." : "Submit Leave Request"}
+                <Button
+                  type="submit"
+                  disabled={applyLeaveMutation.isPending}
+                  className="w-full"
+                >
+                  {applyLeaveMutation.isPending
+                    ? "Applying..."
+                    : "Submit Leave Request"}
                 </Button>
               </form>
             </Card>
 
             <Card className="p-6 space-y-4 lg:col-span-2">
-              <h2 className="text-lg font-bold text-foreground">Leave Requests History</h2>
+              <h2 className="text-lg font-bold text-foreground">
+                Leave Requests History
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse text-left">
                   <thead>
@@ -400,11 +498,18 @@ export default function DoctorProfile() {
                   </thead>
                   <tbody>
                     {leaves && leaves.length > 0 ? (
-                      leaves.map((l) => (
-                        <tr key={l.id} className="border-b hover:bg-slate-50/50">
+                      leaves.map(l => (
+                        <tr
+                          key={l.id}
+                          className="border-b hover:bg-slate-50/50"
+                        >
                           <td className="p-3 font-medium">{l.leaveType}</td>
-                          <td className="p-3">{new Date(l.startDate).toLocaleDateString()}</td>
-                          <td className="p-3">{new Date(l.endDate).toLocaleDateString()}</td>
+                          <td className="p-3">
+                            {new Date(l.startDate).toLocaleDateString()}
+                          </td>
+                          <td className="p-3">
+                            {new Date(l.endDate).toLocaleDateString()}
+                          </td>
                           <td className="p-3">
                             <Badge
                               variant="outline"
@@ -412,8 +517,8 @@ export default function DoctorProfile() {
                                 l.status === "Approved"
                                   ? "bg-green-50 text-green-700 border-green-200"
                                   : l.status === "Rejected"
-                                  ? "bg-rose-50 text-rose-700 border-rose-200"
-                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                                    ? "bg-rose-50 text-rose-700 border-rose-200"
+                                    : "bg-amber-50 text-amber-700 border-amber-200"
                               }`}
                             >
                               {l.status}
@@ -423,7 +528,10 @@ export default function DoctorProfile() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                        <td
+                          colSpan={4}
+                          className="p-8 text-center text-muted-foreground"
+                        >
                           No leave requests logged yet.
                         </td>
                       </tr>
@@ -435,24 +543,45 @@ export default function DoctorProfile() {
           </TabsContent>
 
           {/* Attendance Log Tab */}
-          <TabsContent value="attendance" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <TabsContent
+            value="attendance"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
             <Card className="p-6 space-y-4 lg:col-span-1 h-fit">
-              <h2 className="text-lg font-bold text-foreground">Attendance Clocking Console</h2>
-              <p className="text-xs text-muted-foreground">Log your shift timestamps directly to registry logs.</p>
+              <h2 className="text-lg font-bold text-foreground">
+                Attendance Clocking Console
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Log your shift timestamps directly to registry logs.
+              </p>
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <Button onClick={() => handleClock("Clock_In")} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+                <Button
+                  onClick={() => handleClock("Clock_In")}
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+                >
                   <CheckCircle className="size-4" />
                   Clock In
                 </Button>
-                <Button onClick={() => handleClock("Clock_Out")} className="gap-2" variant="destructive">
+                <Button
+                  onClick={() => handleClock("Clock_Out")}
+                  className="gap-2"
+                  variant="destructive"
+                >
                   <Clock className="size-4" />
                   Clock Out
                 </Button>
-                <Button onClick={() => handleClock("Break_Start")} className="gap-2 bg-amber-600 hover:bg-amber-700">
+                <Button
+                  onClick={() => handleClock("Break_Start")}
+                  className="gap-2 bg-amber-600 hover:bg-amber-700"
+                >
                   <Coffee className="size-4" />
                   Start Break
                 </Button>
-                <Button onClick={() => handleClock("Break_End")} className="gap-2" variant="outline">
+                <Button
+                  onClick={() => handleClock("Break_End")}
+                  className="gap-2"
+                  variant="outline"
+                >
                   <Coffee className="size-4" />
                   End Break
                 </Button>
@@ -460,7 +589,9 @@ export default function DoctorProfile() {
             </Card>
 
             <Card className="p-6 space-y-4 lg:col-span-2">
-              <h2 className="text-lg font-bold text-foreground">Attendance History</h2>
+              <h2 className="text-lg font-bold text-foreground">
+                Attendance History
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse text-left">
                   <thead>
@@ -472,12 +603,24 @@ export default function DoctorProfile() {
                   </thead>
                   <tbody>
                     {attendanceLogs && attendanceLogs.length > 0 ? (
-                      attendanceLogs.map((a) => (
-                        <tr key={a.id} className="border-b hover:bg-slate-50/50">
-                          <td className="p-3">{new Date(a.clockIn).toLocaleTimeString()}</td>
-                          <td className="p-3">{a.clockOut ? new Date(a.clockOut).toLocaleTimeString() : "Still Active"}</td>
+                      attendanceLogs.map(a => (
+                        <tr
+                          key={a.id}
+                          className="border-b hover:bg-slate-50/50"
+                        >
                           <td className="p-3">
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200">
+                            {new Date(a.clockIn).toLocaleTimeString()}
+                          </td>
+                          <td className="p-3">
+                            {a.clockOut
+                              ? new Date(a.clockOut).toLocaleTimeString()
+                              : "Still Active"}
+                          </td>
+                          <td className="p-3">
+                            <Badge
+                              variant="outline"
+                              className="bg-emerald-50 text-emerald-800 border-emerald-200"
+                            >
                               {a.attendanceStatus}
                             </Badge>
                           </td>
@@ -485,7 +628,10 @@ export default function DoctorProfile() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={3} className="p-8 text-center text-muted-foreground">
+                        <td
+                          colSpan={3}
+                          className="p-8 text-center text-muted-foreground"
+                        >
                           No attendance logs clocked yet.
                         </td>
                       </tr>
@@ -513,10 +659,12 @@ export default function DoctorProfile() {
                     </h3>
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold">Default Consultation Duration (min)</label>
+                        <label className="text-xs font-semibold">
+                          Default Consultation Duration (min)
+                        </label>
                         <select
                           value={defaultDuration}
-                          onChange={(e) => setDefaultDuration(e.target.value)}
+                          onChange={e => setDefaultDuration(e.target.value)}
                           className="w-full h-9 border rounded-lg px-3 py-1 text-sm bg-background"
                         >
                           <option value="10">10 Min</option>
@@ -527,16 +675,34 @@ export default function DoctorProfile() {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold">Follow-up Consultation Duration (min)</label>
-                        <Input type="number" value={followUpDuration} onChange={(e) => setFollowUpDuration(e.target.value)} />
+                        <label className="text-xs font-semibold">
+                          Follow-up Consultation Duration (min)
+                        </label>
+                        <Input
+                          type="number"
+                          value={followUpDuration}
+                          onChange={e => setFollowUpDuration(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold">Emergency Duration (min)</label>
-                        <Input type="number" value={emergencyDuration} onChange={(e) => setEmergencyDuration(e.target.value)} />
+                        <label className="text-xs font-semibold">
+                          Emergency Duration (min)
+                        </label>
+                        <Input
+                          type="number"
+                          value={emergencyDuration}
+                          onChange={e => setEmergencyDuration(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold">Buffer Time between slots (min)</label>
-                        <Input type="number" value={bufferTime} onChange={(e) => setBufferTime(e.target.value)} />
+                        <label className="text-xs font-semibold">
+                          Buffer Time between slots (min)
+                        </label>
+                        <Input
+                          type="number"
+                          value={bufferTime}
+                          onChange={e => setBufferTime(e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -549,18 +715,32 @@ export default function DoctorProfile() {
                     </h3>
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold">Max Appointments Per Day</label>
-                        <Input type="number" value={maxAppointmentsPerDay} onChange={(e) => setMaxAppointmentsPerDay(e.target.value)} />
+                        <label className="text-xs font-semibold">
+                          Max Appointments Per Day
+                        </label>
+                        <Input
+                          type="number"
+                          value={maxAppointmentsPerDay}
+                          onChange={e =>
+                            setMaxAppointmentsPerDay(e.target.value)
+                          }
+                        />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold">Double-Booking Policy</label>
+                        <label className="text-xs font-semibold">
+                          Double-Booking Policy
+                        </label>
                         <select
                           value={doubleBookingPolicy}
-                          onChange={(e) => setDoubleBookingPolicy(e.target.value)}
+                          onChange={e => setDoubleBookingPolicy(e.target.value)}
                           className="w-full h-9 border rounded-lg px-3 py-1 text-sm bg-background"
                         >
-                          <option value="Strict">Strict (Disallow duplicates)</option>
-                          <option value="Emergency_Only">Emergency Only Override</option>
+                          <option value="Strict">
+                            Strict (Disallow duplicates)
+                          </option>
+                          <option value="Emergency_Only">
+                            Emergency Only Override
+                          </option>
                           <option value="Allow">Allow overlaps</option>
                         </select>
                       </div>
@@ -569,9 +749,14 @@ export default function DoctorProfile() {
                           type="checkbox"
                           id="pref-tele"
                           checked={telemedicineEnabled}
-                          onChange={(e) => setTelemedicineEnabled(e.target.checked)}
+                          onChange={e =>
+                            setTelemedicineEnabled(e.target.checked)
+                          }
                         />
-                        <label htmlFor="pref-tele" className="text-xs font-semibold cursor-pointer">
+                        <label
+                          htmlFor="pref-tele"
+                          className="text-xs font-semibold cursor-pointer"
+                        >
                           Enable Telemedicine / Video Consultations
                         </label>
                       </div>
@@ -580,31 +765,60 @@ export default function DoctorProfile() {
 
                   {/* Notification & Security */}
                   <div className="space-y-4 border-t pt-6 md:col-span-2">
-                    <h3 className="text-sm font-bold text-foreground">Notification Channels & Privacy</h3>
+                    <h3 className="text-sm font-bold text-foreground">
+                      Notification Channels & Privacy
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                       <div className="flex items-center gap-2">
-                        <input type="checkbox" id="pref-sms" checked={notifySMS} onChange={(e) => setNotifySMS(e.target.checked)} />
-                        <label htmlFor="pref-sms" className="text-xs font-semibold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          id="pref-sms"
+                          checked={notifySMS}
+                          onChange={e => setNotifySMS(e.target.checked)}
+                        />
+                        <label
+                          htmlFor="pref-sms"
+                          className="text-xs font-semibold cursor-pointer"
+                        >
                           SMS Alerts (Credentials Expiry, emergency)
                         </label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <input type="checkbox" id="pref-email" checked={notifyEmail} onChange={(e) => setNotifyEmail(e.target.checked)} />
-                        <label htmlFor="pref-email" className="text-xs font-semibold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          id="pref-email"
+                          checked={notifyEmail}
+                          onChange={e => setNotifyEmail(e.target.checked)}
+                        />
+                        <label
+                          htmlFor="pref-email"
+                          className="text-xs font-semibold cursor-pointer"
+                        >
                           Email briefings & leave reports
                         </label>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold">Security Session Timeout (minutes)</label>
-                        <Input type="number" value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)} />
+                        <label className="text-xs font-semibold">
+                          Security Session Timeout (minutes)
+                        </label>
+                        <Input
+                          type="number"
+                          value={sessionTimeout}
+                          onChange={e => setSessionTimeout(e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-4 border-t">
-                  <Button type="submit" disabled={saveSettingsMutation.isPending}>
-                    {saveSettingsMutation.isPending ? "Saving..." : "Save Preferences"}
+                  <Button
+                    type="submit"
+                    disabled={saveSettingsMutation.isPending}
+                  >
+                    {saveSettingsMutation.isPending
+                      ? "Saving..."
+                      : "Save Preferences"}
                   </Button>
                 </div>
               </form>

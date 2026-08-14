@@ -44,7 +44,10 @@ export async function checkDuplicatePatient(
     const pFirstSoundex = soundex(p.firstName);
     const pLastSoundex = p.lastName ? soundex(p.lastName) : "";
 
-    if (pFirstSoundex === inputFirstSoundex && pLastSoundex === inputLastSoundex) {
+    if (
+      pFirstSoundex === inputFirstSoundex &&
+      pLastSoundex === inputLastSoundex
+    ) {
       return {
         isDuplicate: true,
         reason: "Phonetic name match with identical date of birth",

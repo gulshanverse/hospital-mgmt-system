@@ -1,5 +1,12 @@
 import * as React from "react";
-import { Bell, Activity, Check, ShieldAlert, Sparkles, Inbox } from "lucide-react";
+import {
+  Bell,
+  Activity,
+  Check,
+  ShieldAlert,
+  Sparkles,
+  Inbox,
+} from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import {
   DropdownMenu,
@@ -11,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export function NotificationCenter() {
-  const { data: notifications, refetch } = trpc.analytics.getNotifications.useQuery();
+  const { data: notifications, refetch } =
+    trpc.analytics.getNotifications.useQuery();
 
   if (!isFeatureEnabled("ENABLE_NOTIFICATION_CENTER")) return null;
 
@@ -30,7 +38,10 @@ export function NotificationCenter() {
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0 rounded-xl overflow-hidden shadow-xl border border-border/80 bg-popover z-50">
+      <DropdownMenuContent
+        align="end"
+        className="w-80 p-0 rounded-xl overflow-hidden shadow-xl border border-border/80 bg-popover z-50"
+      >
         <div className="flex items-center justify-between border-b px-4 py-3 bg-secondary/15">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm">Notifications</span>
@@ -72,7 +83,9 @@ export function NotificationCenter() {
             <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
               <Inbox className="h-8 w-8 text-muted-foreground/60 mb-2" />
               <p className="text-xs font-medium">All caught up!</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">No new notifications.</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                No new notifications.
+              </p>
             </div>
           )}
         </div>

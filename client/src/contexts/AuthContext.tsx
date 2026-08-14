@@ -16,12 +16,27 @@ export interface AuthContextType {
   loading: boolean;
   error: Error | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ accessToken: string; refreshToken: string }>;
-  register: (fullName: string, email: string, password: string, phone?: string) => Promise<AuthUser>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ accessToken: string; refreshToken: string }>;
+  register: (
+    fullName: string,
+    email: string,
+    password: string,
+    phone?: string
+  ) => Promise<AuthUser>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
-  updateProfile: (data: { fullName?: string; phone?: string; avatar?: string }) => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateProfile: (data: {
+    fullName?: string;
+    phone?: string;
+    avatar?: string;
+  }) => Promise<void>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -111,7 +126,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(result.user);
       return result.tokens;
     } catch (err) {
-      const error = err instanceof Error ? err : new Error((err as any)?.message || "Login failed");
+      const error =
+        err instanceof Error
+          ? err
+          : new Error((err as any)?.message || "Login failed");
       setError(error);
       throw error;
     } finally {
@@ -119,7 +137,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (fullName: string, email: string, password: string, phone?: string) => {
+  const register = async (
+    fullName: string,
+    email: string,
+    password: string,
+    phone?: string
+  ) => {
     try {
       setLoading(true);
       setError(null);
@@ -141,7 +164,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(result.user);
       return result.user;
     } catch (err) {
-      const error = err instanceof Error ? err : new Error((err as any)?.message || "Registration failed");
+      const error =
+        err instanceof Error
+          ? err
+          : new Error((err as any)?.message || "Registration failed");
       setError(error);
       throw error;
     } finally {
@@ -163,7 +189,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRefreshToken(null);
     setError(null);
     localStorage.removeItem("auth-tokens");
-    try { sessionStorage.removeItem("manus-cookie"); } catch {}
+    try {
+      sessionStorage.removeItem("manus-cookie");
+    } catch {}
     // Hard redirect to landing page — replaces history entry so Back
     // button cannot return to protected page, and full navigation
     // purges all React state / React Query cache
@@ -192,14 +220,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateProfile = async (data: { fullName?: string; phone?: string; avatar?: string }) => {
+  const updateProfile = async (data: {
+    fullName?: string;
+    phone?: string;
+    avatar?: string;
+  }) => {
     try {
       setLoading(true);
       const result = await updateProfileMutation.mutateAsync(data);
       setUser(result.user);
       setError(null);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error((err as any)?.message || "Profile update failed");
+      const error =
+        err instanceof Error
+          ? err
+          : new Error((err as any)?.message || "Profile update failed");
       setError(error);
       throw error;
     } finally {
@@ -207,13 +242,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const changePassword = async (currentPassword: string, newPassword: string) => {
+  const changePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
     try {
       setLoading(true);
-      await changePasswordMutation.mutateAsync({ currentPassword, newPassword });
+      await changePasswordMutation.mutateAsync({
+        currentPassword,
+        newPassword,
+      });
       setError(null);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error((err as any)?.message || "Password change failed");
+      const error =
+        err instanceof Error
+          ? err
+          : new Error((err as any)?.message || "Password change failed");
       setError(error);
       throw error;
     } finally {

@@ -10,7 +10,7 @@ export const UPGRADE_NOTES = [
       "Standardised typography, margins, shadows, and rounded borders.",
       "Implemented central Feature Flags system.",
       "Introduced reusable Enterprise DataTable, Form System, and Command Palette.",
-      "Set up centralized accessibility focus borders."
-    ]
-  }
+      "Set up centralized accessibility focus borders.",
+    ],
+  },
 ];
