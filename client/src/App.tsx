@@ -28,6 +28,7 @@ import { useAuthContext } from "./contexts/AuthContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 function Router() {
   const { user, loading } = useAuthContext();
@@ -103,6 +104,7 @@ function App() {
             <Toaster />
             <Router />
             <Analytics />
+            <SpeedInsights />
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>

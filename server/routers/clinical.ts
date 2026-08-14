@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { randomInt } from "node:crypto";
 import {
   router,
   protectedProcedure,
@@ -1007,25 +1008,22 @@ export const appointmentRouter = router({
     // Seed 500 appointments
     console.log("[Demo Seeder] Populating 500 appointments...");
     const valuesToInsert = [];
+    const pickRandom = <T>(items: T[]): T => items[randomInt(items.length)];
 
     for (let i = 0; i < 500; i++) {
-      const patient =
-        patientsList[Math.floor(Math.random() * patientsList.length)];
-      const doctor =
-        doctorsList[Math.floor(Math.random() * doctorsList.length)];
+      const patient = pickRandom(patientsList);
+      const doctor = pickRandom(doctorsList);
 
-      const offsetDays = Math.floor(Math.random() * 60) - 30; // -30 to +30 days range
+      const offsetDays = randomInt(61) - 30; // -30 to +30 days range
       const aptDate = new Date();
       aptDate.setDate(aptDate.getDate() + offsetDays);
       const dateStr = aptDate.toISOString().split("T")[0];
 
-      const timeStr = slotTimes[Math.floor(Math.random() * slotTimes.length)];
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const priority =
-        priorities[Math.floor(Math.random() * priorities.length)];
-      const type =
-        appointmentTypes[Math.floor(Math.random() * appointmentTypes.length)];
-      const reason = reasons[Math.floor(Math.random() * reasons.length)];
+      const timeStr = pickRandom(slotTimes);
+      const status = pickRandom(statuses);
+      const priority = pickRandom(priorities);
+      const type = pickRandom(appointmentTypes);
+      const reason = pickRandom(reasons);
 
       valuesToInsert.push({
         patientId: patient.id,
@@ -1041,7 +1039,7 @@ export const appointmentRouter = router({
         createdBy: 1, // System Admin
         queuePosition:
           status === "Checked-In" || status === "Waiting"
-            ? Math.floor(Math.random() * 10) + 1
+            ? randomInt(1, 11)
             : null,
       });
     }
