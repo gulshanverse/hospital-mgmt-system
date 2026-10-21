@@ -1,4 +1,4 @@
-# Hospital Management System (HMS)
+# Hospital Management System (HMS): SwasthayaSeva
 
 A comprehensive, full-stack Hospital Management System built with React 19, Node.js, Express, tRPC, and MySQL. The system provides complete operational coverage for hospitals including patient management, appointments, electronic health records, laboratory management, pharmacy inventory, bed management, and billing.
 
